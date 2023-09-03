@@ -1,2 +1,2 @@
 include/** linguist-vendored
-Voxel*Game/gl.c linguist-vendored
+src/gl.c linguist-vendored
