@@ -32,12 +32,17 @@ in vec3 VertexPos;
 
 out vec4 FragColor;
 
+const float errorMargin = 0.0001;
 
 void main() {
 	vec4 texColor = texture(tex_array, TexCoords);
 	if (texColor.a < 0.1)
 		discard;
-	if (drawBlockHighlight && VertexPos.x >= blockPos.x - 0.01 && VertexPos.x <= blockPos.x + 1.0 && VertexPos.y >= blockPos.y - 0.01 && VertexPos.y <= blockPos.y + 1 && VertexPos.z >= blockPos.z - 0.01 && VertexPos.z <= blockPos.z + 1.0)
+
+	if (drawBlockHighlight && 
+	VertexPos.x >= blockPos.x - errorMargin && VertexPos.x <= blockPos.x + 1.0 + errorMargin && 
+	VertexPos.y >= blockPos.y - errorMargin && VertexPos.y <= blockPos.y + 1.0 + errorMargin && 
+	VertexPos.z >= blockPos.z - errorMargin && VertexPos.z <= blockPos.z + 1.0 + errorMargin)
 		texColor.b += 0.5;
 	FragColor = texColor;
-};
+}
