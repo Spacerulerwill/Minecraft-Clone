@@ -1,0 +1,43 @@
+#shader vertex
+
+#version 450 core
+
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec3 aTexCoords;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+out vec3 TexCoords;
+out vec3 VertexPos;
+
+void main()
+{
+	TexCoords = aTexCoords;
+	VertexPos = aPos;
+	gl_Position = projection * view * model * vec4(aPos, 1.0f);
+}
+
+#shader fragment
+
+#version 450 core
+
+uniform sampler2DArray tex_array;
+uniform ivec3 blockPos;
+uniform bool drawBlockHighlight;
+
+in vec3 TexCoords;
+in vec3 VertexPos;
+
+out vec4 FragColor;
+
+
+void main() {
+	vec4 texColor = texture(tex_array, TexCoords);
+	if (texColor.a < 0.1)
+		discard;
+	if (drawBlockHighlight && VertexPos.x >= blockPos.x - 0.01 && VertexPos.x <= blockPos.x + 1.0 && VertexPos.y >= blockPos.y - 0.01 && VertexPos.y <= blockPos.y + 1 && VertexPos.z >= blockPos.z - 0.01 && VertexPos.z <= blockPos.z + 1.0)
+		texColor.b += 0.5;
+	FragColor = texColor;
+};

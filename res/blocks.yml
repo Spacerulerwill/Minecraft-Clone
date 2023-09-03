@@ -1,0 +1,44 @@
+air:
+  opaque: false
+  unique_faces: 1
+  material: 0
+bedrock:
+  opaque: true
+  unique_faces: 1
+  material: 2
+dirt:
+  opaque: true
+  unique_faces: 1
+  material: 1
+cobble:
+  opaque: true
+  unique_faces: 1
+  material: 2
+stone:
+  opaque: true
+  unique_faces: 1
+  material: 2
+glass:
+  opaque: false
+  unique_faces: 1
+  material: 4
+oak_planks:
+  opaque: true
+  unique_faces: 1
+  material: 3
+cherry_planks:
+  opaque: true
+  unique_faces: 1
+  material: 3
+cherry_log:
+  opaque: true
+  unique_faces: 2
+  material: 3
+grass:
+  opaque: true
+  unique_faces: 3
+  material: 5
+tnt:
+  opaque: true
+  unique_faces: 3
+  material: 5
