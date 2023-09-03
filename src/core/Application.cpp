@@ -66,15 +66,17 @@ void engine::Application::Run()
 
     glEnable(GL_BLEND);
     glDepthFunc(GL_LEQUAL);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
     
     // Create a framebuffer, postprocess shader and quad to render to so we can use Render-To-Texture
-    float quadVerts[36] = {
-        -1.0f,  1.0f, 0.0f, 1.0f,  // top left
+    float quadVerts[24] = {
         -1.0f, -1.0f, 0.0f, 0.0f, // bottom left
-         1.0f, -1.0f, 1.0f, 0.0f, // bottom right
-         -1.0f,  1.0f, 0.0f, 1.0f,  // top left
-         1.0f,  1.0f, 1.0f, 1.0f, // top right
-         1.0f, -1.0f, 1.0f, 0.0f, // bottom right
+        1.0f, -1.0f, 1.0f, 0.0f, // bottom right
+        1.0f, 1.0f, 1.0f, 1.0f, // top right
+        -1.0f, -1.0f, 0.0f, 0.0f, // bottom left
+        1.0f, 1.0f, 1.0f, 1.0f, // top right
+        -1.0f, 1.0f, 0.0f, 1.0f // top left
     };
 
     VertexBuffer VBO;
@@ -118,17 +120,16 @@ void engine::Application::Run()
     float bottom_corner_x = (Window::SCREEN_WIDTH / 2.0f) - crosshair_size / 2.0f;
     float bottom_corner_y = (Window::SCREEN_HEIGHT / 2.0f) - crosshair_size / 2.0f;
 
-    float crosshairVerts[36] = {
-        bottom_corner_x, bottom_corner_y + crosshair_size, 0.0f, 1.0f,  // top left
+    float crosshairVerts[24] = {
         bottom_corner_x, bottom_corner_y, 0.0f, 0.0f, // bottom left
-         bottom_corner_x + crosshair_size, bottom_corner_y, 1.0f, 0.0f, // bottom right
+        bottom_corner_x + crosshair_size, bottom_corner_y, 1.0f, 0.0f, // bottom right
+        bottom_corner_x + crosshair_size,  bottom_corner_y + crosshair_size, 1.0f, 1.0f, // top right
+        bottom_corner_x, bottom_corner_y, 0.0f, 0.0f, // bottom left
+        bottom_corner_x + crosshair_size,  bottom_corner_y + crosshair_size, 1.0f, 1.0f, // top right
         bottom_corner_x, bottom_corner_y + crosshair_size, 0.0f, 1.0f,  // top left
-         bottom_corner_x + crosshair_size,  bottom_corner_y + crosshair_size, 1.0f, 1.0f, // top right
-         bottom_corner_x + crosshair_size, bottom_corner_y, 1.0f, 0.0f, // bottom right
     };
 
     Mat4 ortho = orthographic(0.0f, Window::SCREEN_HEIGHT, 0.0f, Window::SCREEN_WIDTH, -1.0f, 100.0f);
-
 
     VertexBuffer crosshairVBO;
     crosshairVBO.BufferData((const void*)crosshairVerts, sizeof(crosshairVerts));
@@ -155,8 +156,6 @@ void engine::Application::Run()
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         glEnable(GL_DEPTH_TEST);
-
-
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -196,6 +195,7 @@ void engine::Application::Run()
         crosshairShader.SetInt("screenTexture", 0);
         crosshairShader.SetInt("crosshair", 1);
         crosshairShader.setMat4("projection", ortho);
+
         glActiveTexture(GL_TEXTURE1);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 

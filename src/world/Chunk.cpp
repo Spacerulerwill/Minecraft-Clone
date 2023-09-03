@@ -184,63 +184,15 @@ void engine::Chunk::GreedyMesh()
                                     texCoords[11] = h;
                                     break;
                                 }
-                                }                                    
+                                }    
 
-                                // Add vertices for a quad
-                                m_Vertices.emplace_back(
-                                    x[0] + du[0] + dv[0],
-                                    x[1] + du[1] + dv[1],
-                                    x[2] + du[2] + dv[2],
-                                    texCoords[0],
-                                    texCoords[1],
-                                    face
-                                );
-
-                                m_Vertices.emplace_back(
-                                    x[0] + dv[0],
-                                    x[1] + dv[1],
-                                    x[2] + dv[2],
-                                    texCoords[2],
-                                    texCoords[3],
-                                    face
-                                );
-
-                                m_Vertices.emplace_back(
-                                    x[0] + du[0],
-                                    x[1] + du[1],
-                                    x[2] + du[2],
-                                    texCoords[4],
-                                    texCoords[5],
-                                    face
-                                );
-
-                                m_Vertices.emplace_back(
-                                    x[0] + dv[0],
-                                    x[1] + dv[1],
-                                    x[2] + dv[2],
-                                    texCoords[6],
-                                    texCoords[7],
-                                    face
-                                );
-
-                                m_Vertices.emplace_back(
-                                    x[0],
-                                    x[1],
-                                    x[2],
-                                    texCoords[8],
-                                    texCoords[9],
-                                    face
-                                );
-
-                                m_Vertices.emplace_back(
-                                    x[0] + du[0],
-                                    x[1] + du[1],
-                                    x[2] + du[2],
-                                    texCoords[10],
-                                    texCoords[11],
-                                    face
-                                );
-                            }
+                                int topLeft[3] = {x[0] + du[0], x[1] + du[1], x[2] + du[2]};
+                                int topRight[3] = {topLeft[0] + dv[0], topLeft[1] + dv[1], topLeft[2] + dv[2]};
+                                int bottomRight[3] = {x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]};
+                                // if backface we add quad with counter clockwise winding order
+                                // otherwise we use clockwise
+                                AddQuadToMesh(x, topLeft, topRight, bottomRight, texCoords, face, backFace);                            
+                            } 
 
                             // Zero out mask
                             for (l = 0; l < h; ++l) {
@@ -272,8 +224,26 @@ void engine::Chunk::CreateMesh()
     GreedyMesh();
 
     m_VertexCount = m_Vertices.size();
-
 }
+
+void engine::Chunk::AddQuadToMesh(int bottomLeft[3], int topLeft[3], int topRight[3], int bottomRight[3], int texCoords[12], BlockInt face, bool ccw) {
+    if (ccw) {
+        m_Vertices.emplace_back(bottomLeft[0],bottomLeft[1],bottomLeft[2],texCoords[8],texCoords[9],face);
+        m_Vertices.emplace_back(bottomRight[0],bottomRight[1],bottomRight[2],texCoords[2],texCoords[3],face);
+        m_Vertices.emplace_back(topRight[0],topRight[1],topRight[2],texCoords[0],texCoords[1],face);
+        m_Vertices.emplace_back(bottomLeft[0],bottomLeft[1],bottomLeft[2],texCoords[8],texCoords[9],face);
+        m_Vertices.emplace_back(topRight[0],topRight[1],topRight[2],texCoords[0],texCoords[1],face);
+        m_Vertices.emplace_back(topLeft[0],topLeft[1],topLeft[2],texCoords[4],texCoords[5],face);
+    } else {
+        m_Vertices.emplace_back(bottomLeft[0],bottomLeft[1],bottomLeft[2],texCoords[8],texCoords[9],face);
+        m_Vertices.emplace_back(topRight[0],topRight[1],topRight[2],texCoords[0],texCoords[1],face);
+        m_Vertices.emplace_back(bottomRight[0],bottomRight[1],bottomRight[2],texCoords[2],texCoords[3],face);
+        m_Vertices.emplace_back(bottomLeft[0],bottomLeft[1],bottomLeft[2],texCoords[8],texCoords[9],face);
+        m_Vertices.emplace_back(topLeft[0],topLeft[1],topLeft[2],texCoords[4],texCoords[5],face);
+        m_Vertices.emplace_back(topRight[0],topRight[1],topRight[2],texCoords[0],texCoords[1],face);
+    }
+}
+
 
 engine::VoxelFace engine::Chunk::GetVoxelFace(Face side, unsigned int x, unsigned int y, unsigned int z)
 {
@@ -314,6 +284,7 @@ void engine::Chunk::BufferData()
     m_VBO.BufferData(m_Vertices.data(), m_VertexCount * sizeof(Vertex));
     m_VBO.Unbind();
     m_Vertices.clear();
+
 }
 
 void engine::Chunk::Draw(Shader& shader)

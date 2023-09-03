@@ -17,7 +17,7 @@ LICENSE: MIT
 #include <world/Block.hpp>
 
 namespace engine {
-	constexpr int CHUNK_EXP = 5;
+	constexpr int CHUNK_EXP = 6;
 	constexpr int CHUNK_EXP_TIMES_TWO = CHUNK_EXP * 2;
 	constexpr int CHUNK_SIZE = 1 << CHUNK_EXP;
 	constexpr int CHUNK_SIZE_MINUS_ONE = CHUNK_SIZE - 1;
@@ -70,13 +70,8 @@ namespace engine {
 		Mat4 m_Model = scale(Vec3(BLOCK_SCALE));
 		int m_VertexCount = 0;
 		std::vector<Vertex> m_Vertices;
-
-		[[nodiscard]] inline uint32_t CalculateVertexAO(bool side1, bool	side2, bool corner) const
-		{
-			return (3 - (side1 + side2 + corner)) * !(side1 && side2);
-		}
-
 		[[nodiscard]] VoxelFace GetVoxelFace(Face side, unsigned int x, unsigned int y, unsigned int z);
+		void AddQuadToMesh(int bottomLeft[3], int topLeft[3], int topRight[3], int bottomRight[3], int texCoords[12], BlockInt face, bool backFace);
 
 	public:
 		Chunk(int chunkX, int chunkY, int chunkZ);
