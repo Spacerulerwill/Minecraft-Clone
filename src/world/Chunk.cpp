@@ -18,7 +18,6 @@ engine::Chunk::Chunk(int chunkX, int chunkY, int chunkZ): chunkX(chunkX), chunkY
     m_Model *= translate(Vec3(chunkX * CHUNK_SIZE, chunkY * CHUNK_SIZE, chunkZ * CHUNK_SIZE));
 
     memset(m_Blocks, DIRT, sizeof(BlockInt) * CHUNK_SIZE_CUBED);
-
     
     VertexBufferLayout bufLayout;
 	bufLayout.AddAttribute<float>(3);
@@ -52,10 +51,10 @@ void engine::Chunk::GreedyMesh()
     * This mask will contain the groups of matching voxel faces
     * as we proceed through the chunk in 6 directions. One for each side of ac ube
     */
-    VoxelFace* mask = new VoxelFace[CHUNK_SIZE_SQUARED] {};
     VoxelFace voxel, voxel1 = {}; // keeping track of voxels
     VoxelFace null {};
     int* texCoords = new int[12]{};
+    VoxelFace* mask = new VoxelFace[CHUNK_SIZE * CHUNK_SIZE] {};
 
     /*
     * An unccomon application of a boolean for loop, on the first iteration backFace will be true
@@ -297,12 +296,12 @@ void engine::Chunk::Draw(Shader& shader)
 
 void engine::Chunk::SetBlock(BlockInt block, unsigned int x, unsigned int y, unsigned int z)
 {
-    m_Blocks[x + (y << CHUNK_EXP) + (z << CHUNK_EXP_TIMES_TWO)] = block;
+    m_Blocks[y + (x << CHUNK_SIZE_EXP) + (z << CHUNK_SIZE_EXP_X2)] = block;
 }
 
 engine::BlockInt engine::Chunk::GetBlock(unsigned int x, unsigned int y, unsigned int z) const
 {
-    return m_Blocks[x + (y << CHUNK_EXP) + (z << CHUNK_EXP_TIMES_TWO)];
+    return m_Blocks[y + (x << CHUNK_SIZE_EXP) + (z << CHUNK_SIZE_EXP_X2)];
 }
 
 /*

@@ -17,12 +17,18 @@ LICENSE: MIT
 #include <world/Block.hpp>
 
 namespace engine {
-	constexpr int CHUNK_EXP = 6;
-	constexpr int CHUNK_EXP_TIMES_TWO = CHUNK_EXP * 2;
-	constexpr int CHUNK_SIZE = 1 << CHUNK_EXP;
+
+	// Chunks are 32 x 32 x 32 blocks
+	// Chunks are stored in Columns going down X and then Z
+	// This is to make setting columns of blocks more memory efficient
+
+	// CHUNK_SIZE is the width and length and height of a chunk
+	constexpr int CHUNK_SIZE_EXP = 5;
+	constexpr int CHUNK_SIZE_EXP_X2 = CHUNK_SIZE_EXP * 2;
+	constexpr int CHUNK_SIZE = 1 << CHUNK_SIZE_EXP;
 	constexpr int CHUNK_SIZE_MINUS_ONE = CHUNK_SIZE - 1;
-	constexpr int CHUNK_SIZE_SQUARED = CHUNK_SIZE * CHUNK_SIZE;
-	constexpr int CHUNK_SIZE_CUBED = CHUNK_SIZE_SQUARED * CHUNK_SIZE;
+	constexpr int CHUNK_SIZE_SQUARED = 1 << CHUNK_SIZE_EXP_X2;
+	constexpr int CHUNK_SIZE_CUBED = CHUNK_SIZE_SQUARED << CHUNK_SIZE_EXP;
 
 	enum Face {
 		NORTH,
