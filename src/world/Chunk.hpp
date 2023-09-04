@@ -21,6 +21,7 @@ namespace engine {
 	// Chunks are 32 x 32 x 32 blocks
 	// Chunks are stored in Columns going down X and then Z
 	// This is to make setting columns of blocks more memory efficient
+	// When generating terrain
 
 	// CHUNK_SIZE is the width and length and height of a chunk
 	constexpr int CHUNK_SIZE_EXP = 5;
@@ -49,15 +50,24 @@ namespace engine {
 		float texX;
 		float texY; 
 		float texZ;
+		float ambientOcclusion;
 	};
 
 	struct VoxelFace {
 		BlockInt type = AIR;
 		bool transparent = true;
+		int ambientOcclusion00;
+		int ambientOcclusion01;
+		int ambientOcclusion10;
+		int ambientOcclusion11;
 
 		bool operator==(const VoxelFace& other) {
 			return type == other.type &&
-				transparent == other.transparent;
+				transparent == other.transparent &&
+				ambientOcclusion00 == other.ambientOcclusion00 &&
+				ambientOcclusion01 == other.ambientOcclusion01 &&
+				ambientOcclusion10 == other.ambientOcclusion10 &&
+				ambientOcclusion11 == other.ambientOcclusion11;
 		}
 
 		bool operator!=(const VoxelFace& other) {
@@ -76,8 +86,11 @@ namespace engine {
 		Mat4 m_Model = scale(Vec3(BLOCK_SCALE));
 		int m_VertexCount = 0;
 		std::vector<Vertex> m_Vertices;
+		[[nodiscard]] inline int CalculateVertexAO(bool side1, bool side2, bool corner) {
+			return (3 - (side1 + side2 + corner)) * !(side1 && side2);
+		}
 		[[nodiscard]] VoxelFace GetVoxelFace(Face side, unsigned int x, unsigned int y, unsigned int z);
-		void AddQuadToMesh(int bottomLeft[3], int topLeft[3], int topRight[3], int bottomRight[3], int texCoords[12], BlockInt face, bool backFace);
+		void AddQuadToMesh(int bottomLeft[3], int topLeft[3], int topRight[3], int bottomRight[3], int texCoords[12], int ao00, int ao01, int ao10, int ao11, BlockInt face, bool backFace);
 
 	public:
 		Chunk(int chunkX, int chunkY, int chunkZ);

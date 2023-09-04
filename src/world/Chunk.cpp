@@ -22,6 +22,7 @@ engine::Chunk::Chunk(int chunkX, int chunkY, int chunkZ): chunkX(chunkX), chunkY
     VertexBufferLayout bufLayout;
 	bufLayout.AddAttribute<float>(3);
     bufLayout.AddAttribute<float>(3);
+    bufLayout.AddAttribute<float>(1);
     m_VAO.AddBuffer(m_VBO, bufLayout);
 }
 
@@ -190,7 +191,7 @@ void engine::Chunk::GreedyMesh()
                                 int bottomRight[3] = {x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]};
                                 // if backface we add quad with counter clockwise winding order
                                 // otherwise we use clockwise
-                                AddQuadToMesh(x, topLeft, topRight, bottomRight, texCoords, face, backFace);                            
+                                AddQuadToMesh(x, topLeft, topRight, bottomRight, texCoords, mask[n].ambientOcclusion00, mask[n].ambientOcclusion01, mask[n].ambientOcclusion10, mask[n].ambientOcclusion11, face,backFace);                            
                             } 
 
                             // Zero out mask
@@ -225,24 +226,23 @@ void engine::Chunk::CreateMesh()
     m_VertexCount = m_Vertices.size();
 }
 
-void engine::Chunk::AddQuadToMesh(int bottomLeft[3], int topLeft[3], int topRight[3], int bottomRight[3], int texCoords[12], BlockInt face, bool ccw) {
+void engine::Chunk::AddQuadToMesh(int bottomLeft[3], int topLeft[3], int topRight[3], int bottomRight[3], int texCoords[12], int ao00, int ao01, int ao10, int ao11, BlockInt face, bool ccw) {
     if (ccw) {
-        m_Vertices.emplace_back(bottomLeft[0],bottomLeft[1],bottomLeft[2],texCoords[8],texCoords[9],face);
-        m_Vertices.emplace_back(bottomRight[0],bottomRight[1],bottomRight[2],texCoords[2],texCoords[3],face);
-        m_Vertices.emplace_back(topRight[0],topRight[1],topRight[2],texCoords[0],texCoords[1],face);
-        m_Vertices.emplace_back(bottomLeft[0],bottomLeft[1],bottomLeft[2],texCoords[8],texCoords[9],face);
-        m_Vertices.emplace_back(topRight[0],topRight[1],topRight[2],texCoords[0],texCoords[1],face);
-        m_Vertices.emplace_back(topLeft[0],topLeft[1],topLeft[2],texCoords[4],texCoords[5],face);
+        m_Vertices.emplace_back(bottomLeft[0],bottomLeft[1],bottomLeft[2],texCoords[8],texCoords[9],face,ao00);
+        m_Vertices.emplace_back(bottomRight[0],bottomRight[1],bottomRight[2],texCoords[2],texCoords[3],face,ao10);
+        m_Vertices.emplace_back(topRight[0],topRight[1],topRight[2],texCoords[0],texCoords[1],face,ao11);
+        m_Vertices.emplace_back(bottomLeft[0],bottomLeft[1],bottomLeft[2],texCoords[8],texCoords[9],face,ao00);
+        m_Vertices.emplace_back(topRight[0],topRight[1],topRight[2],texCoords[0],texCoords[1],face, ao11);
+        m_Vertices.emplace_back(topLeft[0],topLeft[1],topLeft[2],texCoords[4],texCoords[5],face,ao01);
     } else {
-        m_Vertices.emplace_back(bottomLeft[0],bottomLeft[1],bottomLeft[2],texCoords[8],texCoords[9],face);
-        m_Vertices.emplace_back(topRight[0],topRight[1],topRight[2],texCoords[0],texCoords[1],face);
-        m_Vertices.emplace_back(bottomRight[0],bottomRight[1],bottomRight[2],texCoords[2],texCoords[3],face);
-        m_Vertices.emplace_back(bottomLeft[0],bottomLeft[1],bottomLeft[2],texCoords[8],texCoords[9],face);
-        m_Vertices.emplace_back(topLeft[0],topLeft[1],topLeft[2],texCoords[4],texCoords[5],face);
-        m_Vertices.emplace_back(topRight[0],topRight[1],topRight[2],texCoords[0],texCoords[1],face);
+        m_Vertices.emplace_back(bottomLeft[0],bottomLeft[1],bottomLeft[2],texCoords[8],texCoords[9],face,ao00);
+        m_Vertices.emplace_back(topRight[0],topRight[1],topRight[2],texCoords[0],texCoords[1],face,ao11);
+        m_Vertices.emplace_back(bottomRight[0],bottomRight[1],bottomRight[2],texCoords[2],texCoords[3],face,ao10);
+        m_Vertices.emplace_back(bottomLeft[0],bottomLeft[1],bottomLeft[2],texCoords[8],texCoords[9],face,ao00);
+        m_Vertices.emplace_back(topLeft[0],topLeft[1],topLeft[2],texCoords[4],texCoords[5],face,ao01);
+        m_Vertices.emplace_back(topRight[0],topRight[1],topRight[2],texCoords[0],texCoords[1],face,ao11);
     }
 }
-
 
 engine::VoxelFace engine::Chunk::GetVoxelFace(Face side, unsigned int x, unsigned int y, unsigned int z)
 {
@@ -252,26 +252,182 @@ engine::VoxelFace engine::Chunk::GetVoxelFace(Face side, unsigned int x, unsigne
     switch (side) {
     case TOP: {
         face.transparent = y < CHUNK_SIZE_MINUS_ONE ? BlockHandler::BlockData[GetBlock(x, y + 1, z)].opaque :false;
+        
+        bool left = x > 0 && y < CHUNK_SIZE_MINUS_ONE ? GetBlock(x-1, y+1, z) != AIR : false;
+        bool right = x < CHUNK_SIZE_MINUS_ONE && y < CHUNK_SIZE_MINUS_ONE ? GetBlock(x+1, y+1, z) != AIR : false;
+        bool top = z > 0 && y < CHUNK_SIZE_MINUS_ONE ? GetBlock(x, y+1, z-1) != AIR : false;
+        bool bottom = z < CHUNK_SIZE_MINUS_ONE && y < CHUNK_SIZE_MINUS_ONE ? GetBlock(x, y+1, z+1) != AIR : false;
+
+        face.ambientOcclusion00 = CalculateVertexAO(
+            left,
+            top,
+            x > 0 && z > 0 && y < CHUNK_SIZE_MINUS_ONE ? GetBlock(x-1, y+1, z-1) != AIR : false
+        );
+        face.ambientOcclusion01 = CalculateVertexAO(
+            left,
+            bottom,
+            x > 0 && z < CHUNK_SIZE_MINUS_ONE && y < CHUNK_SIZE_MINUS_ONE ? GetBlock(x-1, y+1, z+1) != AIR : false
+        );
+        face.ambientOcclusion10 = CalculateVertexAO(
+            top,
+            right,
+            x < CHUNK_SIZE_MINUS_ONE && z > 0 && y < CHUNK_SIZE_MINUS_ONE ? GetBlock(x+1, y+1, z-1) != AIR : false
+        );
+        face.ambientOcclusion11 = CalculateVertexAO(
+            bottom,
+            right,
+            x < CHUNK_SIZE_MINUS_ONE && z < CHUNK_SIZE_MINUS_ONE && y < CHUNK_SIZE_MINUS_ONE ? GetBlock(x+1, y+1, z+1) != AIR : false
+        );
         break;
     }
     case BOTTOM: {
         face.transparent = y > 0 ? BlockHandler::BlockData[GetBlock(x, y - 1, z)].opaque : false;
+
+        bool left = x > 0 && y > 0 ? GetBlock(x-1, y-1, z) != AIR : false;
+        bool right = x < CHUNK_SIZE_MINUS_ONE && y > 0 ? GetBlock(x+1, y-1, z) != AIR : false;
+        bool top = z > 0 && y > 0 ? GetBlock(x, y-1, z-1) != AIR : false;
+        bool bottom = z < CHUNK_SIZE_MINUS_ONE && y > 0 ? GetBlock(x, y-1, z+1) != AIR : false;
+
+        face.ambientOcclusion00 = CalculateVertexAO(
+            left,
+            top,
+            x > 0 && z > 0 && y > 0 ? GetBlock(x-1, y-1, z-1) != AIR : false
+        );
+        face.ambientOcclusion01 = CalculateVertexAO(
+            left,
+            bottom,
+            x > 0 && z < CHUNK_SIZE_MINUS_ONE && y > 0 ? GetBlock(x-1, y-1, z+1) != AIR : false
+        );
+        face.ambientOcclusion10 = CalculateVertexAO(
+            top,
+            right,
+            x < CHUNK_SIZE_MINUS_ONE && z > 0 && y > 0 ? GetBlock(x+1, y-1, z-1) != AIR : false
+        );
+        face.ambientOcclusion11 = CalculateVertexAO(
+            bottom,
+            right,
+            x < CHUNK_SIZE_MINUS_ONE && z < CHUNK_SIZE_MINUS_ONE && y > 0 ? GetBlock(x+1, y-1, z+1) != AIR : false
+        );
         break;
     }
     case NORTH: {
         face.transparent = z > 0  ? BlockHandler::BlockData[GetBlock(x, y, z-1)].opaque : false;
+
+        bool top = y < CHUNK_SIZE_MINUS_ONE && z > 0 ? GetBlock(x, y + 1, z - 1) != AIR : false;
+        bool bottom = y > 0 && z > 0 ? GetBlock(x, y - 1, z - 1) != AIR : false;
+        bool left = x > 0 && z > 0 ? GetBlock(x -1, y, z - 1) != AIR : false;
+        bool right = x < CHUNK_SIZE_MINUS_ONE && z > 0 ? GetBlock(x + 1, y, z - 1) != AIR : false;
+
+        face.ambientOcclusion00 = CalculateVertexAO(
+            bottom,
+            left,
+            x > 0 && y > 0 && z > 0 ? GetBlock(x-1, y-1, z-1) != AIR : false
+        );
+        face.ambientOcclusion10 = CalculateVertexAO(
+            top,
+            left,
+            x > 0 && y < CHUNK_SIZE_MINUS_ONE && z > 0 ? GetBlock(x-1, y+1, z-1) != AIR : false
+        );
+        face.ambientOcclusion01 = CalculateVertexAO(
+            bottom,
+            right,
+            x < CHUNK_SIZE_MINUS_ONE && y > 0 && z > 0 ? GetBlock(x + 1, y - 1, z -1) != AIR : false
+        );
+        face.ambientOcclusion11 = CalculateVertexAO(
+            top,
+            right,
+            x < CHUNK_SIZE_MINUS_ONE && y < CHUNK_SIZE_MINUS_ONE && z > 0 ? GetBlock(x+1, y+1, z-1) != AIR : false
+        );
         break;
     }
     case SOUTH: {
         face.transparent = z < CHUNK_SIZE_MINUS_ONE ? BlockHandler::BlockData[GetBlock(x, y, z + 1)].opaque : false;
+        
+        bool top = y < CHUNK_SIZE_MINUS_ONE && z < CHUNK_SIZE_MINUS_ONE ? GetBlock(x, y + 1, z + 1) != AIR : false;
+        bool bottom = y > 0 && z < CHUNK_SIZE_MINUS_ONE ? GetBlock(x, y - 1, z + 1) != AIR : false;
+        bool left = x > 0 && z < CHUNK_SIZE_MINUS_ONE ? GetBlock(x -1, y, z + 1) != AIR : false;
+        bool right = x < CHUNK_SIZE_MINUS_ONE && z < CHUNK_SIZE_MINUS_ONE ? GetBlock(x + 1, y, z + 1) != AIR : false;
+
+        face.ambientOcclusion00 = CalculateVertexAO(
+            bottom,
+            left,
+            x > 0 && y > 0 && z < CHUNK_SIZE_MINUS_ONE ? GetBlock(x-1, y-1, z+1) != AIR : false
+        );
+        face.ambientOcclusion10 = CalculateVertexAO(
+            top,
+            left,
+            x > 0 && y < CHUNK_SIZE_MINUS_ONE && z < CHUNK_SIZE_MINUS_ONE ? GetBlock(x-1, y+1, z+1) != AIR : false
+        );
+        face.ambientOcclusion01 = CalculateVertexAO(
+            bottom,
+            right,
+            x < CHUNK_SIZE_MINUS_ONE && y > 0 && z < CHUNK_SIZE_MINUS_ONE ? GetBlock(x + 1, y - 1, z +1) != AIR : false
+        );
+        face.ambientOcclusion11 = CalculateVertexAO(
+            top,
+            right,
+            x < CHUNK_SIZE_MINUS_ONE && y < CHUNK_SIZE_MINUS_ONE && z < CHUNK_SIZE_MINUS_ONE ? GetBlock(x+1, y+1, z+1) != AIR : false
+        );
         break;
     }
     case EAST: {
         face.transparent = x < CHUNK_SIZE_MINUS_ONE ? BlockHandler::BlockData[GetBlock(x + 1, y, z)].opaque: false;
+
+        bool top = x < CHUNK_SIZE_MINUS_ONE && y < CHUNK_SIZE_MINUS_ONE ? GetBlock(x+1, y+1, z) != AIR : false;
+        bool bottom = x < CHUNK_SIZE_MINUS_ONE && y > 0 ? GetBlock(x+1, y-1, z) != AIR : false;
+        bool left = x < CHUNK_SIZE_MINUS_ONE  && z > 0 ? GetBlock(x+1, y, z - 1) != AIR : false;
+        bool right = x < CHUNK_SIZE_MINUS_ONE && z < CHUNK_SIZE_MINUS_ONE ? GetBlock(x+1, y, z + 1) != AIR : false;
+
+        face.ambientOcclusion00 = CalculateVertexAO(
+            bottom,
+            left,
+            x < CHUNK_SIZE_MINUS_ONE && y > 0 && z > 0 ? GetBlock(x+1, y-1, z-1) != AIR : false
+        );
+        face.ambientOcclusion01 = CalculateVertexAO(
+            top,
+            left,
+            x < CHUNK_SIZE_MINUS_ONE && y < CHUNK_SIZE_MINUS_ONE && z > 0 ? GetBlock(x+1, y+1, z-1) != AIR : false
+        );
+        face.ambientOcclusion10 = CalculateVertexAO(
+            bottom,
+            right,
+            x < CHUNK_SIZE_MINUS_ONE && y > 0 && z < CHUNK_SIZE_MINUS_ONE ? GetBlock(x+1, y-1, z+1) != AIR : false
+        );
+        face.ambientOcclusion11 = CalculateVertexAO(
+            top,
+            right,
+            x < CHUNK_SIZE_MINUS_ONE && y < CHUNK_SIZE_MINUS_ONE && z < CHUNK_SIZE_MINUS_ONE ? GetBlock(x+1, y+1, z+1) != AIR : false
+        );
         break;
     }
     case WEST: {
         face.transparent = x > 0 ? BlockHandler::BlockData[GetBlock(x - 1, y, z)].opaque : false;
+
+        bool top = x > 0 && y < CHUNK_SIZE_MINUS_ONE ? GetBlock(x-1, y+1, z) != AIR : false;
+        bool bottom = x > 0 && y > 0 ? GetBlock(x-1, y-1, z) != AIR : false;
+        bool left = x > 0  && z > 0 ? GetBlock(x-1, y, z - 1) != AIR : false;
+        bool right = x > 0 && z < CHUNK_SIZE_MINUS_ONE ? GetBlock(x-1, y, z + 1) != AIR : false;
+
+        face.ambientOcclusion00 = CalculateVertexAO(
+            bottom,
+            left,
+            x > 0 && y > 0 && z > 0 ? GetBlock(x-1, y-1, z-1) != AIR : false
+        );
+        face.ambientOcclusion01 = CalculateVertexAO(
+            top,
+            left,
+            x > 0 && y < CHUNK_SIZE_MINUS_ONE && z > 0 ? GetBlock(x-1, y+1, z-1) != AIR : false
+        );
+        face.ambientOcclusion10 = CalculateVertexAO(
+            bottom,
+            right,
+            x > 0 && y > 0 && z < CHUNK_SIZE_MINUS_ONE ? GetBlock(x-1, y-1, z+1) != AIR : false
+        );
+        face.ambientOcclusion11 = CalculateVertexAO(
+            top,
+            right,
+            x > 0 && y < CHUNK_SIZE_MINUS_ONE && z < CHUNK_SIZE_MINUS_ONE ? GetBlock(x-1, y+1, z+1) != AIR : false
+        );
         break;
     }
     }
@@ -283,7 +439,6 @@ void engine::Chunk::BufferData()
     m_VBO.BufferData(m_Vertices.data(), m_VertexCount * sizeof(Vertex));
     m_VBO.Unbind();
     m_Vertices.clear();
-
 }
 
 void engine::Chunk::Draw(Shader& shader)
