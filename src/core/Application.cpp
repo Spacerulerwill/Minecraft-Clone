@@ -97,11 +97,11 @@ void engine::Application::Run()
     
     m_Chunk = new Chunk(0, 0, 0);
     auto start = high_resolution_clock::now();
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 1000; i++)
         m_Chunk->CreateMesh();
     auto stop = high_resolution_clock::now();
     int microseconds_taken = duration_cast<microseconds>(stop - start).count();
-    LOG_TRACE(microseconds_taken/ 10.0f);
+    LOG_TRACE(microseconds_taken / 1000.0f);
     m_Chunk->BufferData();
 
     Shader chunkShader("res/shaders/chunk.shader");

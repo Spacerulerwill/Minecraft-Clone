@@ -55,6 +55,7 @@ namespace engine {
 
 	struct VoxelFace {
 		BlockInt type = AIR;
+		bool windingOrder;
 		bool transparent = true;
 		int ambientOcclusion00;
 		int ambientOcclusion01;
@@ -67,7 +68,8 @@ namespace engine {
 				ambientOcclusion00 == other.ambientOcclusion00 &&
 				ambientOcclusion01 == other.ambientOcclusion01 &&
 				ambientOcclusion10 == other.ambientOcclusion10 &&
-				ambientOcclusion11 == other.ambientOcclusion11;
+				ambientOcclusion11 == other.ambientOcclusion11 &&
+				windingOrder == other.windingOrder;
 		}
 
 		bool operator!=(const VoxelFace& other) {
@@ -98,10 +100,16 @@ namespace engine {
 		void TerrainGen();
 		void GreedyMesh();
 		void CreateMesh();
+
 		void BufferData();
 		void Draw(Shader& shader);
-		void SetBlock(BlockInt block, unsigned int x, unsigned int y, unsigned int z);
-		[[nodiscard]] BlockInt GetBlock(unsigned int x, unsigned int y, unsigned int z) const;
+		
+		inline void SetBlock(BlockInt block, unsigned int x, unsigned int y, unsigned int z) {
+			m_Blocks[y + (x << CHUNK_SIZE_EXP) + (z << CHUNK_SIZE_EXP_X2)] = block;
+		}
+		[[nodiscard]] inline BlockInt GetBlock(unsigned int x, unsigned int y, unsigned int z) const {
+			return m_Blocks[y + (x << CHUNK_SIZE_EXP) + (z << CHUNK_SIZE_EXP_X2)];
+		}
 	};
 }
 

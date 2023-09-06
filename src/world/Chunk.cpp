@@ -18,6 +18,7 @@ engine::Chunk::Chunk(int chunkX, int chunkY, int chunkZ): chunkX(chunkX), chunkY
     m_Model *= translate(Vec3(chunkX * CHUNK_SIZE, chunkY * CHUNK_SIZE, chunkZ * CHUNK_SIZE));
 
     memset(m_Blocks, DIRT, sizeof(BlockInt) * CHUNK_SIZE_CUBED);
+    memset(m_Blocks, GRASS, CHUNK_SIZE);
     
     VertexBufferLayout bufLayout;
 	bufLayout.AddAttribute<float>(3);
@@ -48,164 +49,157 @@ void engine::Chunk::GreedyMesh()
     int du[3] = { 0,0,0 };
     int dv[3] = { 0,0,0 };
 
-    /*
-    * This mask will contain the groups of matching voxel faces
-    * as we proceed through the chunk in 6 directions. One for each side of ac ube
-    */
     VoxelFace voxel, voxel1 = {}; // keeping track of voxels
+    bool backFace = false;
     VoxelFace null {};
-    int* texCoords = new int[12]{};
+    int* texCoords = new int[12]{0,0,0,0,0,0,0,0,0,0,0,0};
     VoxelFace* mask = new VoxelFace[CHUNK_SIZE * CHUNK_SIZE] {};
 
-    /*
-    * An unccomon application of a boolean for loop, on the first iteration backFace will be true
-    * and the second it will be false. Allows us to keep track of voxel side direction.
-    * 
-    * The boolean for loop runs twice and the inner 3 for each dimension, so iterates 6 times - 
-    * one for each face
-    */
-    for (bool backFace = true, b = false; b != backFace; backFace = backFace && b, b = !b) {
-        for (int d = 0; d < 3; d++) {
+    for (int d = 0; d < 3; d++) {
 
-            u = (d + 1) % 3;
-            v = (d + 2) % 3;
+        u = (d + 1) % 3;
+        v = (d + 2) % 3;
 
-            x[0] = 0;
-            x[1] = 0;
-            x[2] = 0;
+        x[0] = 0;
+        x[1] = 0;
+        x[2] = 0;
 
-            q[0] = 0;
-            q[1] = 0;
-            q[2] = 0;
-            q[d] = 1;
+        q[0] = 0;
+        q[1] = 0;
+        q[2] = 0;
+        q[d] = 1;
 
-            if (d == 0) { side = backFace ? WEST : EAST; }
-            else if (d == 1) { side = backFace ? BOTTOM : TOP; }
-            else if (d == 2) { side = backFace ? NORTH : SOUTH; }
+        // Move through the current dimension from front to back
+        for (x[d] = -1; x[d] < CHUNK_SIZE;) {
+            // Compute mask
+            n = 0;
+            for (x[v] = 0; x[v] < CHUNK_SIZE; x[v]++) {
+                for (x[u] = 0; x[u] < CHUNK_SIZE; x[u]++) {
+                        
+                    backFace = (x[d] < CHUNK_SIZE_MINUS_ONE ? GetBlock(x[0] + q[0],     x[1] + q[1],        x[2] + q[2]) != AIR : false);
 
-            // Move through the current dimension from front to back
-            for (x[d] = -1; x[d] < CHUNK_SIZE;) {
-                // Compute mask
-                n = 0;
-                for (x[v] = 0; x[v] < CHUNK_SIZE; x[v]++) {
-                    for (x[u] = 0; x[u] < CHUNK_SIZE; x[u]++) {
-                        voxel = (x[d] >= 0) ? GetVoxelFace(side, x[0], x[1], x[2]) : null;
-                        voxel1 = (x[d] < CHUNK_SIZE_MINUS_ONE) ? GetVoxelFace(side, x[0] + q[0], x[1] + q[1], x[2] + q[2]) : null;
+                    if (d == 0) { side = backFace ? WEST : EAST; }
+                    else if (d == 1) { side = backFace ? BOTTOM : TOP; }
+                    else if (d == 2) { side = backFace ? NORTH : SOUTH; }
+                    
+                    voxel = (x[d] >= 0) ? GetVoxelFace(side, x[0], x[1], x[2]) : null;
+                    voxel1 = (x[d] < CHUNK_SIZE_MINUS_ONE) ? GetVoxelFace(side, x[0] + q[0], x[1] + q[1], x[2] + q[2]) : null;
 
-                        mask[n++] = ((voxel != null && voxel1 != null && voxel == voxel1))
-                            ? null // TODO check
-                            : backFace ? voxel1 : voxel;
-                    }
+                    voxel.windingOrder = backFace;
+                    voxel1.windingOrder = backFace;
+
+                    mask[n++] = ((voxel != null && voxel1 != null && voxel == voxel1))
+                        ? null
+                        : backFace ? voxel1 : voxel;
                 }
+            }
 
-                x[d]++;
-                n = 0;
+            x[d]++;
+            n = 0;
 
-                for (j = 0; j < CHUNK_SIZE; j++) {
-                    for (i = 0; i < CHUNK_SIZE;) {
-                        if (mask[n] != null) {
+            for (j = 0; j < CHUNK_SIZE; j++) {
+                for (i = 0; i < CHUNK_SIZE;) {
+                    if (mask[n] != null) {
+
+                        // Compute the width of quad
+                        for (w = 1; i + w < CHUNK_SIZE && mask[n + w] != null && mask[n + w] == mask[n]; w++) {}
+
+                        // Compute the height of quad
+                        for (h = 1; j + h < CHUNK_SIZE; h++) {
+                            for (k = 0; k < w; k++) {
+                                if (mask[n + k + h * CHUNK_SIZE] == null || mask[n + k + h * CHUNK_SIZE] != mask[n]) { goto done;}
+                            }
+                        }
+                        done:
+
+                        // Check if face should be culled or not
+                        if (!mask[n].transparent) {
                             BlockDataStruct blockData = BlockHandler::BlockData[mask[n].type];
 
-                            // Compute the width of quad
-                            for (w = 1; i + w < CHUNK_SIZE && mask[n + w] != null && mask[n + w] == mask[n]; w++) {}
+                            x[u] = i;
+                            x[v] = j;
 
-                            // Compute the height of quad
-                            bool done = false;
+                            du[0] = 0;
+                            du[1] = 0;
+                            du[2] = 0;
+                            du[u] = w;
 
-                            for (h = 1; j + h < CHUNK_SIZE; h++) {
-                                for (k = 0; k < w; k++) {
-                                    if (mask[n + k + h * CHUNK_SIZE] == null || mask[n + k + h * CHUNK_SIZE] != mask[n]) { done = true; break; }
-                                }
-                                if (done) { break; }
+                            dv[0] = 0;
+                            dv[1] = 0;
+                            dv[2] = 0;
+                            dv[v] = h;
+
+                            TextureInt face;
+                            switch (d) {
+                            case 0: {
+                                face = backFace ? blockData.left_face : blockData.right_face;
+                                texCoords[0] = h;
+                                texCoords[1] = 0;
+                                texCoords[2] = h;
+                                texCoords[3] = w;
+                                texCoords[4] = 0;
+                                texCoords[5] = 0;
+                                texCoords[6] = h;
+                                texCoords[7] = w;
+                                texCoords[8] = 0;
+                                texCoords[9] = w;
+                                texCoords[10] = 0;
+                                texCoords[11] = 0;
+                                break;
                             }
-
-                            // Check if face should be culled or not
-                            if (!mask[n].transparent) {
-                                x[u] = i;
-                                x[v] = j;
-
-                                du[0] = 0;
-                                du[1] = 0;
-                                du[2] = 0;
-                                du[u] = w;
-
-                                dv[0] = 0;
-                                dv[1] = 0;
-                                dv[2] = 0;
-                                dv[v] = h;
-
-                                TextureInt face;
-                                switch (d) {
-                                case 0: {
-                                    face = backFace ? blockData.left_face : blockData.right_face;
-                                    texCoords[0] = h;
-                                    texCoords[1] = 0;
-                                    texCoords[2] = h;
-                                    texCoords[3] = w;
-                                    texCoords[4] = 0;
-                                    texCoords[5] = 0;
-                                    texCoords[6] = h;
-                                    texCoords[7] = w;
-                                    texCoords[8] = 0;
-                                    texCoords[9] = w;
-                                    texCoords[10] = 0;
-                                    texCoords[11] = 0;
-                                    break;
-                                }
-                                case 1: {
-                                    face = backFace ? blockData.bottom_face : blockData.top_face;
-                                    texCoords[0] = h;
-                                    texCoords[1] = w;
-                                    texCoords[2] = h;
-                                    texCoords[3] = 0;
-                                    texCoords[4] = 0;
-                                    texCoords[5] = w;
-                                    texCoords[6] = h;
-                                    texCoords[7] = 0;
-                                    texCoords[8] = 0;
-                                    texCoords[9] = 0;
-                                    texCoords[10] = 0;
-                                    texCoords[11] = w;
-                                    break;
-                                }
-                                case 2: {
-                                    face = backFace ? blockData.back_face : blockData.front_face;
-                                    texCoords[0] = w;
-                                    texCoords[1] = 0;
-                                    texCoords[2] = 0;
-                                    texCoords[3] = 0;
-                                    texCoords[4] = w;
-                                    texCoords[5] = h;
-                                    texCoords[6] = 0;
-                                    texCoords[7] = 0;
-                                    texCoords[8] = 0;
-                                    texCoords[9] = h;
-                                    texCoords[10] = w;
-                                    texCoords[11] = h;
-                                    break;
-                                }
-                                }    
-
-                                int topLeft[3] = {x[0] + du[0], x[1] + du[1], x[2] + du[2]};
-                                int topRight[3] = {topLeft[0] + dv[0], topLeft[1] + dv[1], topLeft[2] + dv[2]};
-                                int bottomRight[3] = {x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]};
-                                // if backface we add quad with counter clockwise winding order
-                                // otherwise we use clockwise
-                                AddQuadToMesh(x, topLeft, topRight, bottomRight, texCoords, mask[n].ambientOcclusion00, mask[n].ambientOcclusion01, mask[n].ambientOcclusion10, mask[n].ambientOcclusion11, face,backFace);                            
-                            } 
-
-                            // Zero out mask
-                            for (l = 0; l < h; ++l) {
-                                for (k = 0; k < w; ++k) { mask[n + k + l * CHUNK_SIZE] = null; }
+                            case 1: {
+                                face = backFace ? blockData.bottom_face : blockData.top_face;
+                                texCoords[0] = h;
+                                texCoords[1] = w;
+                                texCoords[2] = h;
+                                texCoords[3] = 0;
+                                texCoords[4] = 0;
+                                texCoords[5] = w;
+                                texCoords[6] = h;
+                                texCoords[7] = 0;
+                                texCoords[8] = 0;
+                                texCoords[9] = 0;
+                                texCoords[10] = 0;
+                                texCoords[11] = w;
+                                break;
                             }
-                            // Increment counters and continue
-                            i += w;
-                            n += w;
+                            case 2: {
+                                face = backFace ? blockData.back_face : blockData.front_face;
+                                texCoords[0] = w;
+                                texCoords[1] = 0;
+                                texCoords[2] = 0;
+                                texCoords[3] = 0;
+                                texCoords[4] = w;
+                                texCoords[5] = h;
+                                texCoords[6] = 0;
+                                texCoords[7] = 0;
+                                texCoords[8] = 0;
+                                texCoords[9] = h;
+                                texCoords[10] = w;
+                                texCoords[11] = h;
+                                break;
+                            }
+                            }   
+                            int topLeft[3] = {x[0] + du[0], x[1] + du[1], x[2] + du[2]};
+                            int topRight[3] = {topLeft[0] + dv[0], topLeft[1] + dv[1], topLeft[2] + dv[2]};
+                            int bottomRight[3] = {x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]};
+
+                            // if backface we add quad with counter clockwise winding order
+                            // otherwise we use clockwise
+                            AddQuadToMesh(x, topLeft, topRight, bottomRight, texCoords, mask[n].ambientOcclusion00, mask[n].ambientOcclusion01, mask[n].ambientOcclusion10, mask[n].ambientOcclusion11, face,mask[n].windingOrder);                            
+                        } 
+
+                        // Zero out mask
+                        for (l = 0; l < h; ++l) {
+                            for (k = 0; k < w; ++k) { mask[n + k + l * CHUNK_SIZE] = null; }
                         }
-                        else {
-                            i++;
-                            n++;
-                        }
+                        // Increment counters and continue
+                        i += w;
+                        n += w;
+                    }
+                    else {
+                        i++;
+                        n++;
                     }
                 }
             }
@@ -447,16 +441,6 @@ void engine::Chunk::Draw(Shader& shader)
     shader.setMat4("model", m_Model);
     glDrawArrays(GL_TRIANGLES, 0, m_VertexCount);
 
-}
-
-void engine::Chunk::SetBlock(BlockInt block, unsigned int x, unsigned int y, unsigned int z)
-{
-    m_Blocks[y + (x << CHUNK_SIZE_EXP) + (z << CHUNK_SIZE_EXP_X2)] = block;
-}
-
-engine::BlockInt engine::Chunk::GetBlock(unsigned int x, unsigned int y, unsigned int z) const
-{
-    return m_Blocks[y + (x << CHUNK_SIZE_EXP) + (z << CHUNK_SIZE_EXP_X2)];
 }
 
 /*

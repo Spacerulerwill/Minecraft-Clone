@@ -37,7 +37,7 @@ in float AO;
 out vec4 FragColor;
 
 const float errorMargin = 0.0001;
-const float AO_MIN = 0.7;
+const float AO_MIN = 0.3;
 const float AO_PART = (1.0 - AO_MIN) / 3.0;
 
 void main() {
