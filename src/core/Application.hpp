@@ -18,17 +18,15 @@ License: MIT
 #include <unordered_map>
 
 namespace engine {
-
-	struct BlockRaycastResult {
-		int faceEntered;
-		BlockInt blockHit;
-		Vec3 location;
-	};
+	constexpr int CHUNKS_X = 5;
+	constexpr int CHUNKS_Y = 5;
 
 	class Application {
 	private:
 		Application();
 		static std::unique_ptr<Application> s_Instance;
+
+		Chunk* m_Chunks[CHUNKS_X * CHUNKS_Y] {nullptr};
 
 		void ResourceCleanup();
 		void ProcessInput(float deltaTime);

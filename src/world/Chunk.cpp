@@ -27,7 +27,7 @@ inline const int CTZ(uint64_t x) {
 
 engine::Chunk::Chunk(int chunkX, int chunkY, int chunkZ): chunkX(chunkX), chunkY(chunkY), chunkZ(chunkZ)
 {
-    m_Model *= translate(Vec3(chunkX * CS_P, chunkY * CS_P, chunkZ * CS_P));
+    m_Model *= translate(Vec3(chunkX * CS, chunkY * CS, chunkZ * CS));
     memset(m_Voxels, AIR, sizeof(BlockInt) * CS_P3);
 
     VertexBufferLayout bufLayout;
@@ -48,40 +48,31 @@ void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin)
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<> distrib(1, 100);
-  const unsigned int water_level = 25;
+  const unsigned int water_level = 32;
   
   for (int x = 1; x < CS_P_MINUS_ONE; x++) {
       for (int z = 1; z < CS_P_MINUS_ONE; z++){
-          float heightMultiplayer = perlin.octave2D_01(x * 0.01 , z * 0.01, 4, 0.5);
-          int height = heightMultiplayer * CS;
-          int stone_max_height = height - 4;
-          int dirt_max_height = height - 1;
-          
-          for (int y = 1; y < stone_max_height; y++) {
+          float heightMultiplayer = perlin.octave2D_01((chunkX * CS + x) * 0.0125 , (chunkZ * CS + z) * 0.0125, 4, 0.5);
+          int height = 1 + (heightMultiplayer * CS_MINUS_ONE);
+
+          int dirt_height = height - 1;
+          int dirt_to_place = dirt_height < 3 ? dirt_height : 3;
+          for (int y = height - dirt_to_place; y < height; y++){
+            SetBlock(DIRT, x, y, z);
+          }
+          for (int y = 1; y <= dirt_height - dirt_to_place; y++){
             SetBlock(STONE, x, y, z);
           }
-
-          for (int y = stone_max_height; y < dirt_max_height; y++) {
-            SetBlock(DIRT,x,y,z);
-          }
-
           
-          int waterBlocks = water_level - height;
-          if (waterBlocks > 0) {
-              SetBlock(DIRT,x, height-1, z);
-            for (int y = height; y < water_level; y++){
-              SetBlock(WATER, x, y, z);
+          if (height < water_level - 1) {
+            SetBlock(DIRT, x, height, z);
+            for (int y = height + 1; y < water_level; y++){
+              SetBlock(WATER,x,y,z);
             }
-          }else {
-            SetBlock(GRASS,x, height-1, z);
-            
-            
-            if (distrib(gen) == 1) {
-              for (int y = 0; y < 5; y++){ 
-                SetBlock(OAK_LOG, x, height + y, z);
-              }         
-            }
+          } else {
+            SetBlock(GRASS, x, height, z);
           }
+        
       }
     }
 }

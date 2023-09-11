@@ -97,16 +97,21 @@ void engine::Application::Run()
     // Initialise Block data from .yml files and create a demo chunk
     BlockHandler::InitBlocks();
 
-    const siv::PerlinNoise::seed_type seed = time(NULL);
-    siv::PerlinNoise perlin {seed};
-    
-    m_Chunk = new Chunk(0, 0, 0);
-    m_Chunk->TerrainGen(perlin);
-    m_Chunk->CreateMesh();
-    m_Chunk->BufferData();
-
     Shader chunkShader("res/shaders/chunk.shader");
     Shader waterShader("res/shaders/water.shader");
+
+    const siv::PerlinNoise::seed_type seed = time(NULL);
+    siv::PerlinNoise perlin {seed};
+        
+    for (int x = 0; x < CHUNKS_X; x++){
+        for (int z = 0; z < CHUNKS_Y; z++){
+            Chunk* chunk = new Chunk(x, 0, z);
+            chunk->TerrainGen(perlin);
+            chunk->CreateMesh();
+            chunk->BufferData();
+            m_Chunks[x * CHUNKS_X + z] = chunk;
+        }
+    }
 
     // Our skybox and texture atlas use texture unit 0, in different texture types so this is fine
     glActiveTexture(GL_TEXTURE0);
@@ -179,14 +184,18 @@ void engine::Application::Run()
         chunkShader.SetInt("tex_array", 0);
      
         glActiveTexture(GL_TEXTURE0);
-        m_Chunk->Draw(chunkShader);
+        for (int i = 0; i < CHUNKS_X * CHUNKS_Y; i++){
+            m_Chunks[i]->Draw(chunkShader);
+        }
 
         waterShader.Bind();
-        chunkShader.setMat4("projection", perspective_matrix);
-        chunkShader.setMat4("view", view_matrix);
-        chunkShader.SetInt("tex_array", 0);
-        m_Chunk->DrawWater(waterShader);
-        
+        waterShader.setMat4("projection", perspective_matrix);
+        waterShader.setMat4("view", view_matrix);
+        waterShader.SetInt("tex_array", 0);
+        for (int i = 0; i < CHUNKS_X * CHUNKS_Y; i++){
+            m_Chunks[i]->DrawWater(waterShader);
+        }        
+
         // Render UI
         crosshairShader.Bind();
         crosshairVAO.Bind();
@@ -236,6 +245,9 @@ void engine::Application::GLFWFramebufferResizeCallback(GLFWwindow* window, int 
 void engine::Application::ResourceCleanup()
 {
     delete p_Framebuffer;
+    for (int i =0; i < CHUNKS_X * CHUNKS_Y; i++){
+        delete m_Chunks[i];
+    }
 	Window::Terminate();
 	glfwTerminate();
 }
