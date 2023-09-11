@@ -145,6 +145,8 @@ void engine::Application::Run()
     VertexArray crosshairVAO;
     crosshairVAO.AddBuffer(crosshairVBO, bufferLayout2);
 
+    Vec3 lightDir(1.0f, 0.0f, 0.0f);
+
     // Main game loop
 	while (!glfwWindowShouldClose(Window::GetWindow())) {
 
@@ -169,6 +171,9 @@ void engine::Application::Run()
         Mat4 perspective_matrix = perspective(radians(m_Camera.m_FOV), static_cast<float>(Window::SCREEN_WIDTH) / Window::SCREEN_HEIGHT, 0.1f, 100.0f);
         Mat4 view_matrix = m_Camera.GetViewMatrix();
 
+        lightDir.x  = cos(radians(1)) * lightDir.x - sin(radians(1)) * lightDir.y;
+        lightDir.y = sin(radians(1)) * lightDir.x + cos(radians(1)) * lightDir.y;
+
         // Draw the skybox
         glDepthMask(GL_FALSE);
         Mat4 skybox_view_matrix = engine::translationRemoved(view_matrix);
@@ -179,6 +184,7 @@ void engine::Application::Run()
         glDepthMask(GL_TRUE);
         // Draw the chunks
         chunkShader.Bind();
+        chunkShader.setVec3("lightDir", lightDir);
         chunkShader.setMat4("projection", perspective_matrix);
         chunkShader.setMat4("view", view_matrix);
         chunkShader.SetInt("tex_array", 0);

@@ -93,6 +93,11 @@ void engine::Shader::setIVec3(const std::string& name, int x, int y, int z)
     glUniform3i(GetLocation(name), x, y, z);
 }
 
+void engine::Shader::setVec3(const std::string& name, const engine::Vec3& vec) {
+    glUniform3f(GetLocation(name), vec.x, vec.y, vec.z);
+}
+
+
 void engine::Shader::SetInt(const std::string& name, int val)
 {
     glUniform1i(GetLocation(name), val);
