@@ -33,13 +33,6 @@ void engine::Camera::ProcessKeyboard(CameraMovement direction, float deltaTime, 
         directionMultiplier = m_Right;
 
     m_Position += directionMultiplier * velocity;
-    engine::Vec3 voxel = m_Position * INV_BLOCK_SCALE;
-    if (voxel.x > 0 && voxel.x < CHUNK_SIZE && voxel.y > 0 && voxel.y < CHUNK_SIZE && voxel.z > 0 && voxel.z < CHUNK_SIZE) {
-        BlockInt block = chunk->GetBlock(voxel.x, voxel.y, voxel.z);
-        if (block != AIR) {
-            m_Position -= directionMultiplier * velocity;
-        }
-    }
 }
 
 void engine::Camera::ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch)

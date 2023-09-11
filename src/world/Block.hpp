@@ -17,6 +17,7 @@ namespace engine {
 
 	enum Block : BlockInt {
 		AIR,
+		WATER,
 		BEDROCK,
 		DIRT,
 		COBBLE,
@@ -27,6 +28,8 @@ namespace engine {
 		CHERRY_LOG,
 		GRASS,
 		TNT,
+		OAK_LOG,
+		OAK_LEAVES,
 		NUM_BLOCKS
 	};
 

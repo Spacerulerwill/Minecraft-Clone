@@ -38,8 +38,6 @@ namespace engine {
 		BlockInt m_SelectedBlock = GRASS;
 		Chunk* m_Chunk = nullptr;
 
-		[[nodiscard]] BlockRaycastResult BlockRaycast(const Vec3& start, const Vec3& direction, float distance) const;
-
 		bool m_Wireframe = false;
 		bool firstMouse = true;
 		float lastX = 0.0f;

@@ -43,7 +43,7 @@ void main()
 #version 450 core
 
 uniform sampler2DArray tex_array;
-
+uniform vec3 waterColor = vec3(0.0,0.0,0.5);
 
 in vec3 FragNormal;
 in vec3 TexCoords;
@@ -51,10 +51,6 @@ in vec4 VertexPos;
 out vec4 FragColor;
 
 void main() {
-	vec4 texColor = texture(tex_array, TexCoords);
-	
-	if (texColor.a < 0.001)
-		discard;
-	
-	FragColor = texColor;
+	vec4 texColor = texture(tex_array, TexCoords);		
+	FragColor = texColor * vec4(waterColor, 1.0);
 }

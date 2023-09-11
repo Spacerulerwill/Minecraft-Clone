@@ -43,6 +43,7 @@ void engine::Application::Init()
 
 void engine::Application::Run()
 {
+    srand(time(NULL));
     // Utilities setup
 	Log::Init();
 
@@ -65,6 +66,7 @@ void engine::Application::Run()
 	}
 
     glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
@@ -94,17 +96,17 @@ void engine::Application::Run()
 
     // Initialise Block data from .yml files and create a demo chunk
     BlockHandler::InitBlocks();
+
+    const siv::PerlinNoise::seed_type seed = time(NULL);
+    siv::PerlinNoise perlin {seed};
     
     m_Chunk = new Chunk(0, 0, 0);
-    auto start = high_resolution_clock::now();
-    for (int i = 0; i < 1000; i++)
-        m_Chunk->CreateMesh();
-    auto stop = high_resolution_clock::now();
-    int microseconds_taken = duration_cast<microseconds>(stop - start).count();
-    LOG_TRACE(microseconds_taken / 1000.0f);
+    m_Chunk->TerrainGen(perlin);
+    m_Chunk->CreateMesh();
     m_Chunk->BufferData();
 
     Shader chunkShader("res/shaders/chunk.shader");
+    Shader waterShader("res/shaders/water.shader");
 
     // Our skybox and texture atlas use texture unit 0, in different texture types so this is fine
     glActiveTexture(GL_TEXTURE0);
@@ -116,7 +118,7 @@ void engine::Application::Run()
     Shader crosshairShader("res/shaders/crosshair.shader");
     unsigned int crosshair = loadTexture("res/textures/ui/crosshair.png");
 
-    int crosshair_size = 64;
+    int crosshair_size = 32;
     float bottom_corner_x = (Window::SCREEN_WIDTH / 2.0f) - crosshair_size / 2.0f;
     float bottom_corner_y = (Window::SCREEN_HEIGHT / 2.0f) - crosshair_size / 2.0f;
 
@@ -162,26 +164,6 @@ void engine::Application::Run()
         Mat4 perspective_matrix = perspective(radians(m_Camera.m_FOV), static_cast<float>(Window::SCREEN_WIDTH) / Window::SCREEN_HEIGHT, 0.1f, 100.0f);
         Mat4 view_matrix = m_Camera.GetViewMatrix();
 
-        // Draw the chunks
-        glDepthMask(GL_TRUE);
-        chunkShader.Bind();
-        chunkShader.setMat4("projection", perspective_matrix);
-        chunkShader.setMat4("view", view_matrix);
-        chunkShader.SetInt("tex_array", 0);
-        BlockRaycastResult result = BlockRaycast(m_Camera.m_Position, m_Camera.m_Front, 3.0f);
-        chunkShader.SetInt("drawBlockHighlight", result.blockHit != AIR);
-        if (result.blockHit != AIR) {
-            chunkShader.setIVec3(
-                "blockPos",
-                static_cast<int>(result.location.x),
-                static_cast<int>(result.location.y),
-                static_cast<int>(result.location.z)
-            );
-        } 
-     
-        glActiveTexture(GL_TEXTURE0);
-        m_Chunk->Draw(chunkShader);
-
         // Draw the skybox
         glDepthMask(GL_FALSE);
         Mat4 skybox_view_matrix = engine::translationRemoved(view_matrix);
@@ -189,6 +171,22 @@ void engine::Application::Run()
         glActiveTexture(GL_TEXTURE0);
         skybox.Draw(perspective_matrix, skybox_view_matrix);
 
+        glDepthMask(GL_TRUE);
+        // Draw the chunks
+        chunkShader.Bind();
+        chunkShader.setMat4("projection", perspective_matrix);
+        chunkShader.setMat4("view", view_matrix);
+        chunkShader.SetInt("tex_array", 0);
+     
+        glActiveTexture(GL_TEXTURE0);
+        m_Chunk->Draw(chunkShader);
+
+        waterShader.Bind();
+        chunkShader.setMat4("projection", perspective_matrix);
+        chunkShader.setMat4("view", view_matrix);
+        chunkShader.SetInt("tex_array", 0);
+        m_Chunk->DrawWater(waterShader);
+        
         // Render UI
         crosshairShader.Bind();
         crosshairVAO.Bind();
@@ -199,8 +197,8 @@ void engine::Application::Run()
         glActiveTexture(GL_TEXTURE1);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
+
         // Unbind framebuffer and render framebuffer texture to quad
-        glDepthMask(GL_TRUE);
         p_Framebuffer->Unbind();
 
         if(m_Wireframe)
@@ -224,99 +222,6 @@ void engine::Application::Run()
 std::unique_ptr<engine::Application>& engine::Application::GetInstance()
 {
     return s_Instance;
-}
-
-engine::BlockRaycastResult engine::Application::BlockRaycast(const Vec3& start, const Vec3& direction, float distance) const
-{
-    float tMaxX, tMaxY, tMaxZ, tDeltaX, tDeltaY, tDeltaZ;
-    int int_voxel_x, int_voxel_y, int_voxel_z;
-
-    Vec3 _start = start * INV_BLOCK_SCALE;
-    Vec3 end = (start + (direction * distance)) * INV_BLOCK_SCALE;
-
-    int dx = sign(end.x - _start.x);
-    if (dx != 0) tDeltaX = fmin(dx / (end.x - _start.x), 16777215.0f); else tDeltaX = 16777215.0f;
-    if (dx > 0) tMaxX = tDeltaX * fract1(_start.x); else tMaxX = tDeltaX * fract(_start.x);
-
-    int dy = sign(end.y - _start.y);
-    if (dy != 0) tDeltaY = fmin(dy / (end.y - _start.y), 16777215.0f); else tDeltaY = 16777215.0f;
-    if (dy > 0) tMaxY = tDeltaY * fract1(_start.y); else tMaxY = tDeltaY * fract(_start.y);
-
-    int dz = sign(end.z - _start.z);
-    if (dz != 0) tDeltaZ = fmin(dz / (end.z - _start.z), 16777215.0f); else tDeltaZ = 16777215.0f;
-    if (dz > 0) tMaxZ = tDeltaZ * fract1(_start.z); else tMaxZ = tDeltaZ * fract(_start.z);
-
-
-    Vec3 voxel(_start.x, _start.y, _start.z);
-
-    int_voxel_x = static_cast<int>(voxel.x);
-    int_voxel_y = static_cast<int>(voxel.y);
-    int_voxel_z = static_cast<int>(voxel.z);
-
-    // first voxel player is in
-    if (!(int_voxel_x < 0 || int_voxel_x > CHUNK_SIZE_MINUS_ONE || int_voxel_y < 0 || int_voxel_y > CHUNK_SIZE_MINUS_ONE || int_voxel_z < 0 || int_voxel_z > CHUNK_SIZE_MINUS_ONE)) {
-
-        BlockInt block = m_Chunk->GetBlock(int_voxel_x, int_voxel_y, int_voxel_z);
-        if (block != AIR) {
-            return {
-                0,
-                block,
-                voxel
-            };
-        }
-    }
-
-    int face_entered;
-    while (true) {
-
-        if (tMaxX < tMaxY) {
-            if (tMaxX < tMaxZ) {
-                voxel.x += dx;
-                face_entered = 2 * -dx;
-                tMaxX += tDeltaX;
-            }
-            else {
-                voxel.z += dz;
-                face_entered = 3 * -dz;
-                tMaxZ += tDeltaZ;
-            }
-        }
-        else {
-            if (tMaxY < tMaxZ) {
-                voxel.y += dy;
-                face_entered = 1 * -dy;
-                tMaxY += tDeltaY;
-            }
-            else {
-                voxel.z += dz;
-                face_entered = 3 * -dz;
-                tMaxZ += tDeltaZ;
-            }
-        }
-        if (tMaxX >= 1 && tMaxY >= 1 && tMaxZ >= 1) {
-            return {
-                face_entered,
-                AIR,
-                voxel
-            };
-        };
-
-        int_voxel_x = static_cast<int>(voxel.x);
-        int_voxel_y = static_cast<int>(voxel.y);
-        int_voxel_z = static_cast<int>(voxel.z);
-
-        if (!(int_voxel_x < 0 || int_voxel_x > CHUNK_SIZE_MINUS_ONE || int_voxel_y < 0 || int_voxel_y > CHUNK_SIZE_MINUS_ONE || int_voxel_z < 0 || int_voxel_z > CHUNK_SIZE_MINUS_ONE)) {
-
-            BlockInt block = m_Chunk->GetBlock(int_voxel_x, int_voxel_y, int_voxel_z);
-            if (block != AIR) {
-                return {
-                    face_entered,
-                    block,
-                    voxel
-                };
-            }
-        }
-    }
 }
 
 void engine::Application::GLFWFramebufferResizeCallback(GLFWwindow* window, int width, int height)
@@ -382,66 +287,7 @@ void engine::Application::GLFWScrollCallback(GLFWwindow* window, double xoffset,
 
 void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-    if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS) {
-        BlockRaycastResult result = BlockRaycast(m_Camera.m_Position, m_Camera.m_Front, 3);
-
-        if (result.blockHit == AIR)
-            return;
-
-        m_Chunk->SetBlock(AIR, static_cast<int>(result.location.x), static_cast<int>(result.location.y), static_cast<int>(result.location.z));
-
-        BlockDataStruct data = BlockHandler::BlockData[result.blockHit];
-        MaterialDataStruct material = BlockHandler::MaterialData[data.material];
-        MaterialInt randomIndex = rand() % material.breakSounds.size();
-
-        m_Chunk->CreateMesh();
-        m_Chunk->BufferData();
-    }
-
-    if (button == GLFW_MOUSE_BUTTON_2 && action == GLFW_PRESS) {
-        BlockRaycastResult hit = BlockRaycast(m_Camera.m_Position, m_Camera.m_Front, 3);
-
-        if (hit.blockHit == AIR)
-            return;
-
-        int voxelX = static_cast<int>(hit.location.x);
-        int voxelY = static_cast<int>(hit.location.y);
-        int voxelZ = static_cast<int>(hit.location.z);
-
-        BlockDataStruct data = BlockHandler::BlockData[m_SelectedBlock];
-        MaterialDataStruct material = BlockHandler::MaterialData[data.material];
-        MaterialInt randomIndex = rand() % material.placeSounds.size();
-
-        switch (hit.faceEntered) {
-        case 1: {
-            m_Chunk->SetBlock(m_SelectedBlock, voxelX, voxelY + 1, voxelZ);
-            break;
-        }
-        case -1: {
-            m_Chunk->SetBlock(m_SelectedBlock, voxelX, voxelY - 1, voxelZ);
-            break;
-        }
-        case 2: {
-            m_Chunk->SetBlock(m_SelectedBlock, voxelX+1, voxelY, voxelZ);
-            break;
-        }
-        case -2: {
-            m_Chunk->SetBlock(m_SelectedBlock, voxelX-1, voxelY, voxelZ);
-            break;
-        }
-        case 3: {
-            m_Chunk->SetBlock(m_SelectedBlock, voxelX, voxelY, voxelZ+1);
-            break;
-        }
-        case -3: {
-            m_Chunk->SetBlock(m_SelectedBlock, voxelX, voxelY, voxelZ-1);
-            break;
-        }
-        }
-
-        m_Chunk->CreateMesh();
-        m_Chunk->BufferData();
-    }
+    
 }
        
 void engine::Application::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)

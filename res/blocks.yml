@@ -2,6 +2,10 @@ air:
   opaque: false
   unique_faces: 1
   material: 0
+water:
+  opaque: false
+  unique_faces: 1
+  material: 2
 bedrock:
   opaque: true
   unique_faces: 1
@@ -41,4 +45,12 @@ grass:
 tnt:
   opaque: true
   unique_faces: 3
+  material: 5
+oak_log:
+  opaque: true
+  unique_faces: 2
+  material: 3
+oak_leaves:
+  opaque: false
+  unique_faces: 1
   material: 5

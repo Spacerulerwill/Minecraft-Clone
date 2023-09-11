@@ -45,3 +45,5 @@ _deps
 
 .vscode/
 [Bb][Uu][Ii][Ll][Dd]/
+
+__pycache__/
