@@ -95,7 +95,7 @@ void engine::BlockHandler::InitBlocks() {
 			break;
 		}
 		}
-
+		blockData.model = it->second["model"].as<ModelInt>();
 		BlockData[block_count] = blockData;
 		face_index += uniqueFacesCount;
 		block_count++;

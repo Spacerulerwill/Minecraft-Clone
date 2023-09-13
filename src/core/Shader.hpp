@@ -40,6 +40,7 @@ namespace engine {
         unsigned int CreateShader(std::string& vertex_source, std::string& fragmement_source);
         void setMat4(const std::string& name, const Mat4& mat);
         void setIVec3(const std::string& name, int x, int y, int z);
+        void setFloat(const std::string& name, float x);
         void setVec3(const std::string& name, const Vec3& vec);
         void SetInt(const std::string& name, int val);
 

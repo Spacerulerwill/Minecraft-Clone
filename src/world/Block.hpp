@@ -14,6 +14,7 @@ namespace engine {
 	typedef uint8_t BlockInt;
 	typedef uint8_t MaterialInt;
 	typedef uint8_t TextureInt;
+	typedef uint8_t ModelInt;
 
 	enum Block : BlockInt {
 		AIR,
@@ -30,19 +31,8 @@ namespace engine {
 		TNT,
 		OAK_LOG,
 		OAK_LEAVES,
+		ROSE,
 		NUM_BLOCKS
-	};
-
-	struct BlockDataStruct {
-		bool opaque;
-		uint8_t unique_faces;
-		MaterialInt material;
-		TextureInt top_face;
-		TextureInt bottom_face;
-		TextureInt left_face;
-		TextureInt right_face;
-		TextureInt front_face;
-		TextureInt back_face;
 	};
 
 	enum Material : MaterialInt {
@@ -67,6 +57,24 @@ namespace engine {
 		"wood",
 		"glass",
 		"grass"
+	};
+
+	enum BlockModel: uint8_t {
+		CUBE,
+		CROSS
+	};
+
+	struct BlockDataStruct {
+		bool opaque;
+		uint8_t unique_faces;
+		MaterialInt material;
+		TextureInt top_face;
+		TextureInt bottom_face;
+		TextureInt left_face;
+		TextureInt right_face;
+		TextureInt front_face;
+		TextureInt back_face;
+		ModelInt model;
 	};
 
 	struct BlockHandler {

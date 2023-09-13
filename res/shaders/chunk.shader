@@ -52,25 +52,11 @@ in vec3 TexCoords;
 in vec4 VertexPos;
 out vec4 FragColor;
 
-uniform vec3 lightDir;
-
-float ambientStrength = 0.25;
-float diffuseStrength = 1.0;
-
 void main() {
 	vec4 texColor = texture(tex_array, TexCoords);
 	if (texColor.a < 0.001)
 		discard;
 
-	// ambient light
-	vec3 ambient = ambientStrength * texColor.rgb;
 
-	// directional lighting
-	vec3 norm = normalize(FragNormal);
-	vec3 dir = normalize(-lightDir);
-    float diff = max(dot(norm, dir), 0.0);
-	vec3 diffuse = diffuseStrength * diff * texColor.rgb;  
-	
-	vec3 result = ambient + diffuse;
-	FragColor = vec4(result, 1.0);
+	FragColor = texColor;
 }

@@ -11,9 +11,14 @@ License: MIT
 namespace engine {
 	constexpr float PI = 3.14159265358979323846f;
 	constexpr float PI_OVER_180 = PI / 180.0f;
+	constexpr float ONE_EIGHTY_OVER_PI = 180.0f / PI;
 
 	inline float radians(float theta) {
 		return theta * PI_OVER_180;
+	}
+
+	inline float degrees(float theta) {
+		return theta * ONE_EIGHTY_OVER_PI;
 	}
 
 	template<typename T>

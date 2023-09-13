@@ -71,6 +71,7 @@ namespace engine {
 		void TerrainGen(const siv::PerlinNoise& perlin);
 		void GreedyTranslucent();
 		void GreedyOpaque();
+		void MeshCustomModelBlocks();
 		void CreateMesh();
 
 		void BufferData();

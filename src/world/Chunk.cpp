@@ -71,6 +71,7 @@ void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin)
             }
           } else {
             SetBlock(GRASS, x, height, z);
+            SetBlock(ROSE, x, height+1, z);
           }
         
       }
@@ -90,6 +91,7 @@ void engine::Chunk::CreateMesh()
     
     GreedyTranslucent();
     GreedyOpaque();
+    MeshCustomModelBlocks();
 
     m_VertexCount = m_Vertices.size();
     m_WaterVertexCount = m_WaterVertices.size();
@@ -105,7 +107,7 @@ void engine::Chunk::GreedyTranslucent() {
     for (int x = 0; x < CS_P; x++) {
       uint64_t zb = 0;
       for (int z = 0; z < CS_P; z++) {
-        if (SolidCheck(m_Voxels[index])) {
+        if (SolidCheck(m_Voxels[index]) && BlockHandler::BlockData[m_Voxels[index]].model == CUBE) {
           axis_cols[x + (z * CS_P)] |= 1ULL << y;
           axis_cols[z + (y * CS_P) + (CS_P2)] |= 1ULL << x;
           zb |= 1ULL << z;
@@ -189,7 +191,7 @@ void engine::Chunk::GreedyTranslucent() {
           merged_forward[(right * CS_P) + bit_pos] = 0;
           merged_right[bit_pos] = 0;
 
-          if (blockData.opaque) {
+          if (blockData.opaque || blockData.model != CUBE) {
             continue;
           }
 
@@ -247,6 +249,7 @@ void engine::Chunk::GreedyTranslucent() {
           }
           InsertQuad(type == WATER, v1, v2, v3, v4);
         }
+        
       }
     }
   }
@@ -262,7 +265,8 @@ void engine::Chunk::GreedyOpaque() {
     for (int x = 0; x < CS_P; x++) {
       uint64_t zb = 0;
       for (int z = 0; z < CS_P; z++) {
-        if (BlockHandler::BlockData[m_Voxels[index]].opaque) {
+        BlockDataStruct blockData = BlockHandler::BlockData[m_Voxels[index]];
+        if (blockData.opaque && blockData.model == CUBE) {
           axis_cols[x + (z * CS_P)] |= 1ULL << y;
           axis_cols[z + (y * CS_P) + (CS_P2)] |= 1ULL << x;
           zb |= 1ULL << z;
@@ -408,6 +412,9 @@ void engine::Chunk::GreedyOpaque() {
   }
 }
 
+void engine::Chunk::MeshCustomModelBlocks() {
+ 
+}
 
 void engine::Chunk::BufferData()
 {
