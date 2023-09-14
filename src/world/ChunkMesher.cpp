@@ -356,8 +356,25 @@ void engine::GreedyOpaque(std::vector<engine::ChunkVertex>& vertices, const engi
   }
 }
 
-void engine::MeshCustomModelBlocks(std::vector<engine::ChunkVertex>& vertices, const engine::BlockInt* voxels) {
-
+void engine::MeshCustomModelBlocks(std::vector<float>& vertices, const engine::BlockInt* voxels) {
+    for (int x = 1; x < CS_P_MINUS_ONE; x++){
+        for (int y = 1; y < CS_P_MINUS_ONE; y++) {
+            for (int z =1; z < CS_P_MINUS_ONE; z++) {
+                BlockDataStruct blockData = BlockData[voxels[z + (x << CHUNK_SIZE_EXP) + (y << CHUNK_SIZE_EXP_X2)]];
+                if (blockData.model != CUBE) {
+                    BlockModelStruct modelData = BlockModelData[blockData.model];
+                    std::vector<float> modelVerts(modelData.begin, modelData.end);
+                    for (int i = 0; i < modelVerts.size() - 1; i += 6) {
+                        modelVerts[i] += x-1;
+                        modelVerts[i+1] += y-1;
+                        modelVerts[i+2] += z-1;
+                        modelVerts[i+5] = blockData.top_face;
+                    }
+                    vertices.insert(vertices.end(), modelVerts.begin(), modelVerts.end());
+                }
+            }
+        }
+    }
 }
 
 /*

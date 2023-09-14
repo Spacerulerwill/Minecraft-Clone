@@ -32,6 +32,7 @@ namespace engine {
 		OAK_LOG,
 		OAK_LEAVES,
 		ROSE,
+        TALL_GRASS,
 		NUM_BLOCKS
 	};
 
@@ -57,8 +58,8 @@ namespace engine {
 	};
 
 	struct BlockModelStruct {
-		std::vector<float>::iterator begin;
-		std::vector<float>::iterator end;
+		float* begin = nullptr;
+		float* end = nullptr;
 	};
 
 	struct BlockDataStruct {

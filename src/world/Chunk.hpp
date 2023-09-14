@@ -34,6 +34,7 @@ namespace engine {
 		int chunkX = 0;
 		int chunkY = 0;
 		int chunkZ = 0;
+
 		BlockInt* m_Voxels = new BlockInt[CS_P3];
 
 		VertexBuffer m_VBO;
@@ -46,16 +47,23 @@ namespace engine {
 		std::vector<ChunkVertex> m_WaterVertices;
 		size_t m_WaterVertexCount = 0;
 
+        VertexBuffer m_CustomModelVBO;
+		VertexArray m_CustomModelVAO;
+		std::vector<float> m_CustomModelVertices;
+		size_t m_CustomModelVertexCount = 0;
+
 		Mat4 m_Model = scale(Vec3(BLOCK_SCALE));
 	public:
 		Chunk(int chunkX, int chunkY, int chunkZ);
 		~Chunk();
+
 		void TerrainGen(const siv::PerlinNoise& perlin);
 		void CreateMesh();
 
 		void BufferData();
 		void Draw(Shader& shader);
 		void DrawWater(Shader& shader);
+        void DrawCustomModelBlocks(Shader& shader);
 
 		[[nodiscard]] inline BlockInt GetBlock(unsigned int x, unsigned int y, unsigned int z) const {
 			return m_Voxels[z + (x << CHUNK_SIZE_EXP) + (y << CHUNK_SIZE_EXP_X2)];

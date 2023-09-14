@@ -18,7 +18,7 @@ namespace engine {
 
     void GreedyTranslucent(std::vector<ChunkVertex>& vertices, std::vector<ChunkVertex>& waterVertices, const engine::BlockInt* voxels);
     void GreedyOpaque(std::vector<ChunkVertex>& vertices, const engine::BlockInt* voxels);
-    void MeshCustomModelBlocks(std::vector<ChunkVertex>& vertices, const engine::BlockInt* voxels);
+    void MeshCustomModelBlocks(std::vector<float>& vertices, const engine::BlockInt* voxels);
 
     inline const ChunkVertex GetVertex(uint32_t x, uint32_t y, uint32_t z, uint32_t texX, uint32_t texY, uint32_t type, uint32_t norm) {
         return {

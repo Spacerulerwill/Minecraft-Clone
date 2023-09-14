@@ -117,6 +117,7 @@ void engine::Application::Run()
 	// Create the chunks and load shaders for chunks
     Shader chunkShader("res/shaders/chunk.shader");
     Shader waterShader("res/shaders/water.shader");
+    Shader customModelShader("res/shaders/custom_model.shader");
 
     const siv::PerlinNoise::seed_type seed = time(NULL);
     siv::PerlinNoise perlin {seed};
@@ -204,6 +205,17 @@ void engine::Application::Run()
             m_Chunks[i]->Draw(chunkShader);
         }
 
+        glDisable(GL_CULL_FACE);
+        customModelShader.Bind();
+        customModelShader.setMat4("projection", perspective_matrix);
+        customModelShader.setMat4("view", view_matrix);
+        customModelShader.SetInt("tex_array", 0);
+
+        for (int i = 0; i < CHUNKS_X * CHUNKS_Y; i++){
+            m_Chunks[i]->DrawCustomModelBlocks(customModelShader);
+        }
+        glEnable(GL_CULL_FACE);
+        
 		/*
 		To draw the skybox we disable the depth mask so it does not write to the depth buffer.
 		We remove the translation component from the camera view matrix for the skybox only so it appears

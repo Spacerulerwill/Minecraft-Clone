@@ -18,8 +18,8 @@ License: MIT
 #include <unordered_map>
 
 namespace engine {
-	constexpr int CHUNKS_X = 5;
-	constexpr int CHUNKS_Y = 5;
+	constexpr int CHUNKS_X = 1;
+	constexpr int CHUNKS_Y = 1;
 
 	class Application {
 	private:

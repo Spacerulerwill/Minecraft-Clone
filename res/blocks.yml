@@ -73,3 +73,8 @@ rose:
   unique_faces: 1
   material: 5
   model: 1
+tall_grass:
+  opaque: false
+  unique_faces: 1
+  material: 5
+  model: 1

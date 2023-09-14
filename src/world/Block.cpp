@@ -10,10 +10,29 @@ LICENSE: MIT
 #include <yaml-cpp/yaml.h>
 #include <world/ChunkMesher.hpp>
 
+float crossVertices[72] = {
+	0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+	1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+
+	0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+	0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+
+    0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+    1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+    1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+
+    0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+    1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+};
+
 engine::BlockDataStruct engine::BlockData[engine::NUM_BLOCKS];
 engine::MaterialDataStruct engine::MaterialData[engine::NUM_MATERIALS];
 engine::BlockModelStruct engine::BlockModelData[engine::NUM_MODELS] = {
-	
+	{}, // Cube has no custom model for obvious reasons,
+	{&crossVertices[0], &crossVertices[72]}
 };
 
 void engine::InitBlocks() {
