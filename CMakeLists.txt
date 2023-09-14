@@ -29,42 +29,30 @@ add_executable(${PROJECT_NAME}
     src/world/Skybox.cpp
     src/util/Log.cpp
     src/util/TextureLoad.cpp
+    src/core/Application.hpp
+    src/core/Camera.hpp
+    src/core/Shader.hpp
+    src/core/Window.hpp
+    src/math/Mat2.hpp
+    src/math/Mat3.hpp
+    src/math/Mat4.hpp
+    src/math/Vec2.hpp
+    src/math/Vec3.hpp
+    src/math/Vec4.hpp
+    src/opengl/Framebuffer.hpp
+    src/opengl/IndexBuffer.hpp
+    src/opengl/VertexArray.hpp
+    src/opengl/VertexBuffer.hpp
+    src/opengl/VertexBufferLayout.hpp
+    src/world/Block.hpp
+    src/world/Chunk.hpp
+    src/world/ChunkMesher.hpp
+    src/world/Skybox.hpp
+    src/util/Log.hpp
+    src/util/TextureLoad.hpp
     src/math/Math.hpp
     src/util/Constants.hpp
 )
-
-# GET ALL SUBMODULES
-find_package(Git QUIET)
-if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
-    option(GIT_SUBMODULE "Check submodules during build" ON)
-    if(GIT_SUBMODULE)
-        message(STATUS "Submodule update")
-        execute_process(
-            COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            RESULT_VARIABLE GIT_SUBMOD_RESULT
-        )
-        if(NOT GIT_SUBMOD_RESULT EQUAL "0")
-            message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}")
-        endif()
-    endif()
-endif()
-
-# CHECK ALL SUBMODULES
-if (NOT GIT_SUBMODULE)
-    if(NOT EXISTS "${PROJECT_SOURCE_DIR}/submodules/glfw/CMAKELists.txt")
-        message(FATAL_ERROR, "GLFW submodule not downloaded!")
-    endif()
-    if(NOT EXISTS "${PROJECT_SOURCE_DIR}/submodules/spdlog/CMAKELists.txt")
-        message(FATAL_ERROR, "SPDLOG submodule not downloaded!")
-    endif()
-    if(NOT EXISTS "${PROJECT_SOURCE_DIR}/submodules/fmt/CMAKELists.txt")
-        message(FATAL_ERROR, "fmt submodule not downloaded!")
-    endif()
-    if(NOT EXISTS "${PROJECT_SOURCE_DIR}/submodules/yaml-cpp/CMAKELists.txt")
-        message(FATAL_ERROR, "yaml-cpp submodule not downloaded!")
-    endif()
-endif()
 
 add_subdirectory(submodules/glfw)
 add_subdirectory(submodules/spdlog)
