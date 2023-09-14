@@ -43,7 +43,7 @@ namespace engine {
 namespace std {
 	template<> struct hash<engine::Vec3> {
 		std::size_t operator()(engine::Vec3 const& vec) const noexcept {		
-			return (((int)vec.x * 73856093) xor ((int)vec.y * 19349663) xor ((int)vec.z * 83492791)) % 3; // or use boost::hash_combine (see Discussion) https://en.cppreference.com/w/Talk:cpp/utility/hash
+			return (((int)vec.x * 73856093) ^ ((int)vec.y * 19349663) ^ ((int)vec.z * 83492791)) % 3; // or use boost::hash_combine (see Discussion) https://en.cppreference.com/w/Talk:cpp/utility/hash
 		}
 	};
 }

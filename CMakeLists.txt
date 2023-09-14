@@ -18,7 +18,6 @@ add_executable(${PROJECT_NAME}
     src/math/Vec2.cpp
     src/math/Vec3.cpp
     src/math/Vec4.cpp
-    src/math/Math.hpp
     src/opengl/Framebuffer.cpp
     src/opengl/IndexBuffer.cpp
     src/opengl/VertexArray.cpp
@@ -26,9 +25,12 @@ add_executable(${PROJECT_NAME}
     src/opengl/VertexBufferLayout.cpp
     src/world/Block.cpp
     src/world/Chunk.cpp
+    src/world/ChunkMesher.cpp
     src/world/Skybox.cpp
     src/util/Log.cpp
     src/util/TextureLoad.cpp
+    src/math/Math.hpp
+    src/util/Constants.hpp
 )
 
 # GET ALL SUBMODULES

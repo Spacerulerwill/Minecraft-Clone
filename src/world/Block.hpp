@@ -50,18 +50,15 @@ namespace engine {
 		std::vector<std::string> placeSounds;
 	};
 
-	inline std::vector<const char*> MaterialNames = {
-		"air",
-		"gravel",
-		"stone",
-		"wood",
-		"glass",
-		"grass"
-	};
-
 	enum BlockModel: uint8_t {
 		CUBE,
-		CROSS
+		CROSS,
+		NUM_MODELS
+	};
+
+	struct BlockModelStruct {
+		std::vector<float>::iterator begin;
+		std::vector<float>::iterator end;
 	};
 
 	struct BlockDataStruct {
@@ -77,12 +74,11 @@ namespace engine {
 		ModelInt model;
 	};
 
-	struct BlockHandler {
-		inline static BlockDataStruct BlockData[NUM_BLOCKS];
-		inline static MaterialDataStruct MaterialData[NUM_MATERIALS];
+	extern BlockDataStruct BlockData[NUM_BLOCKS];
+	extern MaterialDataStruct MaterialData[NUM_MATERIALS];
+	extern BlockModelStruct BlockModelData[NUM_MODELS];
 
-		static void InitBlocks();
-	};
+	void InitBlocks();
 };
 
 #endif // !BLOCK_H
