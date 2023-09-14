@@ -6,6 +6,7 @@ LICENSE: MIT
 #include <world/ChunkMesher.hpp>
 
 #ifdef _MSC_VER
+#include <intrin.h>
 inline const int CTZ(uint64_t &x) {
   unsigned long index;
   _BitScanForward64(&index, x);
