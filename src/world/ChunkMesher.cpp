@@ -4,6 +4,7 @@ LICENSE: MIT
 */
 
 #include <world/ChunkMesher.hpp>
+#include <world/Chunk.hpp>
 
 #ifdef _MSC_VER
 #include <intrin.h>
@@ -360,8 +361,15 @@ void engine::MeshCustomModelBlocks(std::vector<float>& vertices, const engine::B
     for (int x = 1; x < CS_P_MINUS_ONE; x++){
         for (int y = 1; y < CS_P_MINUS_ONE; y++) {
             for (int z =1; z < CS_P_MINUS_ONE; z++) {
-                BlockDataStruct blockData = BlockData[voxels[z + (x << CHUNK_SIZE_EXP) + (y << CHUNK_SIZE_EXP_X2)]];
-                if (blockData.model != CUBE) {
+                BlockDataStruct blockData = BlockData[voxels[VOXEL_INDEX(x,y,z)]];
+                if (blockData.model != CUBE && (
+                    !BlockData[voxels[VOXEL_INDEX(x+1,y,z)]].opaque ||
+                    !BlockData[voxels[VOXEL_INDEX(x-1,y,z)]].opaque ||
+                    !BlockData[voxels[VOXEL_INDEX(x,y+1,z)]].opaque ||
+                    !BlockData[voxels[VOXEL_INDEX(x,y-1,z)]].opaque ||
+                    !BlockData[voxels[VOXEL_INDEX(x,y,z+1)]].opaque ||
+                    !BlockData[voxels[VOXEL_INDEX(x,y,z-1)]].opaque
+                )) {
                     BlockModelStruct modelData = BlockModelData[blockData.model];
                     std::vector<float> modelVerts(modelData.begin, modelData.end);
                     for (int i = 0; i < modelVerts.size() - 1; i += 6) {

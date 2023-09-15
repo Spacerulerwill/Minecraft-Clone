@@ -19,6 +19,8 @@ LICENSE: MIT
 #include <PerlinNoise.hpp>
 #include <util/Constants.hpp>
 
+#define VOXEL_INDEX(x,y,z) (z) + ((x) << CHUNK_SIZE_EXP) + ((y) << CHUNK_SIZE_EXP_X2)
+
 namespace engine {
 
 	// Chunks are stored as 
