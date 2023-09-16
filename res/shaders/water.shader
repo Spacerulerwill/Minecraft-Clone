@@ -43,7 +43,7 @@ void main()
 #version 450 core
 
 uniform sampler2DArray tex_array;
-uniform vec3 waterColor = vec3(0.0,0.0,0.5);
+uniform vec3 waterColor = vec3(0.0, 0.0, 1.0);
 
 in vec3 FragNormal;
 in vec3 TexCoords;

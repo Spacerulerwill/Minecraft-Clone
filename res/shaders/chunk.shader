@@ -9,6 +9,7 @@ uniform mat4 view;
 uniform mat4 projection;
 
 out vec3 FragNormal;
+out uint FragNormalIndex;
 out vec3 FragPos;
 out vec3 TexCoords;
 out vec4 VertexPos;
@@ -29,14 +30,16 @@ void main()
 	float x = float(data.x&uint(63));
 	float y = float((data.x >> 6)&uint(63));
 	float z = float((data.x >> 12)&uint(63));
-
-	FragNormal = NORMALS[uint((data.x >> 18)&uint(7))];
+    
+    FragNormalIndex = uint((data.x >> 18)&uint(7));
+	FragNormal = NORMALS[FragNormalIndex];
 
 	TexCoords = vec3(
 		float(data.y&uint(63)),
 		float((data.y >> 6)&uint(63)),
 		float((data.y >> 12)&uint(255))
 	);
+
 	VertexPos = projection * view * model * vec4(x,y,z,1.0);
 	FragPos = vec3(model * vec4(x,y,z, 1.0));
 
@@ -50,11 +53,13 @@ void main()
 #version 450 core
 
 uniform sampler2DArray tex_array;
+uniform sampler2D grass_mask;
 
 uniform vec3 grassColor = vec3(0.0, 1.0, 0.0);
 uniform vec3 foliageColor = vec3(0.0, 1.0,0.0);
 
 in vec3 FragNormal;
+flat in uint FragNormalIndex;
 in vec3 FragPos;
 in vec3 TexCoords;
 in vec4 VertexPos;
@@ -64,11 +69,21 @@ out vec4 FragColor;
 
 void main() {
 	vec4 texColor = texture(tex_array, TexCoords);
-	if (texColor.a < 0.001)
+    
+	if (texColor.a < 0.5)
 		discard;
-    if (isGrass > 0.5 && texColor.r == texColor.b)
-        texColor.rgb *= grassColor;
-    if (isFoliage > 0.5 && texColor.r == texColor.b)
+        
+    if (isGrass > 0.5) {
+        if (FragNormalIndex > 1) {
+            vec4 grass_mask_color = texture(grass_mask, TexCoords.xy);
+            grass_mask_color.rgb *= grassColor;
+            texColor = mix(texColor, grass_mask_color, grass_mask_color.a);
+        } else {
+            texColor.rgb *= grassColor;
+        }
+    }
+    else if (isFoliage > 0.5)
         texColor.rgb *= foliageColor;
+        
 	FragColor = texColor;
 }

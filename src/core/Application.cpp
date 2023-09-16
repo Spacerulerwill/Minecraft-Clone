@@ -169,6 +169,9 @@ void engine::Application::Run()
 	// Orthographic projection matrix maps normalised device coordinates to pixel screen space coordinates
 	Mat4 ortho = orthographic(0.0f, Window::SCREEN_HEIGHT, 0.0f, Window::SCREEN_WIDTH, -1.0f, 100.0f);
 
+    glActiveTexture(GL_TEXTURE2);
+    unsigned int grass_mask = loadTexture("res/textures/block/color_mask/grass_side_overlay.png");
+
     // Game loop!
 	while (!glfwWindowShouldClose(Window::GetWindow())) {
 		// Calculate delta time
@@ -187,7 +190,7 @@ void engine::Application::Run()
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         glEnable(GL_DEPTH_TEST);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         Mat4 perspective_matrix = perspective(radians(m_Camera.m_FOV), static_cast<float>(Window::SCREEN_WIDTH) / Window::SCREEN_HEIGHT, 0.1f, 100.0f);
@@ -200,8 +203,8 @@ void engine::Application::Run()
         chunkShader.setMat4("projection", perspective_matrix);
         chunkShader.setMat4("view", view_matrix);
         chunkShader.SetInt("tex_array", 0);
+        chunkShader.SetInt("grass_mask", 2);
      
-        glActiveTexture(GL_TEXTURE0);
         for (int i = 0; i < CHUNKS_X * CHUNKS_Y; i++){
             m_Chunks[i]->Draw(chunkShader);
         }
@@ -222,6 +225,7 @@ void engine::Application::Run()
 		We remove the translation component from the camera view matrix for the skybox only so it appears
 		that it nevers moves with the camera.
 		*/
+    
 		glDepthMask(GL_FALSE);
 		Mat4 skybox_view_matrix = engine::translationRemoved(view_matrix);
 		skybox.Draw(perspective_matrix, skybox_view_matrix);
@@ -234,7 +238,8 @@ void engine::Application::Run()
         waterShader.SetInt("tex_array", 0);
         for (int i = 0; i < CHUNKS_X * CHUNKS_Y; i++){
             m_Chunks[i]->DrawWater(waterShader);
-        }        
+        }       
+        
 
         /* 
 		Unbind our framebuffer and render the result texture to a quad
@@ -260,7 +265,6 @@ void engine::Application::Run()
 		crosshairShader.SetInt("crosshair", 1);
 		crosshairShader.setMat4("projection", ortho);
 
-		glActiveTexture(GL_TEXTURE1);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		glfwPollEvents();

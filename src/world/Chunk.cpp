@@ -71,6 +71,18 @@ void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin)
                     SetBlock(ROSE, x, height+1, z);
                 }
             }
+            if (height < CS_P_MINUS_ONE - 4) {
+                if (randInt == 69) {
+                    for (int y = 0; y < 3; y++) {
+                        SetBlock(OAK_LOG, x, height + y + 1, z);
+                    }
+                    SetBlock(OAK_LEAVES, x, height + 4, z);
+                    SetBlock(OAK_LEAVES, x - 1, height + 3, z);
+                    SetBlock(OAK_LEAVES, x + 1, height + 3, z );
+                    SetBlock(OAK_LEAVES, x, height + 3, z - 1);
+                    SetBlock(OAK_LEAVES, x, height + 3, z + 1);
+                }
+            }
           }
       }
     }
