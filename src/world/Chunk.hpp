@@ -23,14 +23,23 @@ LICENSE: MIT
 
 namespace engine {
 
-	// Chunks are stored as 
-	// Chunks are stored in Columns going down X and then Z
-	// This is to make setting columns of blocks more memory efficient
-	// When generating terrain
-
 	constexpr float BLOCK_SCALE = 0.2f;
 	constexpr float INV_BLOCK_SCALE = 1 / BLOCK_SCALE;
 
+    /*
+    Chunks are 62^3 and are stored in vertical columns for memory efficency when
+    setting blocks. Voxels are stored in a 64^3 array of integers, utilizing a layer
+    of padding on each side to remove the need for any bounds checking. Neighbor chunks
+    edge data are copied into the padding layers to allow for cross chunk meshing.
+
+    Each chunk has 3 vertex buffers:
+    * A regular vertex buffer
+    * A water vertex buffer
+    * A custom block model vertex buffer
+    
+    The first 2 buffers used vertexs packed to 8 bytes, however the vertices in the custom
+    block model buffer cannot be packed and are each 6 floats, totalling 24 bytes
+    */
 	class Chunk {
 	private:
 		int chunkX = 0;
@@ -58,7 +67,7 @@ namespace engine {
 	public:
 		Chunk(int chunkX, int chunkY, int chunkZ);
 		~Chunk();
-
+        
 		void TerrainGen(const siv::PerlinNoise& perlin);
 		void CreateMesh();
 
@@ -68,11 +77,11 @@ namespace engine {
         void DrawCustomModelBlocks(Shader& shader);
 
 		[[nodiscard]] inline BlockInt GetBlock(unsigned int x, unsigned int y, unsigned int z) const {
-			return m_Voxels[z + (x << CHUNK_SIZE_EXP) + (y << CHUNK_SIZE_EXP_X2)];
+			return m_Voxels[VOXEL_INDEX(x,y,z)];
 		}
 
 		inline void SetBlock(BlockInt block, unsigned int x, unsigned int y, unsigned int z) {
-			m_Voxels[z + (x << CHUNK_SIZE_EXP) + (y << CHUNK_SIZE_EXP_X2)] = block;
+			m_Voxels[VOXEL_INDEX(x,y,z)] = block;
 		}
 	};
 }

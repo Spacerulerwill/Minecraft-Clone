@@ -16,6 +16,7 @@ namespace engine {
 	private:
 		std::array<float, 16> m_Data;
 	public:
+        // Constructors
 		Mat4();
 		Mat4(float v);
 		Mat4(std::array<float, 16> data);
@@ -24,8 +25,6 @@ namespace engine {
 		[[nodiscard]] float determinant() const;
 		void inverse();
 		void transpose();
-
-		// operators
 		Mat4 operator+(const Mat4& other) const;
 		void operator+=(const Mat4& other);
 		Mat4 operator-(const Mat4& other) const;

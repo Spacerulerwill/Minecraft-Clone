@@ -7,6 +7,9 @@ import yaml
 import os
 from PIL import Image
 
+TEXTURE_SIZE = 16
+MAX_ANIMATION_FRAMES = 32
+
 def atlas_make():
     BASE_DIR = os.path.join( os.path.dirname( __file__ ), '..', '..')
     yml_location = os.path.join(BASE_DIR, "res", "blocks.yml")
@@ -18,7 +21,8 @@ def atlas_make():
 
     with open(yml_location, 'r') as file:
         blocks_yml:dict = yaml.safe_load(file)
-        img = Image.new('RGBA', (16, image_count * 16), (0, 0, 0, 0))
+
+        img = Image.new('RGBA', (TEXTURE_SIZE, image_count * TEXTURE_SIZE), (0, 0, 0, 0))
 
         images_added = 0
         for block, block_data in blocks_yml.items():
@@ -27,25 +31,25 @@ def atlas_make():
                 case 1:
                     texture_path = os.path.join(image_locations, f"{block}.png")
                     texture_img = Image.open(texture_path)
-                    img.paste(texture_img, (0, 16 * images_added))
+                    img.paste(texture_img, (0, TEXTURE_SIZE * images_added))
                     images_added += 1
                 case 2:
                      for ext in ["_vertical", "_side"]:
                         texture_path = os.path.join(image_locations, f"{block}{ext}.png")
                         texture_img = Image.open(texture_path)
-                        img.paste(texture_img, (0, 16 * images_added))
+                        img.paste(texture_img, (0, TEXTURE_SIZE * images_added))
                         images_added += 1
                 case 3:
                     for ext in ["_top", "_bottom", "_side"]:
                         texture_path = os.path.join(image_locations, f"{block}{ext}.png")
                         texture_img = Image.open(texture_path)
-                        img.paste(texture_img, (0, 16 * images_added))
+                        img.paste(texture_img, (0, TEXTURE_SIZE * images_added))
                         images_added += 1
                 case 6:
                     for ext in ["_top", "_bottom", "_left", "_right", "_front", "_back"]:
                         texture_path = os.path.join(image_locations, f"{block}{ext}.png")
                         texture_img = Image.open(texture_path)
-                        img.paste(texture_img, (0, 16 * images_added))
+                        img.paste(texture_img, (0, TEXTURE_SIZE * images_added))
                         images_added += 1
 
         img.save(output_location)

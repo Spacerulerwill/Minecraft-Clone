@@ -43,6 +43,7 @@ void engine::Application::Init()
 
 void engine::Application::Run()
 {
+    // Seed random number generator
 	srand(time(NULL));
 
 	/* 
@@ -50,6 +51,9 @@ void engine::Application::Run()
 	can be logged
 	*/
 	Log::Init();
+
+    // Initialise Block data from .yml files - this must be done before trying to use any blocks!
+    InitBlocks();
 
 	if (!glfwInit()) {
 		throw std::runtime_error("Failed to intialise GLFW");
@@ -110,9 +114,6 @@ void engine::Application::Run()
 
     glActiveTexture(GL_TEXTURE0);
     p_Framebuffer = new Framebuffer(Window::SCREEN_WIDTH, Window::SCREEN_HEIGHT);
-
-    // Initialise Block data from .yml files - this must be done before trying to use any blocks!
-    InitBlocks();
 
 	// Create the chunks and load shaders for chunks
     Shader chunkShader("res/shaders/chunk.shader");

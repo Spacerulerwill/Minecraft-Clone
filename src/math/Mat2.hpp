@@ -15,13 +15,19 @@ namespace engine {
 	private:
 		std::array<float, 4> m_Data;
 	public:
+        // Constructors 
 		Mat2();
 		Mat2(float v);
 		Mat2(std::array<float, 4> data);
 		Mat2(float v_0, float v_1, float v_2, float v_3);
-		[[nodiscard]] inline float determinant() const;
+        // mutative operations
 		void inverse();
 		void tranpose();
+        // imutative operations
+        inline float determinant() const;
+		static Mat2 inversed(const Mat2& matrix);
+		static Mat2 transposed(const Mat2& mat2);
+        // Operator overloads
 		Mat2 operator+(const Mat2& other) const;
 		void operator+=(const Mat2& other);
 		Mat2 operator-(const Mat2& other) const;
@@ -36,8 +42,6 @@ namespace engine {
 		float operator [](size_t idx) const;
 		operator std::string();
 		friend std::ostream& operator<<(std::ostream& os, const Mat2& mat);
-		[[nodiscard]] static Mat2 inversed(const Mat2& matrix);
-		[[nodiscard]] static Mat2 transposed(const Mat2& mat2);
 	};
 }
 #endif // !MAT2_H

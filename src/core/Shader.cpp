@@ -101,7 +101,6 @@ void engine::Shader::setFloat(const std::string& name, float x) {
     glUniform1f(GetLocation(name), x);
 }
 
-
 void engine::Shader::SetInt(const std::string& name, int val)
 {
     glUniform1i(GetLocation(name), val);

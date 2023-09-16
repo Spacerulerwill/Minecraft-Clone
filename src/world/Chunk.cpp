@@ -23,6 +23,7 @@ engine::Chunk::Chunk(int chunkX, int chunkY, int chunkZ): chunkX(chunkX), chunkY
     VertexBufferLayout customModelBufLayout;
     customModelBufLayout.AddAttribute<float>(3);
     customModelBufLayout.AddAttribute<float>(3);
+    customModelBufLayout.AddAttribute<float>(1);
     m_CustomModelVAO.AddBuffer(m_CustomModelVBO, customModelBufLayout);
 }
 

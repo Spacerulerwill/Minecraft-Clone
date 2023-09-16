@@ -67,14 +67,14 @@ void engine::Camera::ProcessMouseScroll(float yoffset)
 
 void engine::Camera::UpdateCameraVectors()
 {
-    // calculate the new Front vector
+    // Calculate the new front vector
     engine::Vec3 front;
     front.x = cos(radians(m_Yaw)) * cos(radians(m_Pitch));
     front.y = sin(radians(m_Pitch));
     front.z = sin(radians(m_Yaw)) * cos(radians(m_Pitch));
     m_Front = Vec3::normalised(front);
 
-    // also re-calculate the Right and Up vector
+    // also recalculate right and up vector
     m_Right = Vec3::normalised(Vec3::cross(m_Front, m_WorldUp));
     m_Up = Vec3::normalised(Vec3::cross(m_Right, m_Front));
 }

@@ -11,11 +11,13 @@ License: MIT
 #include <string>
 
 namespace engine {
+    // integer sizes for each ID type
 	typedef uint8_t BlockInt;
 	typedef uint8_t MaterialInt;
 	typedef uint8_t TextureInt;
 	typedef uint8_t ModelInt;
 
+    // enum of block IDs
 	enum Block : BlockInt {
 		AIR,
 		WATER,
@@ -36,6 +38,7 @@ namespace engine {
 		NUM_BLOCKS
 	};
 
+    // enum of material IDs
 	enum Material : MaterialInt {
 		MATERIAL_AIR,
 		MATERIAL_GRAVEL,
@@ -46,17 +49,22 @@ namespace engine {
 		NUM_MATERIALS
 	};
 
+    
+    //Block materials determine what sound a block makes when it is placed or destroyed
 	struct MaterialDataStruct {
 		std::vector<std::string> breakSounds;
 		std::vector<std::string> placeSounds;
 	};
-
+    
+    // enum of model IDs
 	enum BlockModel: uint8_t {
 		CUBE,
 		CROSS,
 		NUM_MODELS
 	};
 
+    // Block models only consist of a pointer to the start and end of a vector stored
+    // somewhere else to save memory
 	struct BlockModelStruct {
 		float* begin = nullptr;
 		float* end = nullptr;
@@ -75,9 +83,13 @@ namespace engine {
 		ModelInt model;
 	};
 
+    // Global arrays used to fetch certain information by integer ID, using array indexing
 	extern BlockDataStruct BlockData[NUM_BLOCKS];
 	extern MaterialDataStruct MaterialData[NUM_MATERIALS];
 	extern BlockModelStruct BlockModelData[NUM_MODELS];
+
+    extern unsigned int textureSize;
+    extern unsigned int maxAnimationFrames;
 
 	void InitBlocks();
 };
