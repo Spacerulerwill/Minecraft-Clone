@@ -8,10 +8,12 @@ LICENSE: MIT
 
 #include <unordered_map>
 #include <vector>
+#include <queue>
 #include <world/Chunk.hpp>
 #include <math/Vec3.hpp>
 #include <PerlinNoise.hpp>
 #include <core/Shader.hpp>
+#include <BS_thread_pool.hpp>
 
 namespace engine {
     class World {
@@ -27,6 +29,9 @@ namespace engine {
         siv::PerlinNoise::seed_type m_Seed;
         siv::PerlinNoise m_Noise;
         std::vector<Chunk*> m_ChunkDrawVector;
+        BS::thread_pool m_ThreadPool;
+        std::queue<Chunk*> m_ChunkMeshQueue;
+        std::queue<Chunk*> m_ChunkBufferQueue;
     };
 }
 

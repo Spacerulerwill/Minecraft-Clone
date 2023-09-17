@@ -192,7 +192,7 @@ void engine::Application::Run()
         world.CreateChunks(
             static_cast<int>(m_Camera.m_Position.x / CHUNK_SCALE),
             static_cast<int>(m_Camera.m_Position.z / CHUNK_SCALE),
-            20
+            10
         );
 
         chunkShader.Bind();

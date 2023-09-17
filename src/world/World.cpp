@@ -18,14 +18,33 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius) {
             Vec3 vec = Vec3(chunkX + ix, 0, chunkZ + iz);
             if (m_ChunkMap.find(vec) == m_ChunkMap.end()) {
                 Chunk* chunk = new Chunk(chunkX + ix, 0, chunkZ + iz);
-                chunk->TerrainGen(m_Noise);
-                chunk->CreateMesh();
-                chunk->BufferData();
+                m_ChunkMeshQueue.push(chunk);
+                m_ChunkBufferQueue.push(chunk);
                 m_ChunkMap[vec] = chunk;
             } else {
                 m_ChunkDrawVector.push_back(m_ChunkMap[vec]);
             }
         }
+    }
+
+    int chunksToMesh = m_ChunkMeshQueue.size() < 8 ? m_ChunkMeshQueue.size() : 8;
+    for (int i = 0; i < chunksToMesh; i++) {
+        Chunk* chunk = this->m_ChunkMeshQueue.front();
+        this->m_ChunkMeshQueue.pop();
+        m_ThreadPool.push_task([chunk, this]{
+            chunk->TerrainGen(this->m_Noise);
+            chunk->CreateMesh();
+        });
+    }
+    
+    m_ThreadPool.wait_for_tasks();
+    
+    int chunksToBuffer = m_ChunkBufferQueue.size() < 8 ? m_ChunkBufferQueue.size() : 8;
+
+    for (int i = 0; i < chunksToBuffer; i++){
+        Chunk* chunk = this->m_ChunkBufferQueue.front();
+        m_ChunkBufferQueue.pop();
+        chunk->BufferData();
     }
 }
 
