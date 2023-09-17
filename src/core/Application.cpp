@@ -160,6 +160,7 @@ void engine::Application::Run()
     glActiveTexture(GL_TEXTURE2);
     unsigned int grass_mask = loadTexture("res/textures/block/color_mask/grass_side_overlay.png");
 
+    // Create and seed our world
     World world(time(NULL));
 
     // Game loop!
@@ -189,12 +190,17 @@ void engine::Application::Run()
         Mat4 skybox_view_matrix = engine::translationRemoved(view_matrix);
 		skybox.Draw(perspective_matrix, skybox_view_matrix);
 
+        // Create chunks around the players position
         world.CreateChunks(
             static_cast<int>(m_Camera.m_Position.x / CHUNK_SCALE),
             static_cast<int>(m_Camera.m_Position.z / CHUNK_SCALE),
             10
         );
 
+        /*
+        Draw opaque part of chunks first, then the custom block models and then the water to preserve transparency.
+        For drawing of custom block models we disable face culling.
+        */
         chunkShader.Bind();
         chunkShader.setMat4("projection", perspective_matrix);
         chunkShader.setMat4("view", view_matrix);

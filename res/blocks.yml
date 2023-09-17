@@ -78,3 +78,8 @@ tall_grass:
   unique_faces: 1
   material: 5
   model: 1
+pink_tulip:
+  opaque: false
+  unique_faces: 1
+  material: 5
+  model: 1

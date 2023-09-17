@@ -35,6 +35,7 @@ namespace engine {
 		OAK_LEAVES,
 		ROSE,
         TALL_GRASS,
+        PINK_TULIP,
 		NUM_BLOCKS
 	};
 

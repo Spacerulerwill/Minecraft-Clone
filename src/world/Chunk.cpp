@@ -68,8 +68,11 @@ void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin)
                 if (randInt < 20) {
                     SetBlock(TALL_GRASS, x, height+1, z);
                 }
-                else if (randInt < 30) {
+                else if (randInt < 28) {
                     SetBlock(ROSE, x, height+1, z);
+                } 
+                else if (randInt < 30) {
+                    SetBlock(PINK_TULIP, x, height+1, z);
                 }
             }
             if (height < CS_P_MINUS_ONE - 4) {

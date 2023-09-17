@@ -18,15 +18,10 @@ License: MIT
 #include <unordered_map>
 
 namespace engine {
-	constexpr int CHUNKS_X = 20;
-	constexpr int CHUNKS_Y = 20;
-
 	class Application {
 	private:
 		Application();
 		static std::unique_ptr<Application> s_Instance;
-
-		Chunk* m_Chunks[CHUNKS_X * CHUNKS_Y] {nullptr};
 
 		void ResourceCleanup();
 		void ProcessInput(float deltaTime);
@@ -34,7 +29,6 @@ namespace engine {
 		float m_LastFrame = 0.0f;
 		Camera m_Camera;
 		BlockInt m_SelectedBlock = GRASS;
-		Chunk* m_Chunk = nullptr;
 
 		bool m_Wireframe = false;
 		bool firstMouse = true;
