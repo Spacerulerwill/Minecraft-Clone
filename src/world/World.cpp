@@ -4,6 +4,7 @@ LICENSE: MIT
 */
 
 #include <world/World.hpp>
+#include <GLFW/glfw3.h>
 
 engine::World::World(siv::PerlinNoise::seed_type seed) {
     m_Noise.reseed(seed);
@@ -45,6 +46,7 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius) {
         Chunk* chunk = this->m_ChunkBufferQueue.front();
         m_ChunkBufferQueue.pop();
         chunk->BufferData();
+        chunk->firstBufferTime = static_cast<float>(glfwGetTime());
     }
 }
 

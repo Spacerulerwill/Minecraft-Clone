@@ -30,12 +30,14 @@ in vec3 TexCoords;
 
 uniform sampler2DArray tex_array;
 uniform vec3 foliageColor = vec3(0.0,1.0,0.0);
+uniform float time;
 
 void main() {
 	vec4 texColor = texture(tex_array, TexCoords);
-	if (texColor.a < 0.1)
+	if (texColor.a < 0.5)
 		discard;
     if (isFoliage > 0.5)
         texColor.rgb *= foliageColor;
+    texColor.a = time / 2.0;
 	FragColor = texColor;
 }

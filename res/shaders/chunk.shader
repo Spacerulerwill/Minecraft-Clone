@@ -63,6 +63,7 @@ uniform sampler2D grass_mask;
 
 uniform vec3 grassColor = vec3(0.0, 1.0, 0.0);
 uniform vec3 foliageColor = vec3(0.0, 1.0,0.0);
+uniform float time;
 
 in vec3 FragNormal;
 flat in uint FragNormalIndex;
@@ -75,8 +76,8 @@ out vec4 FragColor;
 
 void main() {
 	vec4 texColor = texture(tex_array, TexCoords);
-    
-	if (texColor.a < 0.5)
+
+    if (texColor.a < 0.5)
 		discard;
         
     if (isGrass > 0.5) {
@@ -90,6 +91,7 @@ void main() {
     }
     else if (isFoliage > 0.5)
         texColor.rgb *= foliageColor;
-    
+
+    texColor.a = time / 2.0;
 	FragColor = texColor;
 }

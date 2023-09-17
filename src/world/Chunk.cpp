@@ -9,6 +9,7 @@ LICENSE: MIT
 #include <util/Log.hpp>
 #include <math/Math.hpp>
 #include <algorithm>
+#include <GLFW/glfw3.h>
 
 engine::Chunk::Chunk(int chunkX, int chunkY, int chunkZ): chunkX(chunkX), chunkY(chunkY), chunkZ(chunkZ)
 {
@@ -137,6 +138,7 @@ void engine::Chunk::Draw(Shader& shader)
 {
     m_VAO.Bind();
     shader.setMat4("model", m_Model);
+    shader.setFloat("time", static_cast<float>(glfwGetTime()) - firstBufferTime);
 
     if (m_VertexCount > 0) {
         glDrawArrays(GL_TRIANGLES, 0, m_VertexCount);
@@ -147,6 +149,7 @@ void engine::Chunk::DrawWater(Shader& shader)
 {
     m_WaterVAO.Bind();
     shader.setMat4("model", m_Model);
+    shader.setFloat("time", static_cast<float>(glfwGetTime()) - firstBufferTime);
 
     if (m_WaterVertexCount > 0) {
         glDrawArrays(GL_TRIANGLES, 0, m_WaterVertexCount);
@@ -157,6 +160,7 @@ void engine::Chunk::DrawCustomModelBlocks(Shader& shader)
 {
     m_CustomModelVAO.Bind();
     shader.setMat4("model", m_Model);
+    shader.setFloat("time", static_cast<float>(glfwGetTime()) - firstBufferTime);
 
     if (m_CustomModelVertexCount > 0) {
         glDrawArrays(GL_TRIANGLES, 0, m_CustomModelVertexCount);

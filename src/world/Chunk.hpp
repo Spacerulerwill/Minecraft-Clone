@@ -66,6 +66,8 @@ namespace engine {
 
 		Mat4 m_Model = scale(Vec3(BLOCK_SCALE));
 	public:
+        float firstBufferTime = 0.0f;
+
 		Chunk(int chunkX, int chunkY, int chunkZ);
 		~Chunk();
         

@@ -44,6 +44,7 @@ void main()
 
 uniform sampler2DArray tex_array;
 uniform vec3 waterColor = vec3(0.0, 0.0, 1.0);
+uniform float time;
 
 in vec3 FragNormal;
 in vec3 TexCoords;
@@ -52,5 +53,6 @@ out vec4 FragColor;
 
 void main() {
 	vec4 texColor = texture(tex_array, TexCoords);		
+    texColor.a = time / 2.0;
 	FragColor = texColor * vec4(waterColor, 1.0);
 }
