@@ -6,6 +6,7 @@ License: MIT
 #include <core/Application.hpp>
 #include <util/TextureLoad.hpp>
 #include <world/Skybox.hpp>
+#include <world/World.hpp>
 #include <core/Camera.hpp>
 #include <core/Shader.hpp>
 #include <util/Log.hpp>
@@ -120,19 +121,6 @@ void engine::Application::Run()
     Shader waterShader("res/shaders/water.shader");
     Shader customModelShader("res/shaders/custom_model.shader");
 
-    const siv::PerlinNoise::seed_type seed = time(NULL);
-    siv::PerlinNoise perlin {seed};
-        
-    for (int x = 0; x < CHUNKS_X; x++){
-        for (int z = 0; z < CHUNKS_Y; z++){
-            Chunk* chunk = new Chunk(x, 0, z);
-            chunk->TerrainGen(perlin);
-            chunk->CreateMesh();
-            chunk->BufferData();
-            m_Chunks[x * CHUNKS_X + z] = chunk;
-        }
-    }
-
     // Create skybox and load texture atlas, both use texture unit 0
     glActiveTexture(GL_TEXTURE0);
     Skybox skybox;
@@ -172,6 +160,8 @@ void engine::Application::Run()
     glActiveTexture(GL_TEXTURE2);
     unsigned int grass_mask = loadTexture("res/textures/block/color_mask/grass_side_overlay.png");
 
+    World world(time(NULL));
+
     // Game loop!
 	while (!glfwWindowShouldClose(Window::GetWindow())) {
 		// Calculate delta time
@@ -193,53 +183,38 @@ void engine::Application::Run()
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        Mat4 perspective_matrix = perspective(radians(m_Camera.m_FOV), static_cast<float>(Window::SCREEN_WIDTH) / Window::SCREEN_HEIGHT, 0.1f, 100.0f);
+        Mat4 perspective_matrix = perspective(radians(m_Camera.m_FOV), static_cast<float>(Window::SCREEN_WIDTH) / Window::SCREEN_HEIGHT, 0.1f, 250.0f);
         Mat4 view_matrix = m_Camera.GetViewMatrix();
 
-		// Render the opaque part of the chunks first
-        glDepthMask(GL_TRUE);
+        Mat4 skybox_view_matrix = engine::translationRemoved(view_matrix);
+		skybox.Draw(perspective_matrix, skybox_view_matrix);
+
+        world.CreateChunks(
+            static_cast<int>(m_Camera.m_Position.x / CHUNK_SCALE),
+            static_cast<int>(m_Camera.m_Position.z / CHUNK_SCALE),
+            20
+        );
+
         chunkShader.Bind();
-       
         chunkShader.setMat4("projection", perspective_matrix);
         chunkShader.setMat4("view", view_matrix);
         chunkShader.SetInt("tex_array", 0);
         chunkShader.SetInt("grass_mask", 2);
-     
-        for (int i = 0; i < CHUNKS_X * CHUNKS_Y; i++){
-            m_Chunks[i]->Draw(chunkShader);
-        }
+        world.DrawOpaque(chunkShader);
 
         glDisable(GL_CULL_FACE);
         customModelShader.Bind();
         customModelShader.setMat4("projection", perspective_matrix);
         customModelShader.setMat4("view", view_matrix);
         customModelShader.SetInt("tex_array", 0);
-
-        for (int i = 0; i < CHUNKS_X * CHUNKS_Y; i++){
-            m_Chunks[i]->DrawCustomModelBlocks(customModelShader);
-        }
+        world.DrawCustomModelBlocks(customModelShader);
         glEnable(GL_CULL_FACE);
-        
-		/*
-		To draw the skybox we disable the depth mask so it does not write to the depth buffer.
-		We remove the translation component from the camera view matrix for the skybox only so it appears
-		that it nevers moves with the camera.
-		*/
-    
-		glDepthMask(GL_FALSE);
-		Mat4 skybox_view_matrix = engine::translationRemoved(view_matrix);
-		skybox.Draw(perspective_matrix, skybox_view_matrix);
 
-		// Re enable the depth mask and then draw the water of the chunks
-		glDepthMask(GL_TRUE);
         waterShader.Bind();
         waterShader.setMat4("projection", perspective_matrix);
         waterShader.setMat4("view", view_matrix);
         waterShader.SetInt("tex_array", 0);
-        for (int i = 0; i < CHUNKS_X * CHUNKS_Y; i++){
-            m_Chunks[i]->DrawWater(waterShader);
-        }       
-        
+        world.DrawWater(waterShader);
 
         /* 
 		Unbind our framebuffer and render the result texture to a quad
@@ -290,9 +265,6 @@ void engine::Application::GLFWFramebufferResizeCallback(GLFWwindow* window, int 
 void engine::Application::ResourceCleanup()
 {
     delete p_Framebuffer;
-    for (int i =0; i < CHUNKS_X * CHUNKS_Y; i++){
-        delete m_Chunks[i];
-    }
 	Window::Terminate();
 	glfwTerminate();
 }
@@ -303,13 +275,13 @@ void engine::Application::ProcessInput(float deltaTime)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        m_Camera.ProcessKeyboard(FORWARD, deltaTime, m_Chunk);
+        m_Camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        m_Camera.ProcessKeyboard(BACKWARD, deltaTime, m_Chunk);
+        m_Camera.ProcessKeyboard(BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        m_Camera.ProcessKeyboard(LEFT, deltaTime, m_Chunk);
+        m_Camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        m_Camera.ProcessKeyboard(RIGHT, deltaTime, m_Chunk);
+        m_Camera.ProcessKeyboard(RIGHT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
         m_Camera.m_MovementSpeed = 20.0f;
     else

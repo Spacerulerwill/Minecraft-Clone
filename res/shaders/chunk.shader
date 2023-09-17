@@ -25,6 +25,9 @@ uniform vec3 NORMALS[6] = {
   vec3( 0, 0, -1 )
 };
 
+const float s = 64.0;
+const float t = 5.0;
+
 void main()
 {
 	float x = float(data.x&uint(63));
@@ -45,7 +48,10 @@ void main()
 
     isFoliage = float((data.y >> 20)&uint(1));
     isGrass = float((data.y >> 21)&uint(1));
-	gl_Position = VertexPos;
+
+
+    gl_Position = VertexPos;
+   
 }
 
 #shader fragment
@@ -84,6 +90,6 @@ void main() {
     }
     else if (isFoliage > 0.5)
         texColor.rgb *= foliageColor;
-        
+    
 	FragColor = texColor;
 }

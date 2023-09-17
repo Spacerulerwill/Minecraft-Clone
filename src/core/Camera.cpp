@@ -18,7 +18,7 @@ engine::Mat4 engine::Camera::GetViewMatrix() const
     return engine::lookAt(m_Position, m_Position + m_Front, m_Up);
 }
 
-void engine::Camera::ProcessKeyboard(CameraMovement direction, float deltaTime, Chunk* chunk)
+void engine::Camera::ProcessKeyboard(CameraMovement direction, float deltaTime)
 {
     float velocity = m_MovementSpeed * deltaTime;
     Vec3 directionMultiplier;

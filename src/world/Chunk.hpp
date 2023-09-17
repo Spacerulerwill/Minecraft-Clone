@@ -24,6 +24,7 @@ LICENSE: MIT
 namespace engine {
 
 	constexpr float BLOCK_SCALE = 0.2f;
+    constexpr float CHUNK_SCALE = CS * BLOCK_SCALE;
 	constexpr float INV_BLOCK_SCALE = 1 / BLOCK_SCALE;
 
     /*

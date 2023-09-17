@@ -10,7 +10,6 @@ LICENSE: MIT
 #include <math/Mat4.hpp>
 #include <math/Math.hpp>
 #include <glad/gl.h>
-#include <world/Chunk.hpp>
 #include <vector>
 
 // Abstraction to stay away from window specific input methods
@@ -44,7 +43,7 @@ namespace engine {
         Camera();
 
         engine::Mat4 GetViewMatrix() const;
-        void ProcessKeyboard(CameraMovement direction, float deltaTime, Chunk* chunk);
+        void ProcessKeyboard(CameraMovement direction, float deltaTime);
         void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch);
         void ProcessMouseScroll(float yoffset);
     private:

@@ -27,6 +27,7 @@ add_executable(${PROJECT_NAME}
     src/world/Chunk.cpp
     src/world/ChunkMesher.cpp
     src/world/Skybox.cpp
+    src/world/World.cpp
     src/util/Log.cpp
     src/util/TextureLoad.cpp
     src/core/Application.hpp
@@ -48,6 +49,7 @@ add_executable(${PROJECT_NAME}
     src/world/Chunk.hpp
     src/world/ChunkMesher.hpp
     src/world/Skybox.hpp
+    src/world/World.hpp
     src/util/Log.hpp
     src/util/TextureLoad.hpp
     src/math/Math.hpp
