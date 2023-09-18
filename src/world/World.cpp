@@ -10,7 +10,7 @@ engine::World::World(siv::PerlinNoise::seed_type seed) {
     m_Noise.reseed(seed);
 }
 
-void engine::World::CreateChunks(int chunkX, int chunkZ, int radius) {
+void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferPerFrame) {
 
     m_ChunkDrawVector.clear();
     for (int iz = - radius; iz < radius; iz++) {
@@ -28,7 +28,7 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius) {
         }
     }
 
-    int chunksToMesh = m_ChunkMeshQueue.size() < 8 ? m_ChunkMeshQueue.size() : 8;
+    int chunksToMesh = m_ChunkMeshQueue.size() < bufferPerFrame ? m_ChunkMeshQueue.size() : bufferPerFrame;
     for (int i = 0; i < chunksToMesh; i++) {
         Chunk* chunk = this->m_ChunkMeshQueue.front();
         this->m_ChunkMeshQueue.pop();
@@ -40,7 +40,7 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius) {
     
     m_ThreadPool.wait_for_tasks();
     
-    int chunksToBuffer = m_ChunkBufferQueue.size() < 8 ? m_ChunkBufferQueue.size() : 8;
+    int chunksToBuffer = m_ChunkBufferQueue.size() < bufferPerFrame ? m_ChunkBufferQueue.size() : bufferPerFrame;
 
     for (int i = 0; i < chunksToBuffer; i++){
         Chunk* chunk = this->m_ChunkBufferQueue.front();

@@ -164,7 +164,8 @@ void engine::Application::Run()
     World world(time(NULL));
 
     // Game loop!
-	while (!glfwWindowShouldClose(Window::GetWindow())) {
+	while (!glfwWindowShouldClose(Window::GetWindow())) { 
+
 		// Calculate delta time
         float currentFrame = static_cast<float>(glfwGetTime());
         m_DeltaTime = currentFrame - m_LastFrame;
@@ -189,12 +190,13 @@ void engine::Application::Run()
 
         Mat4 skybox_view_matrix = engine::translationRemoved(view_matrix);
 		skybox.Draw(perspective_matrix, skybox_view_matrix);
-
+        
         // Create chunks around the players position
         world.CreateChunks(
             static_cast<int>(m_Camera.m_Position.x / CHUNK_SCALE),
             static_cast<int>(m_Camera.m_Position.z / CHUNK_SCALE),
-            10
+            20,
+            25
         );
 
         /*

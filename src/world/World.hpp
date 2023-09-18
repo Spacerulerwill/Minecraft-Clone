@@ -19,7 +19,7 @@ namespace engine {
     class World {
     public:
         World(siv::PerlinNoise::seed_type seed);
-        void CreateChunks(int chunkX, int chunkZ, int radius);
+        void CreateChunks(int chunkX, int chunkZ, int radius, int bufferPerFrame);
         void DrawOpaque(Shader& chunkShader);
         void DrawWater(Shader& waterShader);
         void DrawCustomModelBlocks(Shader& customModelShader);
@@ -29,7 +29,7 @@ namespace engine {
         siv::PerlinNoise::seed_type m_Seed;
         siv::PerlinNoise m_Noise;
         std::vector<Chunk*> m_ChunkDrawVector;
-        BS::thread_pool m_ThreadPool;
+        BS::thread_pool m_ThreadPool = BS::thread_pool(50);
         std::queue<Chunk*> m_ChunkMeshQueue;
         std::queue<Chunk*> m_ChunkBufferQueue;
     };
