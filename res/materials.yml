@@ -28,3 +28,8 @@ grass:
   break_count: 4
   place: grass
   place_count: 4
+sand: 
+  break: sand
+  break_count: 4
+  place: sand
+  place_count: 4

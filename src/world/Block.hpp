@@ -36,6 +36,9 @@ namespace engine {
 		ROSE,
         TALL_GRASS,
         PINK_TULIP,
+        SAND,
+        CLAY,
+        GRAVEL,
 		NUM_BLOCKS
 	};
 
@@ -47,6 +50,7 @@ namespace engine {
 		MATERIAL_WOOD,
 		MATERIAL_GLASS,
 		MATERIAL_GRASS,
+        MATERIAL_SAND,
 		NUM_MATERIALS
 	};
 

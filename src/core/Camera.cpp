@@ -58,7 +58,7 @@ void engine::Camera::ProcessMouseMovement(float xoffset, float yoffset, GLboolea
 
 void engine::Camera::ProcessMouseScroll(float yoffset)
 {
-    m_FOV -= yoffset;
+    m_FOV -= yoffset * 2;
     if (m_FOV < 1.0f)
         m_FOV = 1.0f;
     if (m_FOV > 90.0f)

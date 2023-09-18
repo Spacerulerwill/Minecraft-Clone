@@ -16,15 +16,17 @@ namespace engine {
 	private:
 		std::array<float, 16> m_Data;
 	public:
-        // Constructors
 		Mat4();
 		Mat4(float v);
 		Mat4(std::array<float, 16> data);
 		Mat4(float v_0, float v_1, float v_2, float v_3, float v_4, float v_5, float v_6, float v_7, float v_8, float v_9, float v_10, float v_11, float v_12, float v_13, float v_14, float v_15);
-		const float* GetPointer() const;
+		// Return a pointer to the first element in the matrix
+        [[nodiscard]] const float* GetPointer() const;
 		[[nodiscard]] float determinant() const;
 		void inverse();
 		void transpose();
+        [[nodiscard]] static Mat4 inversed(const Mat4& matrix);
+		[[nodiscard]] static Mat4 transposed(const Mat4& mat4);
 		Mat4 operator+(const Mat4& other) const;
 		void operator+=(const Mat4& other);
 		Mat4 operator-(const Mat4& other) const;
@@ -40,8 +42,6 @@ namespace engine {
 		float operator[](size_t idx) const;
 		operator std::string() const;
 		friend std::ostream& operator<<(std::ostream& os, const Mat4& mat);
-		[[nodiscard]] static Mat4 inversed(const Mat4& matrix);
-		[[nodiscard]] static Mat4 transposed(const Mat4& mat4);
 	};
 
 	[[nodiscard]] Mat4 translationRemoved(const Mat4& mat);

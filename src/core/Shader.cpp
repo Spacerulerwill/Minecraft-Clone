@@ -16,6 +16,10 @@ engine::ShaderSources engine::Shader::ParseShader(const std::string& filepath) {
 
     std::ifstream stream(filepath);
 
+    if (stream.fail()) {
+        LOG_ERROR(fmt::format("Shader file at location {} not found", filepath));
+    }
+
     enum ShaderType {
         NONE = -1, VERTEX = 0, FRAGMENT = 1
     };

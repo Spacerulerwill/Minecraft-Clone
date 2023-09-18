@@ -15,19 +15,19 @@ namespace engine {
 	private:
 		std::array<float, 9> m_Data;
 	public:
-        // Constructors
 		Mat3();
 		Mat3(float v);
 		Mat3(std::array<float, 9> data);
 		Mat3(float v_0, float v_1, float v_2, float v_3, float v_4, float v_5, float v_6, float v_7, float v_8);
-        // mutative operations
+        // Mutatively inverse matrix
 		void inverse();
+        // Mutatively tranpose matrix
 		void transpose();
-        // immutative operations
-        float determinant() const;
+        // Return the inversed matrix
         static Mat3 inversed(const Mat3& mat3);
+        // Return the tranposed matrix
 		static Mat3 transposed(const Mat3& mat3);
-        // operator overloads
+        float determinant() const;
 		Mat3 operator+(const Mat3& other) const;
 		void operator+=(const Mat3& other);
 		Mat3 operator-(const Mat3& other) const;

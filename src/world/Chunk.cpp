@@ -56,7 +56,18 @@ void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin)
           }
           
           if (height < water_level - 1) {
-            SetBlock(DIRT, x, height, z);
+            
+            float oceanFloorNoise = perlin.octave2D_01((chunkX * CS + x) * 0.125 , (chunkZ * CS + z) * 0.125, 8, 0.1);
+
+            if (oceanFloorNoise < 0.33) {
+                SetBlock(CLAY, x, height, z);
+            }
+            else if (oceanFloorNoise < 0.66) {
+                SetBlock(SAND, x, height, z);
+            }
+            else if (oceanFloorNoise < 1.0) {
+                SetBlock(GRAVEL, x, height, z);
+            }
             for (int y = height + 1; y < water_level; y++){
               SetBlock(WATER,x,y,z);
             }
