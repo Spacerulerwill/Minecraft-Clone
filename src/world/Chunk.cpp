@@ -107,15 +107,15 @@ void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin)
 void engine::Chunk::CreateMesh()
 {
     m_Vertices.clear();
-    //m_Vertices.reserve(CS_P3 * 3);
+    m_Vertices.reserve(CS_P3 * 3);
     m_VertexCount = 0;
 
     m_WaterVertices.clear();
-    //m_WaterVertices.reserve(CS_P3 * 3);
+    m_WaterVertices.reserve(CS_P3 * 3);
     m_WaterVertexCount = 0;
 
     m_CustomModelVertices.clear();
-    //m_CustomModelVertices.reserve(CS_P3 * 3);
+    m_CustomModelVertices.reserve(CS_P3 * 3);
     m_CustomModelVertexCount = 0;
     
     GreedyTranslucent(m_Vertices, m_WaterVertices, m_Voxels);

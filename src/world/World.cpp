@@ -5,6 +5,8 @@ LICENSE: MIT
 
 #include <world/World.hpp>
 #include <GLFW/glfw3.h>
+#include <chrono>
+using namespace std::chrono;
 
 engine::World::World(siv::PerlinNoise::seed_type seed) {
     m_Noise.reseed(seed);
@@ -33,8 +35,12 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferP
         Chunk* chunk = this->m_ChunkMeshQueue.front();
         this->m_ChunkMeshQueue.pop();
         m_ThreadPool.push_task([chunk, this]{
+            auto start = high_resolution_clock::now();
             chunk->TerrainGen(this->m_Noise);
             chunk->CreateMesh();
+            auto stop = high_resolution_clock::now();
+            auto duration = duration_cast<microseconds>(stop - start);
+            LOG_TRACE(duration.count());
         });
     }
     
