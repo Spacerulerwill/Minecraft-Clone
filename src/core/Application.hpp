@@ -27,7 +27,7 @@ namespace engine {
 		void ProcessInput(float deltaTime);
 		float m_DeltaTime = 0.0f;
 		float m_LastFrame = 0.0f;
-		Camera m_Camera;
+		Camera m_Camera = Camera(Vec3(0.0f, 350.0f, 0.0f));
 		BlockInt m_SelectedBlock = GRASS;
 
 		bool m_Wireframe = false;

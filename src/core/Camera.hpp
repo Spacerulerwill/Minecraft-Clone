@@ -41,6 +41,7 @@ namespace engine {
         float m_FOV = 45.0f;
 
         Camera();
+        Camera(engine::Vec3 pos);
 
         engine::Mat4 GetViewMatrix() const;
         void ProcessKeyboard(CameraMovement direction, float deltaTime);

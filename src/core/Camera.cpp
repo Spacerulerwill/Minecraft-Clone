@@ -13,6 +13,11 @@ engine::Camera::Camera()
     UpdateCameraVectors();
 }
 
+engine::Camera::Camera(engine::Vec3 pos): m_Position(pos) {
+    UpdateCameraVectors();
+}
+
+
 engine::Mat4 engine::Camera::GetViewMatrix() const
 {
     return engine::lookAt(m_Position, m_Position + m_Front, m_Up);
