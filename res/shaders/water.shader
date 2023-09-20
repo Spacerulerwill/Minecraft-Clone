@@ -7,6 +7,7 @@ layout (location = 0) in uvec2 data;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform float time;
 
 out vec3 FragNormal;
 out vec3 TexCoords;
@@ -34,7 +35,7 @@ void main()
 		float((data.y >> 6)&uint(63)),
 		float((data.y >> 12)&uint(255))
 	);
-	VertexPos = projection * view * model * vec4(x,y,z,1.0);
+	VertexPos = projection * view * model * vec4(x,y + (min(time - 2, 0)) * 25,z,1.0);
 	gl_Position = VertexPos;
 }
 

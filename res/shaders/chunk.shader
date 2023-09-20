@@ -7,6 +7,7 @@ layout (location = 0) in uvec2 data;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform float time;
 
 out vec3 FragNormal;
 out uint FragNormalIndex;
@@ -43,7 +44,7 @@ void main()
 		float((data.y >> 12)&uint(255))
 	);
 
-	VertexPos = projection * view * model * vec4(x,y,z,1.0);
+	VertexPos = projection * view * model * vec4(x,y + (min(time - 2, 0)) * 25,z,1.0);
 	FragPos = vec3(model * vec4(x,y,z, 1.0));
 
     isFoliage = float((data.y >> 20)&uint(1));
@@ -92,6 +93,6 @@ void main() {
     else if (isFoliage > 0.5)
         texColor.rgb *= foliageColor;
 
-    texColor.a = time / 2.0;
+    texColor.a = time / 3.0;
 	FragColor = texColor;
 }

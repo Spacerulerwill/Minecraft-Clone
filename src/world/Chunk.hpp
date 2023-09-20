@@ -43,10 +43,6 @@ namespace engine {
     */
 	class Chunk {
 	private:
-		int chunkX = 0;
-		int chunkY = 0;
-		int chunkZ = 0;
-
 		BlockInt* m_Voxels = new BlockInt[CS_P3];
 
 		VertexBuffer m_VBO;
@@ -68,6 +64,11 @@ namespace engine {
 	public:
 		bool needsRemeshing = true;
 		bool needsBuffering = false;
+
+        int chunkX = 0;
+		int chunkY = 0;
+		int chunkZ = 0;
+        
         float firstBufferTime = 0.0f;
 
 		Chunk(int chunkX, int chunkY, int chunkZ);

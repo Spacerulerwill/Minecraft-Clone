@@ -9,6 +9,7 @@ layout (location = 2) in float aIsFoliage;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform float time;
 
 out vec3 TexCoords;
 out float isFoliage;
@@ -17,7 +18,7 @@ void main()
 {
     isFoliage = aIsFoliage;
     TexCoords = aTexCoords;
-	gl_Position = projection * view * model * vec4(aPos, 1.0);
+	gl_Position = projection * view * model * vec4(aPos.x, aPos.y + (min(time - 2, 0)) * 25, aPos.z, 1.0);
 }
 
 #shader fragment

@@ -16,10 +16,25 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferP
 	int chunksRemeshed = 0;
     m_ChunkDrawVector.clear();
 
+
+    for (auto it = m_ChunkMap.cbegin(); it != m_ChunkMap.cend();) {
+        Chunk* chunk = (*it).second;
+        if (
+            chunk->chunkX < chunkX - radius ||
+            chunk->chunkX > chunkX + radius - 1 ||
+            chunk->chunkZ < chunkZ - radius ||
+            chunk->chunkZ > chunkZ + radius - 1
+        ) {
+            delete chunk;
+            m_ChunkMap.erase(it++);
+        } else {
+            ++it;
+        }
+    }
+
     for (int iz = -radius; iz < radius; iz++) {
 		for (int y = 0; y < 4; y++) {
-			int dx = static_cast<int>(round(sqrt(radius * radius - iz * iz)));
-			for (int ix = -dx; ix < dx; ix++) {
+			for (int ix = -radius; ix < radius; ix++) {
 				Vec3 vec = Vec3(chunkX + ix, y, chunkZ + iz);
 				Chunk* chunk = nullptr;
 				if (m_ChunkMap.find(vec) == m_ChunkMap.end()) {
@@ -28,7 +43,7 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferP
 				}
 				else {
 					chunk = m_ChunkMap[vec];
-					
+
 					if (chunk->needsBuffering) {
 						if (chunksBuffered < bufferPerFrame) {
 							chunk->BufferData();
@@ -37,7 +52,7 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferP
 					}
 					else if (!chunk->needsRemeshing) {
 						m_ChunkDrawVector.push_back(chunk);
-					}
+                    }
 				}
 
 				if (chunksRemeshed < bufferPerFrame && chunk->needsRemeshing) {
