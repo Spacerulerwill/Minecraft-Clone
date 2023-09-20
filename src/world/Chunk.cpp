@@ -75,12 +75,13 @@ void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin)
             SetBlock(GRASS, x, height, z);
 
             int randInt = distrib(gen);
-            if (height < CS_P_MINUS_ONE) {
+            if (height < CS_P_MINUS_ONE - 1) {
                 if (randInt < 20) {
                     SetBlock(TALL_GRASS, x, height+1, z);
                 }
                 else if (randInt < 28) {
-                    SetBlock(ROSE, x, height+1, z);
+					SetBlock(ROSE, x, height + 1, z);
+
                 } 
                 else if (randInt < 30) {
                     SetBlock(PINK_TULIP, x, height+1, z);
@@ -103,19 +104,31 @@ void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin)
     }
 }
 
+void engine::Chunk::TerrainGen(BlockInt block)
+{
+	memset(m_Voxels, AIR, CS_P3);
+	for (int x = 1; x < CS_P_MINUS_ONE; x++) {
+		for (int y = 1; y < CS_P_MINUS_ONE; y++) {
+			for (int z = 1; z < CS_P_MINUS_ONE; z++) {
+				SetBlock(block, x, y, z);
+			}
+		}
+	}
+}
+
 
 void engine::Chunk::CreateMesh()
 {
     m_Vertices.clear();
-    m_Vertices.reserve(CS_P3 * 3);
+    //m_Vertices.reserve(CS_P3 * 3);
     m_VertexCount = 0;
 
     m_WaterVertices.clear();
-    m_WaterVertices.reserve(CS_P3 * 3);
+    //m_WaterVertices.reserve(CS_P3 * 3);
     m_WaterVertexCount = 0;
 
     m_CustomModelVertices.clear();
-    m_CustomModelVertices.reserve(CS_P3 * 3);
+    //m_CustomModelVertices.reserve(CS_P3 * 3);
     m_CustomModelVertexCount = 0;
     
     GreedyTranslucent(m_Vertices, m_WaterVertices, m_Voxels);
@@ -125,6 +138,9 @@ void engine::Chunk::CreateMesh()
     m_VertexCount = m_Vertices.size();
     m_WaterVertexCount = m_WaterVertices.size();
     m_CustomModelVertexCount = m_CustomModelVertices.size();
+
+	needsRemeshing = false;
+	needsBuffering = true;
 }
 
 void engine::Chunk::BufferData()
@@ -146,37 +162,40 @@ void engine::Chunk::BufferData()
         m_CustomModelVBO.Unbind();
         m_CustomModelVertices.clear();
     }
+
+	needsBuffering = false;
 }
 
 void engine::Chunk::Draw(Shader& shader)
 {
-    m_VAO.Bind();
-    shader.setMat4("model", m_Model);
-    shader.setFloat("time", static_cast<float>(glfwGetTime()) - firstBufferTime);
+	if (m_VertexCount > 0) {
+		 m_VAO.Bind();
+		shader.setMat4("model", m_Model);
+		shader.setFloat("time", static_cast<float>(glfwGetTime()) - firstBufferTime);
 
-    if (m_VertexCount > 0) {
-        glDrawArrays(GL_TRIANGLES, 0, m_VertexCount);
-    }
+			glDrawArrays(GL_TRIANGLES, 0, m_VertexCount);
+		}
 }
 
 void engine::Chunk::DrawWater(Shader& shader)
 {
-    m_WaterVAO.Bind();
-    shader.setMat4("model", m_Model);
-    shader.setFloat("time", static_cast<float>(glfwGetTime()) - firstBufferTime);
+	if (m_WaterVertexCount > 0) {
+		m_WaterVAO.Bind();
+		shader.setMat4("model", m_Model);
+		shader.setFloat("time", static_cast<float>(glfwGetTime()) - firstBufferTime);
 
-    if (m_WaterVertexCount > 0) {
-        glDrawArrays(GL_TRIANGLES, 0, m_WaterVertexCount);
+		glDrawArrays(GL_TRIANGLES, 0, m_WaterVertexCount);
     }
 }
 
 void engine::Chunk::DrawCustomModelBlocks(Shader& shader)
 {
-    m_CustomModelVAO.Bind();
-    shader.setMat4("model", m_Model);
-    shader.setFloat("time", static_cast<float>(glfwGetTime()) - firstBufferTime);
+	if (m_CustomModelVertexCount > 0) {
 
-    if (m_CustomModelVertexCount > 0) {
+		m_CustomModelVAO.Bind();
+		shader.setMat4("model", m_Model);
+		shader.setFloat("time", static_cast<float>(glfwGetTime()) - firstBufferTime);
+
         glDrawArrays(GL_TRIANGLES, 0, m_CustomModelVertexCount);
     }
 }

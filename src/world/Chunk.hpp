@@ -23,7 +23,7 @@ LICENSE: MIT
 
 namespace engine {
 
-	constexpr float BLOCK_SCALE = 0.2f;
+	constexpr float BLOCK_SCALE = 1.0f;
     constexpr float CHUNK_SCALE = CS * BLOCK_SCALE;
 	constexpr float INV_BLOCK_SCALE = 1 / BLOCK_SCALE;
 
@@ -66,12 +66,15 @@ namespace engine {
 
 		Mat4 m_Model = scale(Vec3(BLOCK_SCALE));
 	public:
+		bool needsRemeshing = true;
+		bool needsBuffering = false;
         float firstBufferTime = 0.0f;
 
 		Chunk(int chunkX, int chunkY, int chunkZ);
 		~Chunk();
         
 		void TerrainGen(const siv::PerlinNoise& perlin);
+		void TerrainGen(BlockInt block);
 		void CreateMesh();
 
 		void BufferData();

@@ -29,9 +29,7 @@ namespace engine {
         siv::PerlinNoise::seed_type m_Seed;
         siv::PerlinNoise m_Noise;
         std::vector<Chunk*> m_ChunkDrawVector;
-        BS::thread_pool m_ThreadPool;
-        std::queue<Chunk*> m_ChunkMeshQueue;
-        std::queue<Chunk*> m_ChunkBufferQueue;
+        BS::thread_pool m_ThreadPool = BS::thread_pool(8);
     };
 }
 

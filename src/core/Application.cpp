@@ -185,7 +185,7 @@ void engine::Application::Run()
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        Mat4 perspective_matrix = perspective(radians(m_Camera.m_FOV), static_cast<float>(Window::SCREEN_WIDTH) / Window::SCREEN_HEIGHT, 0.1f, 500.0f);
+        Mat4 perspective_matrix = perspective(radians(m_Camera.m_FOV), static_cast<float>(Window::SCREEN_WIDTH) / Window::SCREEN_HEIGHT, 0.1f, 3000.0f);
         Mat4 view_matrix = m_Camera.GetViewMatrix();
 
         Mat4 skybox_view_matrix = engine::translationRemoved(view_matrix);
@@ -195,8 +195,8 @@ void engine::Application::Run()
         world.CreateChunks(
             static_cast<int>(m_Camera.m_Position.x / CHUNK_SCALE),
             static_cast<int>(m_Camera.m_Position.z / CHUNK_SCALE),
-            20,
-            25
+            12,
+            8
         );
 
         /*
@@ -291,9 +291,9 @@ void engine::Application::ProcessInput(float deltaTime)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         m_Camera.ProcessKeyboard(RIGHT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
-        m_Camera.m_MovementSpeed = 50.0f;
+        m_Camera.m_MovementSpeed = 100.0f;
     else
-        m_Camera.m_MovementSpeed = 2.5f;
+        m_Camera.m_MovementSpeed = 10.0f;
 }
 
 void engine::Application::GLFWMouseMoveCallback(GLFWwindow* window, double xposIn, double yposIn)

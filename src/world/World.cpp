@@ -5,54 +5,61 @@ LICENSE: MIT
 
 #include <world/World.hpp>
 #include <GLFW/glfw3.h>
-#include <chrono>
-using namespace std::chrono;
+#include <atomic>
 
 engine::World::World(siv::PerlinNoise::seed_type seed) {
     m_Noise.reseed(seed);
 }
 
 void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferPerFrame) {
-
+	int chunksBuffered = 0;
+	int chunksRemeshed = 0;
     m_ChunkDrawVector.clear();
-    for (int iz = - radius; iz < radius; iz++) {
-        int dx = static_cast<int>(round(sqrt(radius * radius - iz * iz)));
-        for (int ix = - dx; ix <  dx; ix++) {
-            Vec3 vec = Vec3(chunkX + ix, 0, chunkZ + iz);
-            if (m_ChunkMap.find(vec) == m_ChunkMap.end()) {
-                Chunk* chunk = new Chunk(chunkX + ix, 0, chunkZ + iz);
-                m_ChunkMeshQueue.push(chunk);
-                m_ChunkBufferQueue.push(chunk);
-                m_ChunkMap[vec] = chunk;
-            } else {
-                m_ChunkDrawVector.push_back(m_ChunkMap[vec]);
-            }
-        }
-    }
 
-    int chunksToMesh = m_ChunkMeshQueue.size() < bufferPerFrame ? m_ChunkMeshQueue.size() : bufferPerFrame;
-    for (int i = 0; i < chunksToMesh; i++) {
-        Chunk* chunk = this->m_ChunkMeshQueue.front();
-        this->m_ChunkMeshQueue.pop();
-        m_ThreadPool.push_task([chunk, this]{
-            auto start = high_resolution_clock::now();
-            chunk->TerrainGen(this->m_Noise);
-            chunk->CreateMesh();
-            auto stop = high_resolution_clock::now();
-            auto duration = duration_cast<microseconds>(stop - start);
-            LOG_TRACE(duration.count());
-        });
-    }
-    
-    m_ThreadPool.wait_for_tasks();
-    
-    int chunksToBuffer = m_ChunkBufferQueue.size() < bufferPerFrame ? m_ChunkBufferQueue.size() : bufferPerFrame;
+    for (int iz = -radius; iz < radius; iz++) {
+		for (int y = 0; y < 4; y++) {
+			int dx = static_cast<int>(round(sqrt(radius * radius - iz * iz)));
+			for (int ix = -dx; ix < dx; ix++) {
+				Vec3 vec = Vec3(chunkX + ix, y, chunkZ + iz);
+				Chunk* chunk = nullptr;
+				if (m_ChunkMap.find(vec) == m_ChunkMap.end()) {
+					chunk = new Chunk(chunkX + ix, y, chunkZ + iz);
+					m_ChunkMap[vec] = chunk;
+				}
+				else {
+					chunk = m_ChunkMap[vec];
+					
+					if (chunk->needsBuffering) {
+						if (chunksBuffered < bufferPerFrame) {
+							chunk->BufferData();
+							chunksBuffered++;
+						}
+					}
+					else if (!chunk->needsRemeshing) {
+						m_ChunkDrawVector.push_back(chunk);
+					}
+				}
 
-    for (int i = 0; i < chunksToBuffer; i++){
-        Chunk* chunk = this->m_ChunkBufferQueue.front();
-        m_ChunkBufferQueue.pop();
-        chunk->BufferData();
-        chunk->firstBufferTime = static_cast<float>(glfwGetTime());
+				if (chunksRemeshed < bufferPerFrame && chunk->needsRemeshing) {
+					chunksRemeshed++;
+
+					if (y == 3) {
+						m_ThreadPool.push_task([chunk, this] {
+							chunk->TerrainGen(this->m_Noise);
+							chunk->CreateMesh();
+                            chunk->firstBufferTime = static_cast<float>(glfwGetTime());
+						});
+					}
+					else {
+						m_ThreadPool.push_task([chunk, this] {
+							chunk->TerrainGen(STONE);
+							chunk->CreateMesh();
+                            chunk->firstBufferTime = static_cast<float>(glfwGetTime());
+						});
+					}
+				}
+			}
+		}
     }
 }
 

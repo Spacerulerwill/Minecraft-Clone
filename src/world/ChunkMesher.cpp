@@ -205,6 +205,7 @@ void engine::GreedyTranslucent(std::vector<engine::ChunkVertex>& vertices, std::
 
 void engine::GreedyOpaque(std::vector<engine::ChunkVertex>& vertices, const engine::BlockInt* voxels) {
   uint64_t axis_cols[CS_P2 * 3] = { 0 };
+  uint64_t not_opaque_axis_cols[CS_P2 * 3] = { 0 };
   uint64_t col_face_masks[CS_P2 * 6];
 
   // Step 1: Convert to binary representation for each direction
@@ -213,15 +214,16 @@ void engine::GreedyOpaque(std::vector<engine::ChunkVertex>& vertices, const engi
     for (int x = 0; x < CS_P; x++) {
       uint64_t zb = 0;
       for (int z = 0; z < CS_P; z++) {
-        BlockDataStruct blockData = BlockData[voxels[index]];
-        if (blockData.opaque && blockData.model == CUBE) {
-          axis_cols[x + (z * CS_P)] |= 1ULL << y;
-          axis_cols[z + (y * CS_P) + (CS_P2)] |= 1ULL << x;
+		  BlockDataStruct blockData = BlockData[voxels[index]];
+		  if (blockData.opaque && blockData.model == CUBE) {
+			axis_cols[x + (z * CS_P)] |= 1ULL << y;
+			axis_cols[z + (y * CS_P) + (CS_P2)] |= 1ULL << x;
           zb |= 1ULL << z;
         }
+
         index++;
       }
-      axis_cols[y + (x * CS_P) + (CS_P2 * 2)] = zb;
+	  axis_cols[y + (x * CS_P) + (CS_P2 * 2)] = zb;
     }
   }
 
@@ -297,9 +299,6 @@ void engine::GreedyOpaque(std::vector<engine::ChunkVertex>& vertices, const engi
           merged_forward[(right * CS_P) + bit_pos] = 0;
           merged_right[bit_pos] = 0;
 
-          if (!blockData.opaque) { 
-            continue;
-          }
           ChunkVertex v1, v2, v3, v4;
           bool isGrass = type == GRASS;
           bool isFoliage = type == type == OAK_LEAVES;
@@ -319,6 +318,7 @@ void engine::GreedyOpaque(std::vector<engine::ChunkVertex>& vertices, const engi
               v2 = GetVertex(mesh_left, mesh_up, mesh_front, 0, 0, texZ, face, isGrass, isFoliage);
               v3 = GetVertex(mesh_right, mesh_up, mesh_front, mesh_right-mesh_left, 0, texZ, face, isGrass, isFoliage);
               v4 = GetVertex(mesh_right, mesh_up, mesh_back, mesh_right-mesh_left, mesh_back-mesh_front, texZ, face, isGrass, isFoliage);
+			
               break;
             }
             case 2: { 
