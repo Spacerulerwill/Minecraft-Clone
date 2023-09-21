@@ -6,6 +6,7 @@ LICENSE: MIT
 #include <world/Chunk.hpp>
 #include <opengl/VertexBufferLayout.hpp>
 #include <cstring>
+#include <fstream>
 #include <util/Log.hpp>
 #include <math/Math.hpp>
 #include <algorithm>
@@ -14,7 +15,6 @@ LICENSE: MIT
 engine::Chunk::Chunk(int chunkX, int chunkY, int chunkZ): chunkX(chunkX), chunkY(chunkY), chunkZ(chunkZ)
 {
     m_Model *= translate(Vec3(chunkX * CS, chunkY * CS, chunkZ * CS));
-    memset(m_Voxels, AIR, sizeof(BlockInt) * CS_P3);
 
     VertexBufferLayout bufLayout;
 	bufLayout.AddAttribute<unsigned int>(2);
@@ -104,6 +104,10 @@ void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin)
     }
 }
 
+void engine::Chunk::SetEmpty() {
+    memset(m_Voxels, AIR, sizeof(BlockInt) * CS_P3);
+}
+
 void engine::Chunk::TerrainGen(BlockInt block)
 {
 	memset(m_Voxels, AIR, CS_P3);
@@ -120,15 +124,15 @@ void engine::Chunk::TerrainGen(BlockInt block)
 void engine::Chunk::CreateMesh()
 {
     m_Vertices.clear();
-    //m_Vertices.reserve(CS_P3 * 3);
+    m_Vertices.reserve(CS_P3 * 3);
     m_VertexCount = 0;
 
     m_WaterVertices.clear();
-    //m_WaterVertices.reserve(CS_P3 * 3);
+    m_WaterVertices.reserve(CS_P3 * 3);
     m_WaterVertexCount = 0;
 
     m_CustomModelVertices.clear();
-    //m_CustomModelVertices.reserve(CS_P3 * 3);
+    m_CustomModelVertices.reserve(CS_P3 * 3);
     m_CustomModelVertexCount = 0;
     
     GreedyTranslucent(m_Vertices, m_WaterVertices, m_Voxels);
@@ -141,6 +145,20 @@ void engine::Chunk::CreateMesh()
 
 	needsRemeshing = false;
 	needsBuffering = true;
+}
+
+void engine::Chunk::UnloadToFile()
+{
+    std::ofstream wf(fmt::format("world/{}.{}.{}.chunk", chunkX, chunkY, chunkZ), std::ios::out | std::ios::binary);
+    if (!wf) {
+        LOG_ERROR(fmt::format("Failed to unload chunk {}, {}, {}. File creation error!", chunkX, chunkY, chunkZ));
+    }
+    wf.write((char *)&m_Voxels[0], CS_P3 * sizeof(BlockInt));
+    wf.close();
+    if (!wf.good()) {
+        LOG_ERROR(fmt::format("Failed to unload chunk {}, {}, {}. File writing error!", chunkX, chunkY, chunkZ));
+    }
+    needsUnloading = false;
 }
 
 void engine::Chunk::BufferData()

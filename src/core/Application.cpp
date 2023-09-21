@@ -18,6 +18,7 @@ License: MIT
 #include <math.h>
 #include <random>
 #include <limits>
+#include <filesystem>
 
 // Unique pointer to the singleton instance
 std::unique_ptr<engine::Application> engine::Application::s_Instance = nullptr;
@@ -44,6 +45,9 @@ void engine::Application::Init()
 
 void engine::Application::Run()
 {
+    // Create folder structure for exe
+    std::filesystem::create_directory("world");
+    
     // Seed random number generator
 	srand(time(NULL));
 
@@ -161,7 +165,7 @@ void engine::Application::Run()
     unsigned int grass_mask = loadTexture("res/textures/block/color_mask/grass_side_overlay.png");
 
     // Create and seed our world
-    World world(time(NULL));
+    World world(0);
 
     // Game loop!
 	while (!glfwWindowShouldClose(Window::GetWindow())) { 
@@ -274,7 +278,7 @@ void engine::Application::ResourceCleanup()
 {
     delete p_Framebuffer;
 	Window::Terminate();
-	glfwTerminate();
+    //glfwTerminate() CAUSES A SEGFAULT?? WHY??
 }
 
 void engine::Application::ProcessInput(float deltaTime)

@@ -43,8 +43,6 @@ namespace engine {
     */
 	class Chunk {
 	private:
-		BlockInt* m_Voxels = new BlockInt[CS_P3];
-
 		VertexBuffer m_VBO;
 		VertexArray m_VAO;
 		std::vector<ChunkVertex> m_Vertices;
@@ -62,8 +60,11 @@ namespace engine {
 
 		Mat4 m_Model = scale(Vec3(BLOCK_SCALE));
 	public:
+    	BlockInt* m_Voxels = new BlockInt[CS_P3];
+
 		bool needsRemeshing = true;
 		bool needsBuffering = false;
+        bool needsUnloading = false;
 
         int chunkX = 0;
 		int chunkY = 0;
@@ -76,7 +77,10 @@ namespace engine {
         
 		void TerrainGen(const siv::PerlinNoise& perlin);
 		void TerrainGen(BlockInt block);
+        void SetEmpty();
 		void CreateMesh();
+
+        void UnloadToFile();
 
 		void BufferData();
 		void Draw(Shader& shader);
@@ -89,6 +93,8 @@ namespace engine {
 
 		inline void SetBlock(BlockInt block, unsigned int x, unsigned int y, unsigned int z) {
 			m_Voxels[VOXEL_INDEX(x,y,z)] = block;
+            needsUnloading = true;
+            needsRemeshing = true;
 		}
 	};
 }

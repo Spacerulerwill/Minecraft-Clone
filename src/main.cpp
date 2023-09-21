@@ -7,6 +7,8 @@
 #include <iostream>
 
 int main() {
+    // Create folder st
+    // Run application
 	engine::Application::Init();
 	try {
 		engine::Application::GetInstance()->Run();
