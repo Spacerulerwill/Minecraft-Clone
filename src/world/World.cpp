@@ -66,7 +66,7 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferP
 						});
 					}
 					else {
-						m_ThreadPool.push_task([chunk, this] {
+						m_ThreadPool.push_task([chunk] {
 							chunk->TerrainGen(STONE);
 							chunk->CreateMesh();
                             chunk->firstBufferTime = static_cast<float>(glfwGetTime());

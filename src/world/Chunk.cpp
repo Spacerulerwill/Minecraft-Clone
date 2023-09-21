@@ -148,19 +148,19 @@ void engine::Chunk::BufferData()
     if (m_VertexCount > 0){
         m_VBO.BufferData(m_Vertices.data(), m_VertexCount * sizeof(ChunkVertex));
         m_VBO.Unbind();
-        m_Vertices.clear();
+        std::vector<ChunkVertex>().swap(m_Vertices);
     }
 
     if (m_WaterVertexCount > 0){
         m_WaterVBO.BufferData(m_WaterVertices.data(), m_WaterVertexCount * sizeof(ChunkVertex));
         m_WaterVBO.Unbind();
-        m_WaterVertices.clear();
+        std::vector<ChunkVertex>().swap(m_WaterVertices);
     }
 
     if (m_CustomModelVertexCount > 0) {
         m_CustomModelVBO.BufferData(m_CustomModelVertices.data(), m_CustomModelVertexCount * sizeof(float));
         m_CustomModelVBO.Unbind();
-        m_CustomModelVertices.clear();
+        std::vector<float>().swap(m_CustomModelVertices);
     }
 
 	needsBuffering = false;
