@@ -204,11 +204,24 @@ void engine::Application::Run()
         Draw opaque part of chunks first, then the custom block models and then the water to preserve transparency.
         For drawing of custom block models we disable face culling.
         */
+        VoxelRaycastResult result = VoxelRaycast(m_World, m_Camera.m_Position, m_Camera.m_Front, 15.0f);
+        Chunk* chunk = result.chunk;
+
         chunkShader.Bind();
         chunkShader.setMat4("projection", perspective_matrix);
         chunkShader.setMat4("view", view_matrix);
         chunkShader.SetInt("tex_array", 0);
         chunkShader.SetInt("grass_mask", 2);
+        chunkShader.SetInt("drawBlockHighlight", result.blockHit != AIR);
+        
+        if (result.blockHit != AIR  && result.blockHit != WATER && chunk != nullptr) {
+            chunkShader.setIVec3("blockPos", 
+                chunk->chunkX * CS + result.blockX - 1, 
+                chunk->chunkY * CS + result.blockY - 1,
+                chunk->chunkZ * CS + result.blockZ - 1
+            );
+        }
+        
         m_World.DrawOpaque(chunkShader);
 
         glDisable(GL_CULL_FACE);
@@ -216,6 +229,16 @@ void engine::Application::Run()
         customModelShader.setMat4("projection", perspective_matrix);
         customModelShader.setMat4("view", view_matrix);
         customModelShader.SetInt("tex_array", 0);
+        customModelShader.SetInt("drawBlockHighlight", result.blockHit != AIR);
+        
+        if (result.blockHit != AIR && result.blockHit != WATER && chunk != nullptr) {
+            customModelShader.setIVec3("blockPos", 
+                chunk->chunkX * CS + result.blockX - 1, 
+                chunk->chunkY * CS + result.blockY - 1,
+                chunk->chunkZ * CS + result.blockZ - 1
+            );
+        }
+        
         m_World.DrawCustomModelBlocks(customModelShader);
         glEnable(GL_CULL_FACE);
 
