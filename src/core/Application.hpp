@@ -12,6 +12,7 @@ License: MIT
 #include <core/Camera.hpp>
 #include <core/Window.hpp>
 #include <world/Chunk.hpp>
+#include <world/World.hpp>
 #include <world/Block.hpp>
 #include <opengl/Framebuffer.hpp>
 #include <memory>
@@ -28,6 +29,7 @@ namespace engine {
 		float m_DeltaTime = 0.0f;
 		float m_LastFrame = 0.0f;
 		Camera m_Camera = Camera(Vec3(0.0f, 350.0f, 0.0f));
+        World m_World = World(0);
 		BlockInt m_SelectedBlock = GRASS;
 
 		bool m_Wireframe = false;

@@ -45,7 +45,7 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferP
 					m_ChunkMap[vec] = chunk;
 				}
 				else {
-					chunk = m_ChunkMap[vec];
+					chunk = m_ChunkMap.at(vec);
 
 					if (chunk->needsBuffering) {
 						if (chunksBuffered < bufferPerFrame) {
@@ -117,6 +117,7 @@ engine::World::~World() {
             chunk->UnloadToFile();
         }
     }
+    // TODO: Delete chunks here
 }
 /*
 MIT License

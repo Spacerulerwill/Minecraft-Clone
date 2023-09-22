@@ -21,20 +21,6 @@ namespace engine {
 		return theta * ONE_EIGHTY_OVER_PI;
 	}
 
-	template<typename T>
-	inline int sign(T x) {
-		return x > 0 ? 1 : (x < 0 ? -1 : 0);
-	}
-
-	template<typename T>
-	inline T fract(T x) {
-		return x - floor(x);
-	}
-
-	template<typename T>
-	inline T fract1(T x) {
-		return 1 - x + floorf(x);
-	}
 }
 
 #endif // !MATH_H

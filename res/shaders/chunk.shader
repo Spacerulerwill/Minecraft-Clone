@@ -86,7 +86,7 @@ void main() {
             vec4 grass_mask_color = texture(grass_mask, TexCoords.xy);
             grass_mask_color.rgb *= grassColor;
             texColor = mix(texColor, grass_mask_color, grass_mask_color.a);
-        } else {
+        } else if (FragNormalIndex == 0){
             texColor.rgb *= grassColor;
         }
     }

@@ -3,14 +3,6 @@ cmake_minimum_required(VERSION 3.22.1)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-
 project(MinecraftClone VERSION 1.0)
 
 add_executable(${PROJECT_NAME} 
@@ -26,6 +18,7 @@ add_executable(${PROJECT_NAME}
     src/math/Vec2.cpp
     src/math/Vec3.cpp
     src/math/Vec4.cpp
+    src/math/VoxelRaycast.cpp
     src/opengl/Framebuffer.cpp
     src/opengl/IndexBuffer.cpp
     src/opengl/VertexArray.cpp
@@ -48,6 +41,7 @@ add_executable(${PROJECT_NAME}
     src/math/Vec2.hpp
     src/math/Vec3.hpp
     src/math/Vec4.hpp
+    src/math/VoxelRaycast.hpp
     src/opengl/Framebuffer.hpp
     src/opengl/IndexBuffer.hpp
     src/opengl/VertexArray.hpp

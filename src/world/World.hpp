@@ -23,6 +23,14 @@ namespace engine {
         void DrawOpaque(Shader& chunkShader);
         void DrawWater(Shader& waterShader);
         void DrawCustomModelBlocks(Shader& customModelShader);
+        inline Chunk* GetChunk(int x, int y, int z) const { 
+            auto it = m_ChunkMap.find(Vec3(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)));
+            if (it == m_ChunkMap.end()) {
+                return nullptr;
+            } else {
+                return it->second;
+            }
+        }
         ~World();
     private:
         std::unordered_map<Vec3, Chunk*> m_ChunkMap;

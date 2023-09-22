@@ -6,11 +6,11 @@ License: MIT
 #include <core/Application.hpp>
 #include <util/TextureLoad.hpp>
 #include <world/Skybox.hpp>
-#include <world/World.hpp>
 #include <core/Camera.hpp>
 #include <core/Shader.hpp>
 #include <util/Log.hpp>
 #include <math/Math.hpp>
+#include <math/VoxelRaycast.hpp>
 #include <opengl/Framebuffer.hpp>
 #include <opengl/VertexArray.hpp>
 #include <opengl/VertexBuffer.hpp>
@@ -164,9 +164,6 @@ void engine::Application::Run()
     glActiveTexture(GL_TEXTURE2);
     unsigned int grass_mask = loadTexture("res/textures/block/color_mask/grass_side_overlay.png");
 
-    // Create and seed our world
-    World world(0);
-
     // Game loop!
 	while (!glfwWindowShouldClose(Window::GetWindow())) { 
 
@@ -196,11 +193,11 @@ void engine::Application::Run()
 		skybox.Draw(perspective_matrix, skybox_view_matrix);
         
         // Create chunks around the players position
-        world.CreateChunks(
+        m_World.CreateChunks(
             static_cast<int>(m_Camera.m_Position.x / CHUNK_SCALE),
             static_cast<int>(m_Camera.m_Position.z / CHUNK_SCALE),
             12,
-            8
+            12
         );
 
         /*
@@ -212,21 +209,21 @@ void engine::Application::Run()
         chunkShader.setMat4("view", view_matrix);
         chunkShader.SetInt("tex_array", 0);
         chunkShader.SetInt("grass_mask", 2);
-        world.DrawOpaque(chunkShader);
+        m_World.DrawOpaque(chunkShader);
 
         glDisable(GL_CULL_FACE);
         customModelShader.Bind();
         customModelShader.setMat4("projection", perspective_matrix);
         customModelShader.setMat4("view", view_matrix);
         customModelShader.SetInt("tex_array", 0);
-        world.DrawCustomModelBlocks(customModelShader);
+        m_World.DrawCustomModelBlocks(customModelShader);
         glEnable(GL_CULL_FACE);
 
         waterShader.Bind();
         waterShader.setMat4("projection", perspective_matrix);
         waterShader.setMat4("view", view_matrix);
         waterShader.SetInt("tex_array", 0);
-        world.DrawWater(waterShader);
+        m_World.DrawWater(waterShader);
 
         /* 
 		Unbind our framebuffer and render the result texture to a quad
@@ -328,7 +325,35 @@ void engine::Application::GLFWScrollCallback(GLFWwindow* window, double xoffset,
 
 void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-    
+    switch (button) {
+        case GLFW_MOUSE_BUTTON_LEFT: {
+            if (action == GLFW_PRESS) {
+                VoxelRaycastResult result = VoxelRaycast(m_World, m_Camera.m_Position, m_Camera.m_Front, 15.0f);
+                Chunk* chunk = result.chunk;
+                if (result.chunk != nullptr && result.blockHit != AIR) {
+                    chunk->SetBlock(AIR, result.blockX, result.blockY, result.blockZ);
+                    chunk->CreateMesh();
+                    chunk->BufferData();
+                }
+            }
+            break;
+        }
+        case GLFW_MOUSE_BUTTON_RIGHT: {
+            if (action == GLFW_PRESS) {
+                VoxelRaycastResult result = VoxelRaycast(m_World, m_Camera.m_Position, m_Camera.m_Front, 15.0f);
+                Chunk* chunk = result.chunk;
+                if (result.chunk != nullptr && result.blockHit != AIR) {
+                    BlockInt blockAtPositionToPlace = chunk->GetBlock(result.blockX + result.normalX, result.blockY + result.normalY, result.blockZ + result.normalZ);
+                    if (blockAtPositionToPlace == AIR) {
+                        chunk->SetBlock(m_SelectedBlock, result.blockX + result.normalX, result.blockY + result.normalY, result.blockZ + result.normalZ);
+                        chunk->CreateMesh();
+                        chunk->BufferData();
+                    }
+                }
+            }
+            break;
+        }
+    }
 }
        
 void engine::Application::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
