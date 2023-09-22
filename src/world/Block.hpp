@@ -93,8 +93,8 @@ namespace engine {
 	extern MaterialDataStruct MaterialData[NUM_MATERIALS];
 	extern BlockModelStruct BlockModelData[NUM_MODELS];
 
-    extern unsigned int textureSize;
-    extern unsigned int maxAnimationFrames;
+    inline constexpr unsigned int textureSize = 16;
+    inline constexpr unsigned int maxAnimationFrames = 32;
 
 	void InitBlocks();
 };

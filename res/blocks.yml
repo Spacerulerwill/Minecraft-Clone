@@ -8,6 +8,7 @@ water:
   unique_faces: 1
   material: 2
   model: 0
+  frames: 32
 bedrock:
   opaque: true
   unique_faces: 1

@@ -35,9 +35,6 @@ engine::BlockModelStruct engine::BlockModelData[engine::NUM_MODELS] = {
 	{&crossVertices[0], &crossVertices[84]}
 };
 
-unsigned int engine::textureSize = 16;
-unsigned int engine::maxAnimationFrames = 32;
-
 void engine::InitBlocks() {
 	// Load block sounds
 	for (const auto& file : std::filesystem::directory_iterator("res/sound/block")) {

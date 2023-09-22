@@ -128,7 +128,6 @@ void engine::Application::Run()
     // Create skybox and load texture atlas, both use texture unit 0
     glActiveTexture(GL_TEXTURE0);
     Skybox skybox;
-    unsigned int textureAtlas = loadTextureArray("res/textures/atlas.png", 16);
 
     /*
 	Load the crosshair texture into texture unit 1 and load its shader, and
@@ -163,6 +162,15 @@ void engine::Application::Run()
 
     glActiveTexture(GL_TEXTURE2);
     unsigned int grass_mask = loadTexture("res/textures/block/color_mask/grass_side_overlay.png");
+
+    // Load texture atlases
+    unsigned int textureAtlases[maxAnimationFrames];
+
+    for (int i = 0; i < maxAnimationFrames; i++) {
+        textureAtlases[i] = loadTextureArray(fmt::format("res/textures/atlases/atlas{}.png", i).c_str(), textureSize);
+    }
+    int textureIndex = 0;
+    double lastTime = 0.0;
 
     // Game loop!
 	while (!glfwWindowShouldClose(Window::GetWindow())) { 
@@ -206,6 +214,13 @@ void engine::Application::Run()
         */
         VoxelRaycastResult result = VoxelRaycast(m_World, m_Camera.m_Position, m_Camera.m_Front, 15.0f);
         Chunk* chunk = result.chunk;
+        
+        if (glfwGetTime() - lastTime > 0.05) {
+            textureIndex = (textureIndex + 1) % maxAnimationFrames;
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, textureAtlases[textureIndex]);
+            lastTime = glfwGetTime();
+        }
 
         chunkShader.Bind();
         chunkShader.setMat4("projection", perspective_matrix);
