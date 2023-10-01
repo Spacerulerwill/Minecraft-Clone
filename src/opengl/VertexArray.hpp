@@ -6,7 +6,7 @@ License: MIT
 #ifndef VERTEXARRAY_H
 #define VERTEXARRAY_H
 
-#include <opengl/VertexBuffer.hpp>
+#include <opengl/BufferObject.hpp>
 #include <opengl/VertexBufferLayout.hpp>
 
 namespace engine {
@@ -16,13 +16,13 @@ namespace engine {
 		VertexArray();
 		~VertexArray();
 
-		unsigned int getId() { return m_ID; }
+		GLuint getID() { return m_ID; }
 
-		void AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout);
+		void AddBuffer(const BufferObject<GL_ARRAY_BUFFER>& vb, const VertexBufferLayout& layout);
 		void Bind() const;
 		void Unbind() const;
 	private:
-		unsigned int m_ID;
+		GLuint m_ID;
 	};
 }
 

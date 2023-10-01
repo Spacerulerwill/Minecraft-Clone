@@ -80,7 +80,7 @@ void main() {
 
     if (texColor.a < 0.5)
 		discard;
-
+    
     if (isGrass > 0.5) {
         if (FragNormalIndex > 1) {
             vec4 grass_mask_color = texture(grass_mask, TexCoords.xy);
@@ -92,8 +92,6 @@ void main() {
     }
     else if (isFoliage > 0.5)
         texColor.rgb *= foliageColor;
-
-    texColor.a = time / 3.0;
 
     if (drawBlockHighlight && 
 	FragPos.x >= blockPos.x - errorMargin && FragPos.x <= blockPos.x + 1.0 + errorMargin && 

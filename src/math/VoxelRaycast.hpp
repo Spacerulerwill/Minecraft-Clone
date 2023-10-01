@@ -14,16 +14,12 @@ License: MIT
 namespace engine {
     struct VoxelRaycastResult {
         Chunk* chunk;
-        int blockX; 
-        int blockY;
-        int blockZ;
-        int normalX;
-        int normalY;
-        int normalZ;
+        Vec3<int> blockPos;
+        Vec3<int> normal;
 		BlockInt blockHit;
 	};
 
-    engine::VoxelRaycastResult VoxelRaycast(const World& world, const Vec3& start, const Vec3& direction, float distance);
+    engine::VoxelRaycastResult VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, float distance);
 }
 
 #endif // !VOXELRAYCAST_HPP

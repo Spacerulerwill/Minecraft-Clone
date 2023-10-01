@@ -14,6 +14,7 @@ License: MIT
 #include <unordered_map>
 #include <math/Mat4.hpp>
 #include <math/Vec3.hpp>
+#include <util/Concepts.hpp>
 
 namespace engine {
     struct ShaderSources {
@@ -22,26 +23,36 @@ namespace engine {
     };
 
     class Shader {
-    protected:
-        unsigned int u_ID;
+    private:
+        GLuint u_ID;
         std::string m_Filepath;
         std::unordered_map<std::string, int> m_UnformLocation;
-
+        
+        ShaderSources ParseShader(const std::string& filepath);
+        GLuint CompileShader(GLenum type, std::string& source);
+        GLuint CreateShader(std::string& vertex_source, std::string& fragmement_source);
     public:
         Shader(std::string filepath);
         ~Shader();
 
         void Bind() const;
         void Unbind() const;
-        int GetLocation(std::string name);
+        GLint GetLocation(std::string name);
 
-        ShaderSources ParseShader(const std::string& filepath);
-        unsigned int CompileShader(unsigned int type, std::string& source);
-        unsigned int CreateShader(std::string& vertex_source, std::string& fragmement_source);
-        void setMat4(const std::string& name, const Mat4& mat);
-        void setIVec3(const std::string& name, int x, int y, int z);
+        template<std::floating_point T> 
+        void setMat4(const std::string& name, const Mat4<T>& mat) {
+            glUniformMatrix4fv(GetLocation(name), 1, GL_TRUE, mat.GetPointer());
+        }
+
+        void setIVec3(const std::string& name, const Vec3<int>& vec) {
+            glUniform3i(GetLocation(name), vec.x, vec.y, vec.z);
+        }
+
+        void setIVec3(const std::string& name, int x, int y, int z) {
+            glUniform3i(GetLocation(name), x, y, z);
+        }
+
         void setFloat(const std::string& name, float x);
-        void setVec3(const std::string& name, const Vec3& vec);
         void SetInt(const std::string& name, int val);
 
     };

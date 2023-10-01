@@ -7,37 +7,35 @@ LICENSE: MIT
 #define WORLD_H
 
 #include <unordered_map>
-#include <vector>
-#include <queue>
-#include <world/Chunk.hpp>
-#include <math/Vec3.hpp>
+#include <BS_thread_pool.hpp>
 #include <PerlinNoise.hpp>
 #include <core/Shader.hpp>
-#include <BS_thread_pool.hpp>
+#include <world/Chunk.hpp>
+#include <math/Vec2.hpp>
+#include <algorithm>
+#include <memory>
+#include <vector>
+#include <mutex>
 
 namespace engine {
     class World {
     public:
-        World(siv::PerlinNoise::seed_type seed);
-        void CreateChunks(int chunkX, int chunkZ, int radius, int bufferPerFrame);
-        void DrawOpaque(Shader& chunkShader);
-        void DrawWater(Shader& waterShader);
-        void DrawCustomModelBlocks(Shader& customModelShader);
-        inline Chunk* GetChunk(int x, int y, int z) const { 
-            auto it = m_ChunkMap.find(Vec3(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)));
-            if (it == m_ChunkMap.end()) {
-                return nullptr;
-            } else {
-                return it->second;
-            }
-        }
+        void DrawBlocks(Shader& shader);
+        void DrawWater(Shader& shader);
+        void DrawCustomModelBlocks(Shader& shader);
+        void CreateChunks(int chunkX, int chunkY, int radius, int bufferPerFrame);
+        Chunk* GetChunk(int chunkX, int chunkZ);
         ~World();
+
     private:
-        std::unordered_map<Vec3, Chunk*> m_ChunkMap;
-        siv::PerlinNoise::seed_type m_Seed;
-        siv::PerlinNoise m_Noise;
+        BS::thread_pool m_ThreadPool = BS::thread_pool(32);
         std::vector<Chunk*> m_ChunkDrawVector;
-        BS::thread_pool m_ThreadPool = BS::thread_pool(8);
+        std::unordered_map<Vec2<int>, Chunk> m_ChunkMap;
+        siv::PerlinNoise m_Noise = siv::PerlinNoise(0);
+        
+        std::random_device rd;
+        std::mt19937 gen = std::mt19937(rd());
+        std::uniform_int_distribution<> distrib = std::uniform_int_distribution<>(1, 100);
     };
 }
 

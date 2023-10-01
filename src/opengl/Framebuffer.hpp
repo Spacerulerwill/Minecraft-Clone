@@ -6,20 +6,22 @@ LICENSE: MIT
 #ifndef FRAMEBUFFER_H
 #define FRAMEBUFFER_H
 
+#include <glad/gl.h>
+
 namespace engine {
 	class Framebuffer {
 	public:
-		Framebuffer(unsigned int width, unsigned int height);
+		Framebuffer(GLsizei width, GLsizei height);
 		~Framebuffer();
 
 		void Bind() const;
 		void Unbind() const;
 
-		unsigned int GetTextureID() const;
+		GLuint GetTextureID() const;
 	private:
-		unsigned int u_FrameBufferID;
-		unsigned int u_TextureID;
-		unsigned int u_RenderBufferID;
+		GLuint u_FrameBufferID;
+		GLuint u_TextureID;
+		GLuint u_RenderBufferID;
 	};
 }
 

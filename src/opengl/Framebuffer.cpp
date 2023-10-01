@@ -4,13 +4,11 @@ LICENSE: MIT
 */
 
 #include <opengl/Framebuffer.hpp>
-#include <glad/gl.h>
-#include <core/Window.hpp>
+#include <util/Log.hpp>
 #include <cstddef>
 #include <system_error>
-#include <util/Log.hpp>
 
-engine::Framebuffer::Framebuffer(unsigned int width, unsigned int height)
+engine::Framebuffer::Framebuffer(GLsizei width, GLsizei height)
 {
 	// generate framebuffer
 	glGenFramebuffers(1, &u_FrameBufferID);
@@ -56,7 +54,7 @@ void engine::Framebuffer::Unbind() const
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-unsigned int engine::Framebuffer::GetTextureID() const
+GLuint engine::Framebuffer::GetTextureID() const
 {
 	return u_TextureID;
 }

@@ -46,7 +46,6 @@ void main() {
 		discard;
     if (isFoliage > 0.5)
         texColor.rgb *= foliageColor;
-    texColor.a = time / 2.0;
 
     if (drawBlockHighlight && 
 	FragPos.x >= blockPos.x - errorMargin && FragPos.x <= blockPos.x + 1.0 + errorMargin && 

@@ -3,22 +3,25 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#include <core/Application.hpp>
-#include <util/TextureLoad.hpp>
-#include <world/Skybox.hpp>
-#include <core/Camera.hpp>
-#include <core/Shader.hpp>
+#include <glad/gl.h>
 #include <util/Log.hpp>
-#include <math/Math.hpp>
-#include <math/VoxelRaycast.hpp>
-#include <opengl/Framebuffer.hpp>
+#include <core/Application.hpp>
+#include <core/Shader.hpp>
+#include <opengl/Texture.hpp>
+#include <opengl/BufferObject.hpp>
 #include <opengl/VertexArray.hpp>
-#include <opengl/VertexBuffer.hpp>
 #include <opengl/VertexBufferLayout.hpp>
-#include <math.h>
-#include <random>
-#include <limits>
+#include <world/Block.hpp>
+#include <world/Skybox.hpp>
+#include <world/Chunk.hpp>
+#include <world/World.hpp>
+#include <math/Math.hpp>
+#include <algorithm>
 #include <filesystem>
+#include <memory>
+#include <chrono>
+
+using namespace std::chrono;
 
 // Unique pointer to the singleton instance
 std::unique_ptr<engine::Application> engine::Application::s_Instance = nullptr;
@@ -29,6 +32,9 @@ void mouse_move_callback(GLFWwindow* window, double xposIn, double yposIn);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+
+constexpr GLsizei SCREEN_WIDTH = 1280;
+constexpr GLsizei SCREEN_HEIGHT = 720;
 
 engine::Application::Application()
 {
@@ -44,60 +50,82 @@ void engine::Application::Init()
 }
 
 void engine::Application::Run()
-{
-    // Create folder structure for exe
+{    
     std::filesystem::create_directory("world");
-    
-    // Seed random number generator
-	srand(time(NULL));
 
-	/* 
-	Initialise the logger class - we do this first so that if any errors are thrown they
-	can be logged
-	*/
-	Log::Init();
-
-    // Initialise Block data from .yml files - this must be done before trying to use any blocks!
-    InitBlocks();
-
-	if (!glfwInit()) {
+    // Try and intialise GLFW
+    if (!glfwInit()) {
+        glfwTerminate();
 		throw std::runtime_error("Failed to intialise GLFW");
 	}
 
-    /* 
-	Create and window and set callback functions for input. These callbacks are free floating functions
-	that wrap application singleton's equivalent functions so we can access the applications
-	member functions from within them
-	*/
-	Window::Init("Voxel Game");
-    glfwSetWindowSizeCallback(Window::GetWindow(), framebuffer_size_callback);
-    glfwSetCursorPosCallback(Window::GetWindow(), mouse_move_callback);
-    glfwSetMouseButtonCallback(Window::GetWindow(), mouse_button_callback);
-    glfwSetScrollCallback(Window::GetWindow(), scroll_callback);
-    glfwSetKeyCallback(Window::GetWindow(), key_callback);
+    // Create our window, and add its callbacks
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // Using glad load the OpenGL function pointers
-	if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
+#ifdef __APPLE__
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+
+	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Voxel Engine", NULL, NULL);
+
+	if (window == NULL)
+	{
+		glfwTerminate();
+		throw std::runtime_error("Failed to create GLFW Window");
+	}
+
+    p_Window = window;
+
+    glfwSetWindowSizeCallback(p_Window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(p_Window, mouse_move_callback);
+    glfwSetMouseButtonCallback(p_Window, mouse_button_callback);
+    glfwSetScrollCallback(p_Window, scroll_callback);
+    glfwSetKeyCallback(p_Window, key_callback);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwMakeContextCurrent(window);
+
+    // Load OpenGL function pointers
+    if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
 	{
 		throw std::runtime_error("Failed to intialise GLAD");
 	}
 
-	/*
+    /*
 	OpenGl setting configuration. We are enabling blend for alpha transparency blending and using the default blend function
-	We use the depth function GL_LEQUAL instead of the default GL_LESS due to a skybox optimisation requiring it. This optimisation
-	allows us to draw opaque objects, then the skybox and then the transparent objects instead of the skybox first.
 	We also enable culling faces as an optimisation using the default winding order.
 	*/
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    
+
+    // Load our block data - this must happen before any other part of the game starts
+    InitBlocks();
+
     /*
-	Create a framebuffer, postprocess shader and quad to render to so we can use Render-To-Texture
-	It uses texture unit 0
-	*/
+    Create an anonymous scope to ensure that all OpenGL objects created are deleted and cleaned up
+    before calling glfwTerminate()
+    */
+
+    // Load texture atlases
+    glActiveTexture(GL_TEXTURE0);
+    
+    std::unique_ptr<Texture<GL_TEXTURE_2D_ARRAY>> atlases[MAX_ANIMATION_FRAMES];
+
+    for (int i = 0; i < MAX_ANIMATION_FRAMES; i++) {
+        atlases[i] = std::make_unique<Texture<GL_TEXTURE_2D_ARRAY>>(fmt::format("res/textures/atlases/atlas{}.png", i).c_str(), TEXTURE_SIZE);
+    }
+
+    // Create skybox 
+    Skybox skybox;
+
+    // Create framebuffer object and quad
+    p_Framebuffer = new Framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
+
     float quadVerts[24] = {
         -1.0f, -1.0f, 0.0f, 0.0f, // bottom left
         1.0f, -1.0f, 1.0f, 0.0f, // bottom right
@@ -106,40 +134,25 @@ void engine::Application::Run()
         1.0f, 1.0f, 1.0f, 1.0f, // top right
         -1.0f, 1.0f, 0.0f, 1.0f // top left
     };
-
-    VertexBuffer VBO;
-    VBO.BufferData((const void*)quadVerts, sizeof(quadVerts));
+    
+    BufferObject<GL_ARRAY_BUFFER> VBO;
+    VBO.BufferData((const void*)quadVerts, sizeof(quadVerts), GL_STATIC_DRAW);
     VertexBufferLayout bufferLayout;
     bufferLayout.AddAttribute<float>(2); // 2 Vertex Coordinates
     bufferLayout.AddAttribute<float>(2); // 2 Texture Coordinates
     VertexArray VAO;
     VAO.AddBuffer(VBO, bufferLayout);
 
-    Shader postProcessShader = Shader("res/shaders/postprocess.shader");
-
-    glActiveTexture(GL_TEXTURE0);
-    p_Framebuffer = new Framebuffer(Window::SCREEN_WIDTH, Window::SCREEN_HEIGHT);
-
-	// Create the chunks and load shaders for chunks
-    Shader chunkShader("res/shaders/chunk.shader");
-    Shader waterShader("res/shaders/water.shader");
-    Shader customModelShader("res/shaders/custom_model.shader");
-
-    // Create skybox and load texture atlas, both use texture unit 0
-    glActiveTexture(GL_TEXTURE0);
-    Skybox skybox;
-
-    /*
-	Load the crosshair texture into texture unit 1 and load its shader, and
-	also create the vertices for its quad and buffer them.
-	*/
+    // Orthographic projection matrix maps normalised device coordinates to pixel screen space coordinates
+	Mat4 ortho = orthographic(0.0f, SCREEN_HEIGHT, 0.0f, SCREEN_WIDTH, -1.0f, 100.0f);
+    // Load crosshair texture
     glActiveTexture(GL_TEXTURE1);
-    Shader crosshairShader("res/shaders/crosshair.shader");
-    unsigned int crosshair = loadTexture("res/textures/ui/crosshair.png");
-		
+    Texture<GL_TEXTURE_2D> crosshairTexture("res/textures/ui/crosshair.png"); 
+
+    // Create vertices, VBO and VAO for crosshair
     int crosshair_size = 32;
-    float bottom_corner_x = (Window::SCREEN_WIDTH / 2.0f) - crosshair_size / 2.0f;
-    float bottom_corner_y = (Window::SCREEN_HEIGHT / 2.0f) - crosshair_size / 2.0f;
+    float bottom_corner_x = (SCREEN_WIDTH / 2.0f) - crosshair_size / 2.0f;
+    float bottom_corner_y = (SCREEN_HEIGHT / 2.0f) - crosshair_size / 2.0f;
 
     float crosshairVerts[24] = {
         bottom_corner_x, bottom_corner_y, 0.0f, 0.0f, // bottom left
@@ -150,38 +163,70 @@ void engine::Application::Run()
         bottom_corner_x, bottom_corner_y + crosshair_size, 0.0f, 1.0f,  // top left
     };
 
-    VertexBuffer crosshairVBO;
-    crosshairVBO.BufferData((const void*)crosshairVerts, sizeof(crosshairVerts));
+    BufferObject<GL_ARRAY_BUFFER> crosshairVBO;
+    crosshairVBO.BufferData((const void*)crosshairVerts, sizeof(crosshairVerts), GL_STATIC_DRAW);
     VertexBufferLayout bufferLayout2;
     bufferLayout2.AddAttribute<float>(4);
     VertexArray crosshairVAO;
-    crosshairVAO.AddBuffer(crosshairVBO, bufferLayout2);
+    crosshairVAO.AddBuffer(crosshairVBO, bufferLayout2);  
 
-	// Orthographic projection matrix maps normalised device coordinates to pixel screen space coordinates
-	Mat4 ortho = orthographic(0.0f, Window::SCREEN_HEIGHT, 0.0f, Window::SCREEN_WIDTH, -1.0f, 100.0f);
-
+    // Load grass mask texture
     glActiveTexture(GL_TEXTURE2);
-    unsigned int grass_mask = loadTexture("res/textures/block/color_mask/grass_side_overlay.png");
+    Texture<GL_TEXTURE_2D> grassMaskTexture("res/textures/block/mask/grass_side_mask.png");
 
-    // Load texture atlases
-    unsigned int textureAtlases[maxAnimationFrames];
+    // Load shaders
+    Shader chunkShader("res/shaders/chunk.shader");
+    Shader waterShader("res/shaders/water.shader");
+    Shader crosshairShader("res/shaders/crosshair.shader");
+    Shader customModelShader("res/shaders/custom_model.shader");
+    Shader framebufferShader("res/shaders/framebuffer.shader");
 
-    for (int i = 0; i < maxAnimationFrames; i++) {
-        textureAtlases[i] = loadTextureArray(fmt::format("res/textures/atlases/atlas{}.png", i).c_str(), textureSize);
-    }
-    int textureIndex = 0;
-    double lastTime = 0.0;
+    double lastTime = 0.00f;
+    int currentAtlasIndex = 0;
+    int totalFrameDuration = 0;
 
-    // Game loop!
-	while (!glfwWindowShouldClose(Window::GetWindow())) { 
+    m_World = new World;
 
-		// Calculate delta time
+    // Main game loop
+    while (!glfwWindowShouldClose(p_Window)) { 
+        auto start = high_resolution_clock::now();
+        // Calculate delta time
         float currentFrame = static_cast<float>(glfwGetTime());
         m_DeltaTime = currentFrame - m_LastFrame;
         m_LastFrame = currentFrame;
 
-        ProcessInput(m_DeltaTime);
+        ProcessInput();
+
+        // Calculate player chunk position
+        int chunkX = m_Camera.GetPosition().x / CS;
+        if (m_Camera.GetPosition().x < 0) chunkX -= 1;
+
+        int chunkZ = m_Camera.GetPosition().z / CS;
+        if (m_Camera.GetPosition().z < 0) chunkZ -= 1;
+
+        // Cycle through texture atlases 10 times a second
+        double currentTime = glfwGetTime();
+        if (currentTime - lastTime > 0.1) {
+            currentAtlasIndex = (currentAtlasIndex + 1) % MAX_ANIMATION_FRAMES;
+            glActiveTexture(GL_TEXTURE0);
+            atlases[currentAtlasIndex]->Bind();
+            lastTime = currentTime;
+            LOG_TRACE(totalFrameDuration);
+        }
+
+        // Create chunks every frame
+        m_World->CreateChunks(chunkX, chunkZ, 8, 4);
+
+        // Raycast outwards to find a block to highlight
         
+        m_BlockSelectRaycastResult = VoxelRaycast(m_World, m_Camera.GetPosition(), m_Camera.GetDirection(), 15.0f);
+        Chunk* chunk = m_BlockSelectRaycastResult.chunk;
+        Vec3<int> raycastBlockPos(
+            chunk->pos.x * CS + m_BlockSelectRaycastResult.blockPos.x - 1, 
+            chunk->pos.y * CS + m_BlockSelectRaycastResult.blockPos.y - 1,
+            chunk->pos.z * CS + m_BlockSelectRaycastResult.blockPos.z - 1
+        );
+
         // Bind our framebuffer and render to it
         p_Framebuffer->Bind();
 
@@ -191,81 +236,46 @@ void engine::Application::Run()
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         glEnable(GL_DEPTH_TEST);
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        Mat4 perspective_matrix = perspective(radians(m_Camera.m_FOV), static_cast<float>(Window::SCREEN_WIDTH) / Window::SCREEN_HEIGHT, 0.1f, 3000.0f);
-        Mat4 view_matrix = m_Camera.GetViewMatrix();
-
-        Mat4 skybox_view_matrix = engine::translationRemoved(view_matrix);
-		skybox.Draw(perspective_matrix, skybox_view_matrix);
         
-        // Create chunks around the players position
-        m_World.CreateChunks(
-            static_cast<int>(m_Camera.m_Position.x / CHUNK_SCALE),
-            static_cast<int>(m_Camera.m_Position.z / CHUNK_SCALE),
-            12,
-            12
-        );
-
-        /*
-        Draw opaque part of chunks first, then the custom block models and then the water to preserve transparency.
-        For drawing of custom block models we disable face culling.
-        */
-        VoxelRaycastResult result = VoxelRaycast(m_World, m_Camera.m_Position, m_Camera.m_Front, 15.0f);
-        Chunk* chunk = result.chunk;
-        
-        if (glfwGetTime() - lastTime > 0.05) {
-            textureIndex = (textureIndex + 1) % maxAnimationFrames;
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D_ARRAY, textureAtlases[textureIndex]);
-            lastTime = glfwGetTime();
-        }
+        Mat4<float> perspective = m_Camera.GetPerspectiveMatrix();
+        Mat4<float> view = m_Camera.GetViewMatrix();
 
         chunkShader.Bind();
-        chunkShader.setMat4("projection", perspective_matrix);
-        chunkShader.setMat4("view", view_matrix);
+        chunkShader.setMat4("projection", perspective);
+        chunkShader.setMat4("view", view);
         chunkShader.SetInt("tex_array", 0);
         chunkShader.SetInt("grass_mask", 2);
-        chunkShader.SetInt("drawBlockHighlight", result.blockHit != AIR);
-        
-        if (result.blockHit != AIR  && result.blockHit != WATER && chunk != nullptr) {
-            chunkShader.setIVec3("blockPos", 
-                chunk->chunkX * CS + result.blockX - 1, 
-                chunk->chunkY * CS + result.blockY - 1,
-                chunk->chunkZ * CS + result.blockZ - 1
-            );
-        }
-        
-        m_World.DrawOpaque(chunkShader);
+        chunkShader.SetInt("drawBlockHighlight", m_BlockSelectRaycastResult.blockHit != AIR);
+        if (m_BlockSelectRaycastResult.blockHit != AIR  && chunk != nullptr)
+            chunkShader.setIVec3("blockPos", raycastBlockPos);
+        m_World->DrawBlocks(chunkShader);
 
         glDisable(GL_CULL_FACE);
         customModelShader.Bind();
-        customModelShader.setMat4("projection", perspective_matrix);
-        customModelShader.setMat4("view", view_matrix);
+        customModelShader.setMat4("projection", perspective);
+        customModelShader.setMat4("view", view);
         customModelShader.SetInt("tex_array", 0);
-        customModelShader.SetInt("drawBlockHighlight", result.blockHit != AIR);
-        
-        if (result.blockHit != AIR && result.blockHit != WATER && chunk != nullptr) {
-            customModelShader.setIVec3("blockPos", 
-                chunk->chunkX * CS + result.blockX - 1, 
-                chunk->chunkY * CS + result.blockY - 1,
-                chunk->chunkZ * CS + result.blockZ - 1
-            );
-        }
-        
-        m_World.DrawCustomModelBlocks(customModelShader);
+        chunkShader.SetInt("drawBlockHighlight", m_BlockSelectRaycastResult.blockHit != AIR);
+        if (m_BlockSelectRaycastResult.blockHit != AIR  && chunk != nullptr)
+            chunkShader.setIVec3("blockPos", raycastBlockPos);
+        m_World->DrawCustomModelBlocks(customModelShader);
         glEnable(GL_CULL_FACE);
 
-        waterShader.Bind();
-        waterShader.setMat4("projection", perspective_matrix);
-        waterShader.setMat4("view", view_matrix);
-        waterShader.SetInt("tex_array", 0);
-        m_World.DrawWater(waterShader);
+        glDepthFunc(GL_LEQUAL);
+        skybox.Draw(perspective, translationRemoved(view));
+        glDepthFunc(GL_LESS);
 
+        waterShader.Bind();
+        waterShader.setMat4("projection", perspective);
+        waterShader.setMat4("view", view);
+        waterShader.SetInt("tex_array", 0);
+        m_World->DrawWater(waterShader);
+        
         /* 
-		Unbind our framebuffer and render the result texture to a quad
-		*/
+        Unbind our framebuffer, binding the default framebuffer and render the result texture to a quad
+        */
         p_Framebuffer->Unbind();
 
         if(m_Wireframe)
@@ -274,32 +284,31 @@ void engine::Application::Run()
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        postProcessShader.Bind();
+        framebufferShader.Bind();
         VAO.Bind();
         glDisable(GL_DEPTH_TEST);
-        glActiveTexture(GL_TEXTURE0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		// Render UI last
+        // Render UI last
 		crosshairShader.Bind();
 		crosshairVAO.Bind();
 		crosshairShader.SetInt("screenTexture", 0);
 		crosshairShader.SetInt("crosshair", 1);
-		crosshairShader.setMat4("projection", ortho);
+		crosshairShader.setMat4<float>("projection", ortho);
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		glfwPollEvents();
-		glfwSwapBuffers(Window::GetWindow());
-	}
-	ResourceCleanup();
-}
+        auto end = high_resolution_clock::now();
+        totalFrameDuration =  duration_cast<microseconds>(end - start).count();
 
-std::unique_ptr<engine::Application>& engine::Application::GetInstance()
-{
-    return s_Instance;
+        glfwPollEvents();
+        glfwSwapBuffers(p_Window);
+    }
+    delete m_World;
+    delete p_Framebuffer;
+    glfwDestroyWindow(p_Window);
+    spdlog::shutdown();
 }
-
 void engine::Application::GLFWFramebufferResizeCallback(GLFWwindow* window, int width, int height)
 {
 	// On resize, we adjust glViewport and regenerate our framebuffer at the new resolution
@@ -309,30 +318,22 @@ void engine::Application::GLFWFramebufferResizeCallback(GLFWwindow* window, int 
     p_Framebuffer = new Framebuffer(width, height);
 }
 
-void engine::Application::ResourceCleanup()
+void engine::Application::ProcessInput()
 {
-    delete p_Framebuffer;
-	Window::Terminate();
-    //glfwTerminate() CAUSES A SEGFAULT?? WHY??
-}
-
-void engine::Application::ProcessInput(float deltaTime)
-{
-    GLFWwindow* window = Window::GetWindow();
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        m_Camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        m_Camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        m_Camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        m_Camera.ProcessKeyboard(RIGHT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
-        m_Camera.m_MovementSpeed = 100.0f;
+    if (glfwGetKey(p_Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(p_Window, true);
+    if (glfwGetKey(p_Window, GLFW_KEY_W) == GLFW_PRESS)
+        m_Camera.ProcessKeyboard(FORWARD, m_DeltaTime);
+    if (glfwGetKey(p_Window, GLFW_KEY_S) == GLFW_PRESS)
+        m_Camera.ProcessKeyboard(BACKWARD, m_DeltaTime);
+    if (glfwGetKey(p_Window, GLFW_KEY_A) == GLFW_PRESS)
+        m_Camera.ProcessKeyboard(LEFT, m_DeltaTime);
+    if (glfwGetKey(p_Window, GLFW_KEY_D) == GLFW_PRESS)
+        m_Camera.ProcessKeyboard(RIGHT, m_DeltaTime);
+    if (glfwGetKey(p_Window, GLFW_KEY_LEFT_SHIFT))
+        m_Camera.SetMovementSpeed(100.0f);
     else
-        m_Camera.m_MovementSpeed = 10.0f;
+        m_Camera.SetMovementSpeed(20.0f);
 }
 
 void engine::Application::GLFWMouseMoveCallback(GLFWwindow* window, double xposIn, double yposIn)
@@ -340,18 +341,18 @@ void engine::Application::GLFWMouseMoveCallback(GLFWwindow* window, double xposI
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
-    if (firstMouse) // initially set to true
+    if (m_FirstMouse) // initially set to true
     {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
+        m_LastMouseX = xpos;
+        m_LastMouseY = ypos;
+        m_FirstMouse = false;
     }
 
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+    float xoffset = xpos - m_LastMouseX;
+    float yoffset = m_LastMouseY - ypos; // reversed since y-coordinates go from bottom to top
 
-    lastX = xpos;
-    lastY = ypos;
+    m_LastMouseX = xpos;
+    m_LastMouseY = ypos;
 
     m_Camera.ProcessMouseMovement(xoffset, yoffset, true);
 }
@@ -366,10 +367,9 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT: {
             if (action == GLFW_PRESS) {
-                VoxelRaycastResult result = VoxelRaycast(m_World, m_Camera.m_Position, m_Camera.m_Front, 15.0f);
-                Chunk* chunk = result.chunk;
-                if (result.chunk != nullptr && result.blockHit != AIR) {
-                    chunk->SetBlock(AIR, result.blockX, result.blockY, result.blockZ);
+                Chunk* chunk = m_BlockSelectRaycastResult.chunk;
+                if (chunk != nullptr && m_BlockSelectRaycastResult.blockHit != AIR) {
+                    chunk->SetBlock(AIR, m_BlockSelectRaycastResult.blockPos);
                     chunk->CreateMesh();
                     chunk->BufferData();
                 }
@@ -378,14 +378,39 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
         }
         case GLFW_MOUSE_BUTTON_RIGHT: {
             if (action == GLFW_PRESS) {
-                VoxelRaycastResult result = VoxelRaycast(m_World, m_Camera.m_Position, m_Camera.m_Front, 15.0f);
-                Chunk* chunk = result.chunk;
-                if (result.chunk != nullptr && result.blockHit != AIR) {
-                    BlockInt blockAtPositionToPlace = chunk->GetBlock(result.blockX + result.normalX, result.blockY + result.normalY, result.blockZ + result.normalZ);
-                    if (blockAtPositionToPlace == AIR) {
-                        chunk->SetBlock(m_SelectedBlock, result.blockX + result.normalX, result.blockY + result.normalY, result.blockZ + result.normalZ);
-                        chunk->CreateMesh();
-                        chunk->BufferData();
+                Chunk* chunk = m_BlockSelectRaycastResult.chunk;
+                if (chunk != nullptr && m_BlockSelectRaycastResult.blockHit != AIR) {
+                    BlockInt blockToPlaceOn = chunk->GetBlock(m_BlockSelectRaycastResult.blockPos);
+                    if (blockToPlaceOn != AIR) {
+                        Vec3<int> blockPlacePosition = m_BlockSelectRaycastResult.blockPos + m_BlockSelectRaycastResult.normal;
+
+                        // chunk edge cases 
+                        if (blockPlacePosition.x == CS_P_MINUS_ONE) {
+                            blockPlacePosition.x = 1;
+                            chunk = m_World->GetChunk(chunk->pos.x + 1, chunk->pos.z);
+                        }
+
+                        if (blockPlacePosition.x == 0) {
+                            blockPlacePosition.x = CS;
+                            chunk = m_World->GetChunk(chunk->pos.x - 1, chunk->pos.z);
+                        }
+
+                        if (blockPlacePosition.z == CS_P_MINUS_ONE) {
+                            blockPlacePosition.z = 1;
+                            chunk = m_World->GetChunk(chunk->pos.x, chunk->pos.z + 1);
+                        }
+
+                        if (blockPlacePosition.z == 0) {
+                            blockPlacePosition.z = CS;
+                            chunk = m_World->GetChunk(chunk->pos.x, chunk->pos.z - 1);
+                        }
+
+                        BlockInt blockAtPlacePosition = chunk->GetBlock(blockPlacePosition);
+                        if (blockAtPlacePosition == AIR) {
+                            chunk->SetBlock(m_SelectedBlock, blockPlacePosition);
+                            chunk->CreateMesh();
+                            chunk->BufferData();
+                        }
                     }
                 }
             }
@@ -396,6 +421,7 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
        
 void engine::Application::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+
     if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
         m_Wireframe = !m_Wireframe;
     if (key == GLFW_KEY_TAB && action == GLFW_PRESS) {
@@ -406,7 +432,11 @@ void engine::Application::GLFWKeyCallback(GLFWwindow* window, int key, int scanc
             m_SelectedBlock++;
         }
     }
-        
+}
+
+std::unique_ptr<engine::Application>& engine::Application::GetInstance()
+{
+    return s_Instance;
 }
 
 // input callback that wraps the application singleton mouse callback function
@@ -436,7 +466,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     engine::Application::GetInstance()->GLFWFramebufferResizeCallback(window, width, height);
 }
-
 /*
 MIT License
 

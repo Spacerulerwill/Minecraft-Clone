@@ -9,40 +9,38 @@ License: MIT
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <math/Vec3.hpp>
+#include <math/Vec4.hpp>
+#include <math/VoxelRaycast.hpp>
 #include <core/Camera.hpp>
-#include <core/Window.hpp>
-#include <world/Chunk.hpp>
-#include <world/World.hpp>
-#include <world/Block.hpp>
 #include <opengl/Framebuffer.hpp>
+#include <world/World.hpp>
 #include <memory>
-#include <unordered_map>
 
 namespace engine {
 	class Application {
 	private:
 		Application();
 		static std::unique_ptr<Application> s_Instance;
+        GLFWwindow* p_Window = nullptr;
+        Camera m_Camera = Camera(Vec3(0.0f, 0.0f, 0.0f));
+        Framebuffer* p_Framebuffer = nullptr;
+        World* m_World = nullptr;
+        VoxelRaycastResult m_BlockSelectRaycastResult {};
+        BlockInt m_SelectedBlock = GRASS;
 
-		void ResourceCleanup();
-		void ProcessInput(float deltaTime);
-		float m_DeltaTime = 0.0f;
-		float m_LastFrame = 0.0f;
-		Camera m_Camera = Camera(Vec3(0.0f, 350.0f, 0.0f));
-        World m_World = World(0);
-		BlockInt m_SelectedBlock = GRASS;
+        float m_DeltaTime = 0.0f;
+        float m_LastFrame = 0.0f;
+        bool m_Wireframe = false;
+		bool m_FirstMouse = true;
+		float m_LastMouseX = 0.0f;
+		float m_LastMouseY = 0.0f;
 
-		bool m_Wireframe = false;
-		bool firstMouse = true;
-		float lastX = 0.0f;
-		float lastY = 0.0f;
-
-		Framebuffer* p_Framebuffer = nullptr;
+        void ProcessInput();
 	public:
 		static void Init();
 		void Run();
 		static std::unique_ptr<Application>& GetInstance();
-		void GLFWMouseMoveCallback(GLFWwindow* window, double xposIn, double yposIn);
+        void GLFWMouseMoveCallback(GLFWwindow* window, double xposIn, double yposIn);
 		void GLFWScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 		void GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 		void GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods);

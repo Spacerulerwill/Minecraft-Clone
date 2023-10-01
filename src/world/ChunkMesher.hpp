@@ -8,6 +8,7 @@ LICENSE: MIT
 
 #include <world/Block.hpp>
 #include <util/Constants.hpp>
+#include <util/Log.hpp>
 #include <vector>
 
 namespace engine {

@@ -3,45 +3,17 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#ifndef LOG_H
-#define LOG_H
+#ifndef CONCEPTS_H
+#define CONCEPTS_H
 
-#include <spdlog/spdlog.h>
-#include <memory>
-
-#define DEBUG_MODE
+#include <concepts>
 
 namespace engine {
-	class Log {
-	public:
-		static void Init();
-		inline static std::shared_ptr<spdlog::logger>& GetLogger() { return s_Logger; }
+    template<typename T>
+    concept Arithmetic = std::integral<T> || std::floating_point<T>;
+}
 
-		Log(const Log& arg) = delete; // Copy constructor
-		Log(const Log&& arg) = delete;  // Move constructor
-		Log& operator=(const Log& arg) = delete; // Assignment operator
-		Log& operator=(const Log&& arg) = delete; // Move operator
-	private:
-		static std::shared_ptr<spdlog::logger> s_Logger;
-	};
-
-};
-#endif // !LOG_H
-
-// debug messages
-#ifdef DEBUG_MODE
-	#define LOG_CRITICAL(...)    engine::Log::GetLogger()->critical(__VA_ARGS__)
-	#define LOG_ERROR(...)		engine::Log::GetLogger()->error(__VA_ARGS__)
-	#define LOG_WARNING(...)		engine::Log::GetLogger()->warn(__VA_ARGS__)
-	#define LOG_INFO(...)		engine::Log::GetLogger()->info(__VA_ARGS__)
-	#define LOG_TRACE(...)		engine::Log::GetLogger()->trace(__VA_ARGS__)
-#else
-	#define LOG_CRITICAL 
-	#define LOG_ERROR 
-	#define LOG_WARNING 
-	#define LOG_INFO 
-	#define LOG_TRACE 
-#endif // DEBUG_MODE
+#endif // !CONCEPTS_H
 
 /*
 MIT License

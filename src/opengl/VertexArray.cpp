@@ -5,6 +5,7 @@ License: MIT
 
 #include <opengl/VertexArray.hpp>
 #include "glad/gl.h"
+#include <util/Log.hpp>
 
 engine::VertexArray::VertexArray()
 {
@@ -16,21 +17,21 @@ engine::VertexArray::~VertexArray()
 	glDeleteVertexArrays(1, &m_ID);
 }
 
-void engine::VertexArray::AddBuffer(const engine::VertexBuffer& vb, const engine::VertexBufferLayout& layout)
+void engine::VertexArray::AddBuffer(const engine::BufferObject<GL_ARRAY_BUFFER>& vb, const engine::VertexBufferLayout& layout)
 {
     Bind();
     vb.Bind();
     std::vector<VertexBufferLayoutElement> elements = layout.GetElements();
-    unsigned int offset = 0;
+    uintptr_t offset = 0;
     for (int i = 0; i < elements.size(); i++) {
         const VertexBufferLayoutElement element = elements[i];
         glEnableVertexAttribArray(i);
 
         if (element.type == GL_UNSIGNED_INT || element.type == GL_INT) {
-            glVertexAttribIPointer(i, element.count, element.type, layout.GetStride(), (const void*)offset);
+            glVertexAttribIPointer(i, element.count, element.type, layout.GetStride(), (const void*)(offset));
         }
         else {
-            glVertexAttribPointer(i, element.count, element.type, element.normalized, layout.GetStride(), (const void*)offset);
+            glVertexAttribPointer(i, element.count, element.type, element.normalized, layout.GetStride(), (const void*)(offset));
         }
         offset += element.count * VertexBufferLayoutElement::GetSize(element.type);
     }

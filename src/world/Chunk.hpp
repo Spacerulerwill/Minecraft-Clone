@@ -8,12 +8,13 @@ LICENSE: MIT
 
 #include <cstdint>
 #include <vector>
-#include <opengl/VertexBuffer.hpp>
+#include <opengl/BufferObject.hpp>
 #include <opengl/VertexArray.hpp>
 #include <core/Shader.hpp>
 #include <math/Mat4.hpp>
 #include <math/Math.hpp>
 #include <math/Vec4.hpp>
+#include <math/Vec3.hpp>
 #include <world/Block.hpp>
 #include <world/ChunkMesher.hpp>
 #include <PerlinNoise.hpp>
@@ -43,22 +44,22 @@ namespace engine {
     */
 	class Chunk {
 	private:
-		VertexBuffer m_VBO;
+		BufferObject<GL_ARRAY_BUFFER> m_VBO;
 		VertexArray m_VAO;
 		std::vector<ChunkVertex> m_Vertices;
 		size_t m_VertexCount = 0;
 
-		VertexBuffer m_WaterVBO;
+		BufferObject<GL_ARRAY_BUFFER> m_WaterVBO;
 		VertexArray m_WaterVAO;
 		std::vector<ChunkVertex> m_WaterVertices;
 		size_t m_WaterVertexCount = 0;
 
-        VertexBuffer m_CustomModelVBO;
+        BufferObject<GL_ARRAY_BUFFER> m_CustomModelVBO;
 		VertexArray m_CustomModelVAO;
 		std::vector<float> m_CustomModelVertices;
 		size_t m_CustomModelVertexCount = 0;
 
-		Mat4 m_Model = scale(Vec3(BLOCK_SCALE));
+		Mat4<float> m_Model = scale(Vec3<float>(BLOCK_SCALE));
 	public:
     	BlockInt* m_Voxels = new BlockInt[CS_P3];
 
@@ -66,18 +67,15 @@ namespace engine {
 		bool needsBuffering = false;
         bool needsUnloading = false;
 
-        int chunkX = 0;
-		int chunkY = 0;
-		int chunkZ = 0;
+        Vec3<int> pos = Vec3<int>(0);
         
         float firstBufferTime = 0.0f;
 
 		Chunk(int chunkX, int chunkY, int chunkZ);
 		~Chunk();
         
-		void TerrainGen(const siv::PerlinNoise& perlin);
+		void TerrainGen(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
 		void TerrainGen(BlockInt block);
-        void SetEmpty();
 		void CreateMesh();
 
         void UnloadToFile();
@@ -87,12 +85,22 @@ namespace engine {
 		void DrawWater(Shader& shader);
         void DrawCustomModelBlocks(Shader& shader);
 
-		[[nodiscard]] inline BlockInt GetBlock(unsigned int x, unsigned int y, unsigned int z) const {
+		inline BlockInt GetBlock(unsigned int x, unsigned int y, unsigned int z) const {
 			return m_Voxels[VOXEL_INDEX(x,y,z)];
 		}
 
+        inline BlockInt GetBlock(Vec3<int> pos) {
+            return m_Voxels[VOXEL_INDEX(pos.x, pos.y, pos.z)];
+        }
+
 		inline void SetBlock(BlockInt block, unsigned int x, unsigned int y, unsigned int z) {
 			m_Voxels[VOXEL_INDEX(x,y,z)] = block;
+            needsUnloading = true;
+            needsRemeshing = true;
+		}
+
+        inline void SetBlock(BlockInt block, Vec3<int> pos) {
+			m_Voxels[VOXEL_INDEX(pos.x,pos.y,pos.z)] = block;
             needsUnloading = true;
             needsRemeshing = true;
 		}

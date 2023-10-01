@@ -5,30 +5,25 @@ LICENSE: MIT
 
 #include <world/World.hpp>
 #include <GLFW/glfw3.h>
-#include <fstream>
-#include <atomic>
+#include <util/Log.hpp>
 
-engine::World::World(siv::PerlinNoise::seed_type seed) {
-    m_Noise.reseed(seed);
-}
 
 void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferPerFrame) {
-	int chunksBuffered = 0;
+    int chunksBuffered = 0;
 	int chunksRemeshed = 0;
     m_ChunkDrawVector.clear();
 
-    for (auto it = m_ChunkMap.cbegin(); it != m_ChunkMap.cend();) {
-        Chunk* chunk = (*it).second;
+    for (auto it = m_ChunkMap.begin(); it != m_ChunkMap.end();) {
+        Chunk* chunk = &((*it).second);
         if (
-            chunk->chunkX < chunkX - radius ||
-            chunk->chunkX > chunkX + radius - 1 ||
-            chunk->chunkZ < chunkZ - radius ||
-            chunk->chunkZ > chunkZ + radius - 1
+            chunk->pos.x < chunkX - radius ||
+            chunk->pos.x > chunkX + radius - 1 ||
+            chunk->pos.z < chunkZ - radius ||
+            chunk->pos.z > chunkZ + radius - 1
         ) {
             if (chunk->needsUnloading) {
                 chunk->UnloadToFile();
             }
-            delete chunk;
             m_ChunkMap.erase(it++);
         } else {
             ++it;
@@ -36,65 +31,52 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferP
     }
 
     for (int iz = -radius; iz < radius; iz++) {
-		for (int y = 0; y < 4; y++) {
-			for (int ix = -radius; ix < radius; ix++) {
-				Vec3 vec = Vec3(chunkX + ix, y, chunkZ + iz);
-				Chunk* chunk = nullptr;
-				if (m_ChunkMap.find(vec) == m_ChunkMap.end()) {
-                    chunk = new Chunk(chunkX + ix, y, chunkZ + iz);
-					m_ChunkMap[vec] = chunk;
-				}
-				else {
-					chunk = m_ChunkMap.at(vec);
+        for (int ix = -radius; ix < radius; ix++) {
+            
+            Vec2 vec = Vec2(chunkX + ix, chunkZ + iz);
+            Chunk* chunk = nullptr;
 
-					if (chunk->needsBuffering) {
-						if (chunksBuffered < bufferPerFrame) {
-							chunk->BufferData();
-							chunksBuffered++;
-						}
-					}
-					else if (!chunk->needsRemeshing) {
-						m_ChunkDrawVector.push_back(chunk);
+            auto find = m_ChunkMap.find(vec);
+
+            if (find == m_ChunkMap.end()) {
+                auto result = m_ChunkMap.try_emplace(vec, chunkX + ix, 0, chunkZ + iz);
+                chunk = &(result.first->second);
+            }
+            else {
+                chunk = &(find->second);
+
+                if (chunk->needsBuffering) {
+                    if (chunksBuffered < bufferPerFrame) {
+                        chunk->BufferData();
+                        chunksBuffered++;
                     }
-				}
+                }
+                else if (!chunk->needsRemeshing) {
+                    m_ChunkDrawVector.push_back(chunk);
+                }
+            }
 
-				if (chunksRemeshed < bufferPerFrame && chunk->needsRemeshing) {
-					chunksRemeshed++;
+            if (chunksRemeshed < bufferPerFrame && chunk->needsRemeshing) {
+                chunksRemeshed++;
 
-					if (y == 3) {
-						m_ThreadPool.push_task([chunk, this] {
-                            std::ifstream rf(fmt::format("world/{}.{}.{}.chunk", chunk->chunkX, chunk->chunkY, chunk->chunkZ), std::ios::in | std::ios::binary);
-                            if (!rf) {
-                                chunk->TerrainGen(this->m_Noise);
-
-                            }else {
-                                rf.read((char *)&chunk->m_Voxels[0], CS_P3 * sizeof(BlockInt));
-                                rf.close();
-                            }
-							chunk->CreateMesh();
-                            chunk->firstBufferTime = static_cast<float>(glfwGetTime());
-						});
-					}
-					else {
-						m_ThreadPool.push_task([chunk] {
-							std::ifstream rf(fmt::format("world/{}.{}.{}.chunk", chunk->chunkX, chunk->chunkY, chunk->chunkZ), std::ios::in | std::ios::binary);
-                            if (!rf) {
-                                chunk->TerrainGen(STONE);
-                            }else {
-                                rf.read((char *)&chunk->m_Voxels[0], CS_P3 * sizeof(BlockInt));
-                                rf.close();
-                            }
-							chunk->CreateMesh();
-                            chunk->firstBufferTime = static_cast<float>(glfwGetTime());
-						});
-					}
-				}
-			}
-		}
+                m_ThreadPool.push_task([chunk, this] {
+                    std::ifstream rf(fmt::format("world/{}.{}.{}.chunk", chunk->pos.x, chunk->pos.y, chunk->pos.z), std::ios::in | std::ios::binary);
+                    if (!rf) {
+                        chunk->TerrainGen(this->m_Noise, this->gen, this->distrib);
+                    }else {
+                        rf.read((char *)&chunk->m_Voxels[0], CS_P3 * sizeof(BlockInt));
+                        rf.close();
+                    }
+                    chunk->CreateMesh();
+                    chunk->firstBufferTime = static_cast<float>(glfwGetTime());
+                });
+            }
+        }
     }
+    m_ThreadPool.wait_for_tasks();
 }
 
-void engine::World::DrawOpaque(Shader& chunkShader) {
+void engine::World::DrawBlocks(Shader& chunkShader) {
     for (Chunk* chunk : m_ChunkDrawVector){
         chunk->Draw(chunkShader);
     }
@@ -110,14 +92,22 @@ void engine::World::DrawCustomModelBlocks(Shader& customModelShader) {
     }
 }
 
+engine::Chunk* engine::World::GetChunk(int chunkX, int chunkY) {
+    auto find = m_ChunkMap.find(Vec2(chunkX, chunkY));
+
+    if (find == m_ChunkMap.end()) {
+        return nullptr;
+    } else {
+        return &(find->second);
+    }
+}
+
 engine::World::~World() {
-    for (const auto p : m_ChunkMap){
-        Chunk* chunk = p.second;
-        if (chunk->needsUnloading) {
-            chunk->UnloadToFile();
+    for (auto& [key, chunk]: m_ChunkMap) {
+        if (chunk.needsUnloading) {
+            chunk.UnloadToFile();
         }
     }
-    // TODO: Delete chunks here
 }
 /*
 MIT License

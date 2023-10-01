@@ -6,58 +6,46 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 project(MinecraftClone VERSION 1.0)
 
 add_executable(${PROJECT_NAME} 
-    src/main.cpp 
+    src/main.cpp
     src/gl.c
-    src/core/Application.cpp
-    src/core/Camera.cpp
-    src/core/Shader.cpp
-    src/core/Window.cpp
-    src/math/Mat2.cpp
-    src/math/Mat3.cpp
-    src/math/Mat4.cpp
-    src/math/Vec2.cpp
-    src/math/Vec3.cpp
-    src/math/Vec4.cpp
-    src/math/VoxelRaycast.cpp
-    src/opengl/Framebuffer.cpp
-    src/opengl/IndexBuffer.cpp
-    src/opengl/VertexArray.cpp
-    src/opengl/VertexBuffer.cpp
-    src/opengl/VertexBufferLayout.cpp
-    src/world/Block.cpp
-    src/world/Chunk.cpp
-    src/world/ChunkMesher.cpp
-    src/world/Skybox.cpp
-    src/world/World.cpp
-    src/util/Log.cpp
-    src/util/TextureLoad.cpp
+    src/core/Application.cpp 
     src/core/Application.hpp
-    src/core/Camera.hpp
+    src/core/Shader.cpp 
     src/core/Shader.hpp
-    src/core/Window.hpp
+    src/core/Camera.cpp
+    src/core/Camera.hpp
     src/math/Mat2.hpp
     src/math/Mat3.hpp
     src/math/Mat4.hpp
     src/math/Vec2.hpp
     src/math/Vec3.hpp
     src/math/Vec4.hpp
-    src/math/VoxelRaycast.hpp
-    src/opengl/Framebuffer.hpp
-    src/opengl/IndexBuffer.hpp
-    src/opengl/VertexArray.hpp
-    src/opengl/VertexBuffer.hpp
-    src/opengl/VertexBufferLayout.hpp
-    src/world/Block.hpp
-    src/world/Chunk.hpp
-    src/world/ChunkMesher.hpp
-    src/world/Skybox.hpp
-    src/world/World.hpp
-    src/util/Log.hpp
-    src/util/TextureLoad.hpp
     src/math/Math.hpp
+    src/math/VoxelRaycast.cpp
+    src/math/VoxelRaycast.hpp
+    src/opengl/BufferObject.hpp
+    src/opengl/Texture.hpp
+    src/opengl/Framebuffer.cpp
+    src/opengl/Framebuffer.hpp
+    src/opengl/VertexArray.cpp
+    src/opengl/VertexArray.hpp
+    src/opengl/VertexBufferLayout.cpp
+    src/opengl/VertexBufferLayout.hpp
+    src/world/Block.cpp
+    src/world/Block.hpp
+    src/world/Skybox.cpp
+    src/world/Skybox.hpp
+    src/world/Chunk.cpp
+    src/world/Chunk.hpp
+    src/world/World.cpp
+    src/world/World.hpp
+    src/world/ChunkMesher.cpp
+    src/world/ChunkMesher.hpp
+    src/util/Log.cpp
+    src/util/Log.hpp
+    src/util/Concepts.hpp
     src/util/Constants.hpp
 )
-
 
 add_subdirectory(submodules/glfw)
 add_subdirectory(submodules/spdlog)

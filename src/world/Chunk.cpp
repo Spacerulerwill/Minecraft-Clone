@@ -9,12 +9,11 @@ LICENSE: MIT
 #include <fstream>
 #include <util/Log.hpp>
 #include <math/Math.hpp>
-#include <algorithm>
 #include <GLFW/glfw3.h>
 
-engine::Chunk::Chunk(int chunkX, int chunkY, int chunkZ): chunkX(chunkX), chunkY(chunkY), chunkZ(chunkZ)
+engine::Chunk::Chunk(int x, int y, int z): pos(x, y, z)
 {
-    m_Model *= translate(Vec3(chunkX * CS, chunkY * CS, chunkZ * CS));
+    m_Model *= translate(Vec3<float>(static_cast<float>(x * CS), static_cast<float>(y * CS), static_cast<float>(z * CS)));
 
     VertexBufferLayout bufLayout;
 	bufLayout.AddAttribute<unsigned int>(2);
@@ -33,17 +32,14 @@ engine::Chunk::~Chunk()
     delete[] m_Voxels;
 }
 
-void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin)
+void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin,std::mt19937& gen, std::uniform_int_distribution<>& distrib)
 {
   memset(m_Voxels, AIR, CS_P3);
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<> distrib(1, 100);
   const unsigned int water_level = 32;
   
   for (int x = 1; x < CS_P_MINUS_ONE; x++) {
       for (int z = 1; z < CS_P_MINUS_ONE; z++){
-          float heightMultiplayer = perlin.octave2D_01((chunkX * CS + x) * 0.0125 , (chunkZ * CS + z) * 0.0125, 4, 0.5);
+          float heightMultiplayer = perlin.octave2D_01((pos.x * CS + x) * 0.0125 , (pos.z * CS + z) * 0.0125, 4, 0.5);
           int height = 1 + (heightMultiplayer * CS_MINUS_ONE);
 
           int dirt_height = height - 1;
@@ -57,7 +53,7 @@ void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin)
           
           if (height < water_level - 1) {
             
-            float oceanFloorNoise = perlin.octave2D_01((chunkX * CS + x) * 0.125 , (chunkZ * CS + z) * 0.125, 8, 0.1);
+            float oceanFloorNoise = perlin.octave2D_01((pos.x * CS + x) * 0.125 , (pos.z * CS + z) * 0.125, 8, 0.1);
 
             if (oceanFloorNoise < 0.33) {
                 SetBlock(CLAY, x, height, z);
@@ -104,10 +100,6 @@ void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin)
     }
 }
 
-void engine::Chunk::SetEmpty() {
-    memset(m_Voxels, AIR, sizeof(BlockInt) * CS_P3);
-}
-
 void engine::Chunk::TerrainGen(BlockInt block)
 {
 	memset(m_Voxels, AIR, CS_P3);
@@ -149,14 +141,14 @@ void engine::Chunk::CreateMesh()
 
 void engine::Chunk::UnloadToFile()
 {
-    std::ofstream wf(fmt::format("world/{}.{}.{}.chunk", chunkX, chunkY, chunkZ), std::ios::out | std::ios::binary);
+    std::ofstream wf(fmt::format("world/{}.{}.{}.chunk", pos.x, pos.y, pos.z), std::ios::out | std::ios::binary);
     if (!wf) {
-        LOG_ERROR(fmt::format("Failed to unload chunk {}, {}, {}. File creation error!", chunkX, chunkY, chunkZ));
+        LOG_ERROR(fmt::format("Failed to unload chunk {}. File creation error!", std::string(pos)));
     }
     wf.write((char *)&m_Voxels[0], CS_P3 * sizeof(BlockInt));
     wf.close();
     if (!wf.good()) {
-        LOG_ERROR(fmt::format("Failed to unload chunk {}, {}, {}. File writing error!", chunkX, chunkY, chunkZ));
+        LOG_ERROR(fmt::format("Failed to unload chunk {}. File writing error!", std::string(pos)));
     }
     needsUnloading = false;
 }
@@ -164,20 +156,17 @@ void engine::Chunk::UnloadToFile()
 void engine::Chunk::BufferData()
 {
     if (m_VertexCount > 0){
-        m_VBO.BufferData(m_Vertices.data(), m_VertexCount * sizeof(ChunkVertex));
-        m_VBO.Unbind();
+        m_VBO.BufferData(m_Vertices.data(), m_VertexCount * sizeof(ChunkVertex), GL_STATIC_DRAW);
         std::vector<ChunkVertex>().swap(m_Vertices);
     }
 
     if (m_WaterVertexCount > 0){
-        m_WaterVBO.BufferData(m_WaterVertices.data(), m_WaterVertexCount * sizeof(ChunkVertex));
-        m_WaterVBO.Unbind();
+        m_WaterVBO.BufferData(m_WaterVertices.data(), m_WaterVertexCount * sizeof(ChunkVertex), GL_STATIC_DRAW);
         std::vector<ChunkVertex>().swap(m_WaterVertices);
     }
 
     if (m_CustomModelVertexCount > 0) {
-        m_CustomModelVBO.BufferData(m_CustomModelVertices.data(), m_CustomModelVertexCount * sizeof(float));
-        m_CustomModelVBO.Unbind();
+        m_CustomModelVBO.BufferData(m_CustomModelVertices.data(), m_CustomModelVertexCount * sizeof(float), GL_STATIC_DRAW);
         std::vector<float>().swap(m_CustomModelVertices);
     }
 

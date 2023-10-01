@@ -16,7 +16,7 @@ namespace engine {
         unsigned int count;
         GLuint normalized;
 
-        static unsigned int GetSize(unsigned int type) {
+        static unsigned int GetSize(GLenum type) {
             switch (type)
             {
             case GL_FLOAT:

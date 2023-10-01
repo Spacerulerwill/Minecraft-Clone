@@ -4,6 +4,7 @@ License: MIT
 */
 
 #include "core/Shader.hpp"
+#include <glad/gl.h>
 #include <util/Log.hpp>
 #include <fmt/format.h>
 
@@ -47,33 +48,32 @@ engine::ShaderSources engine::Shader::ParseShader(const std::string& filepath) {
     };
 }
 
-unsigned int engine::Shader::CompileShader(unsigned int type, std::string& source) {
-    unsigned int id = glCreateShader(type);
+GLuint engine::Shader::CompileShader(GLenum type, std::string& source) {
+    GLuint id = glCreateShader(type);
     const char* sourceStr = source.c_str();
     glShaderSource(id, 1, &sourceStr, nullptr);
     glCompileShader(id);
 
-    int result;
+    GLint result;
     glGetShaderiv(id, GL_COMPILE_STATUS, &result);
     if (result == GL_FALSE) {
-        int length;
+        GLsizei length;
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-        char* msg = new char[length];
+        GLchar* msg = new GLchar[length];
         glGetShaderInfoLog(id, length, &length, msg);
-        LOG_CRITICAL(fmt::format("Failed to compile {} shader\n{}", (type == GL_VERTEX_SHADER ? "vertex" : "fragment"), msg));
+        LOG_ERROR(fmt::format("Failed to compile {} shader\n{}", (type == GL_VERTEX_SHADER ? "vertex" : "fragment"), msg));
         glDeleteShader(id);
         delete[] msg;
         return 0;
     }
-
     return id;
 }
 
-unsigned int engine::Shader::CreateShader(std::string& vertex_source, std::string& fragmement_source) {
+GLuint engine::Shader::CreateShader(std::string& vertex_source, std::string& fragmement_source) {
 
-    unsigned int program = glCreateProgram();
-    unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertex_source);
-    unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmement_source);
+    GLuint program = glCreateProgram();
+    GLuint vs = CompileShader(GL_VERTEX_SHADER, vertex_source);
+    GLuint fs = CompileShader(GL_FRAGMENT_SHADER, fragmement_source);
 
     glAttachShader(program, vs);
     glAttachShader(program, fs);
@@ -85,20 +85,6 @@ unsigned int engine::Shader::CreateShader(std::string& vertex_source, std::strin
     glDeleteShader(fs);
 
     return program;
-}
-
-void engine::Shader::setMat4(const std::string& name, const engine::Mat4& mat)
-{
-    glUniformMatrix4fv(GetLocation(name), 1, GL_TRUE, mat.GetPointer());
-}
-
-void engine::Shader::setIVec3(const std::string& name, int x, int y, int z)
-{
-    glUniform3i(GetLocation(name), x, y, z);
-}
-
-void engine::Shader::setVec3(const std::string& name, const engine::Vec3& vec) {
-    glUniform3f(GetLocation(name), vec.x, vec.y, vec.z);
 }
 
 void engine::Shader::setFloat(const std::string& name, float x) {
@@ -118,11 +104,11 @@ void engine::Shader::Unbind() const {
     glUseProgram(0);
 }
 
-int engine::Shader::GetLocation(std::string name) {
+GLint engine::Shader::GetLocation(std::string name) {
     if (m_UnformLocation.find(name) != m_UnformLocation.end()) {
         return m_UnformLocation[name];
     }
-    int location = glGetUniformLocation(u_ID, name.c_str());
+    GLint location = glGetUniformLocation(u_ID, name.c_str());
     if (location == -1) {
         LOG_WARNING(fmt::format("Location of {} not found!", name));
     }

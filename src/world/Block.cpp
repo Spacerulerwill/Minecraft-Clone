@@ -8,7 +8,6 @@ LICENSE: MIT
 #include <filesystem>
 #include <fmt/format.h>
 #include <yaml-cpp/yaml.h>
-#include <world/ChunkMesher.hpp>
 
 float crossVertices[84] = {
 	0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
@@ -39,7 +38,6 @@ void engine::InitBlocks() {
 	// Load block sounds
 	for (const auto& file : std::filesystem::directory_iterator("res/sound/block")) {
 		auto char_path = file.path().string();
-		LOG_TRACE(char_path);
 	}
 
 	// Load materials from materials.yml

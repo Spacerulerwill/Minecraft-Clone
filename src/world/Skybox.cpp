@@ -3,7 +3,6 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 LICENSE: MIT
 */
 
-#include <util/TextureLoad.hpp>
 #include <world/Skybox.hpp>
 #include <opengl/VertexBufferLayout.hpp>
 
@@ -60,23 +59,16 @@ const char * engine::Skybox::m_SkyboxFaces[6] = {
     "res/textures/skybox/back.jpg"
 };
 
-engine::Skybox::~Skybox()
-{
-
-}
-
 engine::Skybox::Skybox()
 {
     // Setup Buffers
     VertexBufferLayout bufLayout;
     bufLayout.AddAttribute<float>(3);
-    m_VBO.BufferData(m_SkyboxVertices, sizeof(m_SkyboxVertices));
+    m_VBO.BufferData(m_SkyboxVertices, sizeof(m_SkyboxVertices), GL_STATIC_DRAW);
     m_VAO.AddBuffer(m_VBO, bufLayout);
-
-    m_CubemapID = loadCubemap(m_SkyboxFaces);
 }
 
-void engine::Skybox::Draw(const Mat4& projection, const Mat4& view) {
+void engine::Skybox::Draw(const Mat4<float>& projection, const Mat4<float>& view) {
     m_Shader.Bind();
     m_VAO.Bind();
     m_Shader.setMat4("projection", projection);

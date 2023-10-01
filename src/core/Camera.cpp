@@ -1,32 +1,54 @@
 /*
 Copyright (C) 2023 William Redding - All Rights Reserved
-LICENSE: MIT
+License: MIT
 */
 
 #include <core/Camera.hpp>
-#include <util/Log.hpp>
-#include <GLFW/glfw3.h>
-#include <core/Window.hpp>
+#include <glad/gl.h>
 
-engine::Camera::Camera()
-{
+engine::Camera::Camera() {
     UpdateCameraVectors();
 }
 
-engine::Camera::Camera(engine::Vec3 pos): m_Position(pos) {
+engine::Camera::Camera(engine::Vec3<float> pos): m_Position(pos) {
     UpdateCameraVectors();
 }
 
+engine::Mat4<float> engine::Camera::GetViewMatrix() const {
+    return lookAt(m_Position, m_Position + m_Front, m_Up);
+}
 
-engine::Mat4 engine::Camera::GetViewMatrix() const
-{
-    return engine::lookAt(m_Position, m_Position + m_Front, m_Up);
+engine::Mat4<float> engine::Camera::GetPerspectiveMatrix() const {
+    return m_PerspectiveMatrix;
+}
+
+void engine::Camera::SetFOV(float FOV) {
+    if (m_FOV != FOV) {
+        m_PerspectiveMatrix = perspective(radians(FOV), m_Aspect, m_Near, m_Far);
+    }
+    m_FOV = FOV;
+}
+
+float engine::Camera::GetFOV() const {
+    return m_FOV;
+}
+
+void engine::Camera::SetMovementSpeed(float speed) {
+    m_MovementSpeed = speed;
+}
+
+engine::Vec3<float> engine::Camera::GetPosition() const {
+    return m_Position;
+}
+
+engine::Vec3<float> engine::Camera::GetDirection() const {
+    return m_Front;
 }
 
 void engine::Camera::ProcessKeyboard(CameraMovement direction, float deltaTime)
 {
     float velocity = m_MovementSpeed * deltaTime;
-    Vec3 directionMultiplier;
+    Vec3<float> directionMultiplier;
        
     if (direction == FORWARD)
         directionMultiplier = m_Front;
@@ -62,28 +84,27 @@ void engine::Camera::ProcessMouseMovement(float xoffset, float yoffset, GLboolea
 }
 
 void engine::Camera::ProcessMouseScroll(float yoffset)
-{
-    m_FOV -= yoffset * 2;
+{   
+    SetFOV(m_FOV - (yoffset) * 2);
     if (m_FOV < 1.0f)
-        m_FOV = 1.0f;
+        SetFOV(1.0f);
     if (m_FOV > 90.0f)
-        m_FOV = 90.0f;
+        SetFOV(90.0f);
 }
 
 void engine::Camera::UpdateCameraVectors()
 {
     // Calculate the new front vector
-    engine::Vec3 front;
+    Vec3<float> front;
     front.x = cos(radians(m_Yaw)) * cos(radians(m_Pitch));
     front.y = sin(radians(m_Pitch));
     front.z = sin(radians(m_Yaw)) * cos(radians(m_Pitch));
-    m_Front = Vec3::normalised(front);
+    m_Front = Vec3<float>::normalised(front);
 
     // also recalculate right and up vector
-    m_Right = Vec3::normalised(Vec3::cross(m_Front, m_WorldUp));
-    m_Up = Vec3::normalised(Vec3::cross(m_Right, m_Front));
+    m_Right = Vec3<float>::normalised(Vec3<float>::cross(m_Front, m_WorldUp));
+    m_Up = Vec3<float>::normalised(Vec3<float>::cross(m_Right, m_Front));
 }
-
 
 /*
 MIT License

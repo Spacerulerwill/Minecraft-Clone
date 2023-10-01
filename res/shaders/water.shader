@@ -54,7 +54,5 @@ out vec4 FragColor;
 
 void main() {
 	vec4 texColor = texture(tex_array, TexCoords);	
-
-    texColor.a = min(texColor.a, time / 2.0);
 	FragColor = texColor * vec4(waterColor, 1.0);
 }
