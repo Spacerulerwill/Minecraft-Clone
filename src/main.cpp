@@ -42,6 +42,8 @@ int main() {
                 std::cout << "World already exists! ";
             }
         }
+        
+        std::filesystem::create_directory(fmt::format("worlds/{}/chunks", worldName));
 
          // get seed
         const size_t MAXIMUM_CHARS = 32;
@@ -53,10 +55,18 @@ int main() {
         siv::PerlinNoise::seed_type seed = static_cast<siv::PerlinNoise::seed_type>(hasher(seedString));
 
         // create world.yml
-        YAML::Node node;
-        node["seed"] = seed;
-        std::ofstream fout(fmt::format("worlds/{}/world.yml", worldName), std::ofstream::trunc);
-        fout << node;
+        YAML::Node worldNode;
+        worldNode["seed"] = seed;
+        std::ofstream fWorldOut(fmt::format("worlds/{}/world.yml", worldName), std::ofstream::trunc);
+        fWorldOut << worldNode;
+        fWorldOut.close();
+
+        // create player.yml
+        YAML::Node playerNode;
+        playerNode["position"] = engine::Vec3<float>(0.0f,0.0f,0.0f);
+        std::ofstream fPlayerOut(fmt::format("worlds/{}/player.yml", worldName), std::ofstream::trunc);
+        fPlayerOut << playerNode;
+        fPlayerOut.close();
     }
 
     engine::Log::Init();

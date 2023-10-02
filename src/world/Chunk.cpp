@@ -141,7 +141,7 @@ void engine::Chunk::CreateMesh()
 
 void engine::Chunk::UnloadToFile(const char* worldName)
 {
-    std::ofstream wf(fmt::format("worlds/{}/{}.{}.{}.chunk", worldName, pos.x, pos.y, pos.z), std::ios::out | std::ios::binary);
+    std::ofstream wf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", worldName, pos.x, pos.y, pos.z), std::ios::out | std::ios::binary);
     if (!wf) {
         LOG_ERROR(fmt::format("Failed to unload chunk {}. File creation error!", std::string(pos)));
     }

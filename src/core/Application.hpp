@@ -22,7 +22,7 @@ namespace engine {
 		Application();
 		static std::unique_ptr<Application> s_Instance;
         GLFWwindow* p_Window = nullptr;
-        Camera m_Camera = Camera(Vec3(0.0f, 0.0f, 0.0f));
+        Camera* m_Camera = nullptr;
         Framebuffer* p_Framebuffer = nullptr;
         World* m_World = nullptr;
         VoxelRaycastResult m_BlockSelectRaycastResult {};

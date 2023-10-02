@@ -11,6 +11,7 @@ License: MIT
 #include <ostream>
 #include <util/Concepts.hpp>
 #include <fmt/format.h>
+#include <yaml-cpp/yaml.h>
 
 namespace engine {
     template<Arithmetic T>
@@ -140,6 +141,33 @@ namespace engine {
             os << fmt::format("({}, {}, {})", vec.x, vec.y, vec.z);
 	        return os;
         }
+	};
+}
+
+namespace YAML
+{    
+    template <engine::Arithmetic T>
+	struct convert<engine::Vec3<T>>
+	{
+		static Node encode(const engine::Vec3<T>& rhs)
+		{
+			Node node;
+			node.push_back(rhs.x);
+			node.push_back(rhs.y);
+			node.push_back(rhs.z);
+			return node;
+		}
+        
+		static bool decode(const Node& node, engine::Vec3<T>& rhs)
+		{
+			if (!node.IsSequence() || node.size() != 3)
+				return false;
+
+			rhs.x = node[0].as<T>();
+			rhs.y = node[1].as<T>();
+			rhs.z = node[2].as<T>();
+			return true;
+		}
 	};
 }
 

@@ -67,7 +67,7 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferP
                 chunksRemeshed++;
 
                 m_ThreadPool.push_task([chunk, this] {
-                    std::ifstream rf(fmt::format("worlds/{}/{}.{}.{}.chunk", m_WorldName, chunk->pos.x, chunk->pos.y, chunk->pos.z), std::ios::in | std::ios::binary);
+                    std::ifstream rf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", m_WorldName, chunk->pos.x, chunk->pos.y, chunk->pos.z), std::ios::in | std::ios::binary);
                     if (!rf) {
                         chunk->TerrainGen(this->m_Noise, this->gen, this->distrib);
                     }else {
@@ -110,6 +110,8 @@ engine::Chunk* engine::World::GetChunk(int chunkX, int chunkY) {
 }
 
 engine::World::~World() {
+
+    // Unload all remaining chunks
     for (auto& [key, chunk]: m_ChunkMap) {
         if (chunk.needsUnloading) {
             chunk.UnloadToFile(m_WorldName);

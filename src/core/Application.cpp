@@ -185,7 +185,11 @@ void engine::Application::Run(const char* worldName)
     double lastTime = 0.00f;
     int currentAtlasIndex = 0;
     int totalFrameDuration = 0;
+    
+    YAML::Node playerYaml = YAML::LoadFile(fmt::format("worlds/{}/player.yml", worldName));
+    Vec3 playerPosition = playerYaml["position"].as<Vec3<float>>();
 
+    m_Camera = new Camera(playerPosition);
     m_World = new World(worldName);
 
     // Main game loop
@@ -199,11 +203,11 @@ void engine::Application::Run(const char* worldName)
         ProcessInput();
 
         // Calculate player chunk position
-        int chunkX = m_Camera.GetPosition().x / CS;
-        if (m_Camera.GetPosition().x < 0) chunkX -= 1;
+        int chunkX = m_Camera->GetPosition().x / CS;
+        if (m_Camera->GetPosition().x < 0) chunkX -= 1;
 
-        int chunkZ = m_Camera.GetPosition().z / CS;
-        if (m_Camera.GetPosition().z < 0) chunkZ -= 1;
+        int chunkZ = m_Camera->GetPosition().z / CS;
+        if (m_Camera->GetPosition().z < 0) chunkZ -= 1;
 
         // Cycle through texture atlases 10 times a second
         double currentTime = glfwGetTime();
@@ -212,15 +216,14 @@ void engine::Application::Run(const char* worldName)
             glActiveTexture(GL_TEXTURE0);
             atlases[currentAtlasIndex]->Bind();
             lastTime = currentTime;
-            LOG_TRACE(totalFrameDuration);
+            //LOG_TRACE(totalFrameDuration);
         }
 
         // Create chunks every frame
         m_World->CreateChunks(chunkX, chunkZ, 8, 4);
 
         // Raycast outwards to find a block to highlight
-        
-        m_BlockSelectRaycastResult = VoxelRaycast(m_World, m_Camera.GetPosition(), m_Camera.GetDirection(), 15.0f);
+        m_BlockSelectRaycastResult = VoxelRaycast(m_World, m_Camera->GetPosition(), m_Camera->GetDirection(), 15.0f);
         Chunk* chunk = m_BlockSelectRaycastResult.chunk;
         Vec3<int> raycastBlockPos(
             chunk->pos.x * CS + m_BlockSelectRaycastResult.blockPos.x - 1, 
@@ -240,8 +243,8 @@ void engine::Application::Run(const char* worldName)
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        Mat4<float> perspective = m_Camera.GetPerspectiveMatrix();
-        Mat4<float> view = m_Camera.GetViewMatrix();
+        Mat4<float> perspective = m_Camera->GetPerspectiveMatrix();
+        Mat4<float> view = m_Camera->GetViewMatrix();
 
         chunkShader.Bind();
         chunkShader.setMat4("projection", perspective);
@@ -306,6 +309,17 @@ void engine::Application::Run(const char* worldName)
         glfwSwapBuffers(p_Window);
     }
     delete m_World;
+
+     // save player position into player.yaml
+    std::string playerYamlLocation = fmt::format("worlds/{}/player.yml", worldName);
+    YAML::Node worldYaml = YAML::LoadFile(playerYamlLocation);
+    worldYaml["position"] = m_Camera->GetPosition();
+    std::ofstream fout(playerYamlLocation); 
+    fout << worldYaml;
+    fout.close();
+
+    delete m_Camera;
+
     delete p_Framebuffer;
     glfwDestroyWindow(p_Window);
     spdlog::shutdown();
@@ -324,17 +338,17 @@ void engine::Application::ProcessInput()
     if (glfwGetKey(p_Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(p_Window, true);
     if (glfwGetKey(p_Window, GLFW_KEY_W) == GLFW_PRESS)
-        m_Camera.ProcessKeyboard(FORWARD, m_DeltaTime);
+        m_Camera->ProcessKeyboard(FORWARD, m_DeltaTime);
     if (glfwGetKey(p_Window, GLFW_KEY_S) == GLFW_PRESS)
-        m_Camera.ProcessKeyboard(BACKWARD, m_DeltaTime);
+        m_Camera->ProcessKeyboard(BACKWARD, m_DeltaTime);
     if (glfwGetKey(p_Window, GLFW_KEY_A) == GLFW_PRESS)
-        m_Camera.ProcessKeyboard(LEFT, m_DeltaTime);
+        m_Camera->ProcessKeyboard(LEFT, m_DeltaTime);
     if (glfwGetKey(p_Window, GLFW_KEY_D) == GLFW_PRESS)
-        m_Camera.ProcessKeyboard(RIGHT, m_DeltaTime);
+        m_Camera->ProcessKeyboard(RIGHT, m_DeltaTime);
     if (glfwGetKey(p_Window, GLFW_KEY_LEFT_SHIFT))
-        m_Camera.SetMovementSpeed(100.0f);
+        m_Camera->SetMovementSpeed(100.0f);
     else
-        m_Camera.SetMovementSpeed(20.0f);
+        m_Camera->SetMovementSpeed(20.0f);
 }
 
 void engine::Application::GLFWMouseMoveCallback(GLFWwindow* window, double xposIn, double yposIn)
@@ -355,12 +369,12 @@ void engine::Application::GLFWMouseMoveCallback(GLFWwindow* window, double xposI
     m_LastMouseX = xpos;
     m_LastMouseY = ypos;
 
-    m_Camera.ProcessMouseMovement(xoffset, yoffset, true);
+    m_Camera->ProcessMouseMovement(xoffset, yoffset, true);
 }
 
 void engine::Application::GLFWScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    m_Camera.ProcessMouseScroll(static_cast<float>(yoffset));
+    m_Camera->ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
 void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)

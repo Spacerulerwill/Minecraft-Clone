@@ -27,7 +27,6 @@ namespace engine {
         void CreateChunks(int chunkX, int chunkY, int radius, int bufferPerFrame);
         Chunk* GetChunk(int chunkX, int chunkZ);
         ~World();
-
     private:
         const char* m_WorldName = nullptr;
         BS::thread_pool m_ThreadPool = BS::thread_pool(32);
