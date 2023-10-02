@@ -1,5 +1,7 @@
 # Minecraft Clone (Craft++)
 
+**Requires C++20** and compiles with **GCC**.Untested with MSVC but should work.
+
 This is a minecraft clone written in C++ and GLSL. It's called **Craft++** because it abbreviates to C++ and I think that's quite funny. Here are some images of a few houses I have built:
 
 <img src="images/harold.png" alt="Harold the House" width="1000"/>

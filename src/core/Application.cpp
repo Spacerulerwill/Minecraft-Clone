@@ -222,7 +222,7 @@ void engine::Application::Run(const char* worldName)
         }
 
         // Create chunks every frame
-        m_World->CreateChunks(chunkX, chunkZ, 8, 4);
+        m_World->CreateChunks(chunkX, chunkZ, 8, 2);
 
         // Raycast outwards to find a block to highlight
         m_BlockSelectRaycastResult = VoxelRaycast(m_World, m_Camera->GetPosition(), m_Camera->GetDirection(), 15.0f);
