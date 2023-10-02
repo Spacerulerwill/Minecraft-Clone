@@ -435,6 +435,12 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
             }
             break;
         }
+        case GLFW_MOUSE_BUTTON_MIDDLE: {
+            if (m_BlockSelectRaycastResult.blockHit != AIR) {
+                m_SelectedBlock = m_BlockSelectRaycastResult.blockHit;
+            }
+            break;
+        }
     }
 }
        
