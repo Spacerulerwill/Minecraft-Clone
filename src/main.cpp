@@ -42,7 +42,7 @@ int main() {
                 std::cout << "World already exists! ";
             }
         }
-        
+
         std::filesystem::create_directory(fmt::format("worlds/{}/chunks", worldName));
 
          // get seed
@@ -64,6 +64,8 @@ int main() {
         // create player.yml
         YAML::Node playerNode;
         playerNode["position"] = engine::Vec3<float>(0.0f,0.0f,0.0f);
+        playerNode["yaw"] = -90.0f;
+        playerNode["pitch"] = 0.0f;
         std::ofstream fPlayerOut(fmt::format("worlds/{}/player.yml", worldName), std::ofstream::trunc);
         fPlayerOut << playerNode;
         fPlayerOut.close();

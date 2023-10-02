@@ -22,6 +22,7 @@ namespace engine {
         public:
             Camera();
             Camera(Vec3<float> pos);
+            Camera(Vec3<float> pos, float yaw, float pitch);
 
             Mat4<float> GetViewMatrix() const;
             Mat4<float> GetPerspectiveMatrix() const;
@@ -38,16 +39,16 @@ namespace engine {
             void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch);
             void ProcessMouseScroll(float yoffset);
 
+            // euler angles
+            float m_Yaw = -90.0f;
+            float m_Pitch = 0.0f;
+
         private:
             Vec3<float> m_Position = Vec3<float>(0.0f, 0.0f, 0.0f);
             Vec3<float> m_Front;
             Vec3<float> m_Up;
             Vec3<float> m_Right;
             Vec3<float> m_WorldUp = Vec3<float>(0.0f, 1.0f, 0.0f);
-
-            // euler angles
-            float m_Yaw = -90.0f;
-            float m_Pitch = 0.0f;
 
             // camera options
             float m_MovementSpeed = 2.5f;

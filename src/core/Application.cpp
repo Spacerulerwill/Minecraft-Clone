@@ -188,8 +188,10 @@ void engine::Application::Run(const char* worldName)
     
     YAML::Node playerYaml = YAML::LoadFile(fmt::format("worlds/{}/player.yml", worldName));
     Vec3 playerPosition = playerYaml["position"].as<Vec3<float>>();
+    float playerYaw = playerYaml["yaw"].as<float>();
+    float playerPitch = playerYaml["pitch"].as<float>();
 
-    m_Camera = new Camera(playerPosition);
+    m_Camera = new Camera(playerPosition, playerYaw, playerPitch);
     m_World = new World(worldName);
 
     // Main game loop
@@ -314,6 +316,8 @@ void engine::Application::Run(const char* worldName)
     std::string playerYamlLocation = fmt::format("worlds/{}/player.yml", worldName);
     YAML::Node worldYaml = YAML::LoadFile(playerYamlLocation);
     worldYaml["position"] = m_Camera->GetPosition();
+    worldYaml["yaw"] = m_Camera->m_Yaw;
+    worldYaml["pitch"] = m_Camera->m_Pitch;
     std::ofstream fout(playerYamlLocation); 
     fout << worldYaml;
     fout.close();

@@ -14,6 +14,10 @@ engine::Camera::Camera(engine::Vec3<float> pos): m_Position(pos) {
     UpdateCameraVectors();
 }
 
+engine::Camera::Camera(engine::Vec3<float> pos, float yaw, float pitch): m_Position(pos), m_Yaw(yaw), m_Pitch(pitch) {
+    UpdateCameraVectors();
+}
+
 engine::Mat4<float> engine::Camera::GetViewMatrix() const {
     return lookAt(m_Position, m_Position + m_Front, m_Up);
 }
