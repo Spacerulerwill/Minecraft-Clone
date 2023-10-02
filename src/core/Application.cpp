@@ -20,6 +20,9 @@ License: MIT
 #include <filesystem>
 #include <memory>
 #include <chrono>
+#include <PerlinNoise.hpp>
+#include <yaml-cpp/yaml.h>
+#include <fstream>
 
 using namespace std::chrono;
 
@@ -49,10 +52,8 @@ void engine::Application::Init()
     }
 }
 
-void engine::Application::Run()
+void engine::Application::Run(const char* worldName)
 {    
-    std::filesystem::create_directory("world");
-
     // Try and intialise GLFW
     if (!glfwInit()) {
         glfwTerminate();
@@ -185,7 +186,7 @@ void engine::Application::Run()
     int currentAtlasIndex = 0;
     int totalFrameDuration = 0;
 
-    m_World = new World;
+    m_World = new World(worldName);
 
     // Main game loop
     while (!glfwWindowShouldClose(p_Window)) { 

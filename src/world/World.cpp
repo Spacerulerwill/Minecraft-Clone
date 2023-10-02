@@ -6,7 +6,14 @@ LICENSE: MIT
 #include <world/World.hpp>
 #include <GLFW/glfw3.h>
 #include <util/Log.hpp>
+#include <fmt/format.h>
+#include <yaml-cpp/yaml.h>
 
+engine::World::World(const char* worldName) : m_WorldName(worldName) {
+    YAML::Node worldYaml = YAML::LoadFile(fmt::format("worlds/{}/world.yml", worldName));
+    siv::PerlinNoise::seed_type seed = worldYaml["seed"].as<siv::PerlinNoise::seed_type>();
+    m_Noise.reseed(seed);
+}
 
 void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferPerFrame) {
     int chunksBuffered = 0;
@@ -22,7 +29,7 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferP
             chunk->pos.z > chunkZ + radius - 1
         ) {
             if (chunk->needsUnloading) {
-                chunk->UnloadToFile();
+                chunk->UnloadToFile(m_WorldName);
             }
             m_ChunkMap.erase(it++);
         } else {
@@ -60,7 +67,7 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferP
                 chunksRemeshed++;
 
                 m_ThreadPool.push_task([chunk, this] {
-                    std::ifstream rf(fmt::format("world/{}.{}.{}.chunk", chunk->pos.x, chunk->pos.y, chunk->pos.z), std::ios::in | std::ios::binary);
+                    std::ifstream rf(fmt::format("worlds/{}/{}.{}.{}.chunk", m_WorldName, chunk->pos.x, chunk->pos.y, chunk->pos.z), std::ios::in | std::ios::binary);
                     if (!rf) {
                         chunk->TerrainGen(this->m_Noise, this->gen, this->distrib);
                     }else {
@@ -105,7 +112,7 @@ engine::Chunk* engine::World::GetChunk(int chunkX, int chunkY) {
 engine::World::~World() {
     for (auto& [key, chunk]: m_ChunkMap) {
         if (chunk.needsUnloading) {
-            chunk.UnloadToFile();
+            chunk.UnloadToFile(m_WorldName);
         }
     }
 }

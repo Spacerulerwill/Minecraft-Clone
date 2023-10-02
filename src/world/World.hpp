@@ -20,6 +20,7 @@ LICENSE: MIT
 namespace engine {
     class World {
     public:
+        World(const char* worldName);
         void DrawBlocks(Shader& shader);
         void DrawWater(Shader& shader);
         void DrawCustomModelBlocks(Shader& shader);
@@ -28,6 +29,7 @@ namespace engine {
         ~World();
 
     private:
+        const char* m_WorldName = nullptr;
         BS::thread_pool m_ThreadPool = BS::thread_pool(32);
         std::vector<Chunk*> m_ChunkDrawVector;
         std::unordered_map<Vec2<int>, Chunk> m_ChunkMap;

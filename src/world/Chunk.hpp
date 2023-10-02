@@ -78,7 +78,7 @@ namespace engine {
 		void TerrainGen(BlockInt block);
 		void CreateMesh();
 
-        void UnloadToFile();
+        void UnloadToFile(const char* worldName);
 
 		void BufferData();
 		void Draw(Shader& shader);

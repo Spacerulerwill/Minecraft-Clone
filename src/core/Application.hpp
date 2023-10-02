@@ -38,7 +38,7 @@ namespace engine {
         void ProcessInput();
 	public:
 		static void Init();
-		void Run();
+		void Run(const char* worldName);
 		static std::unique_ptr<Application>& GetInstance();
         void GLFWMouseMoveCallback(GLFWwindow* window, double xposIn, double yposIn);
 		void GLFWScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
