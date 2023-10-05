@@ -43,7 +43,7 @@ namespace engine {
     block model buffer cannot be packed and are each 6 floats, totalling 24 bytes
     */
 	class Chunk {
-	private:
+	private:        
 		BufferObject<GL_ARRAY_BUFFER> m_VBO;
 		VertexArray m_VAO;
 		std::vector<ChunkVertex> m_Vertices;
@@ -62,11 +62,7 @@ namespace engine {
 		Mat4<float> m_Model = scale(Vec3<float>(BLOCK_SCALE));
 	public:
     	BlockInt* m_Voxels = new BlockInt[CS_P3];
-
-		bool needsRemeshing = true;
-		bool needsBuffering = false;
-        bool needsUnloading = false;
-
+		bool dirty = false;
         Vec3<int> pos = Vec3<int>(0);
         
         float firstBufferTime = 0.0f;
@@ -95,14 +91,12 @@ namespace engine {
 
 		inline void SetBlock(BlockInt block, unsigned int x, unsigned int y, unsigned int z) {
 			m_Voxels[VOXEL_INDEX(x,y,z)] = block;
-            needsUnloading = true;
-            needsRemeshing = true;
+            dirty = true;
 		}
 
         inline void SetBlock(BlockInt block, Vec3<int> pos) {
 			m_Voxels[VOXEL_INDEX(pos.x,pos.y,pos.z)] = block;
-            needsUnloading = true;
-            needsRemeshing = true;
+            dirty = true;
 		}
 	};
 }

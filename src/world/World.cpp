@@ -16,10 +16,19 @@ engine::World::World(const char* worldName) : m_WorldName(worldName) {
 }
 
 void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferPerFrame) {
-    int chunksBuffered = 0;
-	int chunksRemeshed = 0;
-    m_ChunkDrawVector.clear();
+    int chunksCreated = 0;
 
+    // erase chunks no longer within the view distance from the m_ChunkDrawVector
+    m_ChunkDrawVector.erase(std::remove_if(m_ChunkDrawVector.begin(), m_ChunkDrawVector.end(), [chunkX, chunkZ, radius](Chunk* chunk) { 
+        return chunk->pos.x < chunkX-radius ||
+        chunk->pos.x > chunkX+radius - 1||
+        chunk->pos.z < chunkZ-radius ||
+        chunk->pos.z > chunkZ+radius - 1;
+    }), m_ChunkDrawVector.end());
+
+
+    // Lock mutex for map access and unload each chunk outside view distance (single threaded)
+    mtx.lock();
     for (auto it = m_ChunkMap.begin(); it != m_ChunkMap.end();) {
         Chunk* chunk = &((*it).second);
         if (
@@ -28,7 +37,7 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferP
             chunk->pos.z < chunkZ - radius ||
             chunk->pos.z > chunkZ + radius - 1
         ) {
-            if (chunk->needsUnloading) {
+            if (chunk->dirty) {
                 chunk->UnloadToFile(m_WorldName);
             }
             m_ChunkMap.erase(it++);
@@ -36,51 +45,49 @@ void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferP
             ++it;
         }
     }
+    mtx.unlock();
 
+    // Generate new chunks
     for (int iz = -radius; iz < radius; iz++) {
         for (int ix = -radius; ix < radius; ix++) {
             
             Vec2 vec = Vec2(chunkX + ix, chunkZ + iz);
             Chunk* chunk = nullptr;
 
+            mtx.lock();
             auto find = m_ChunkMap.find(vec);
-
-            if (find == m_ChunkMap.end()) {
+            
+            if (find == m_ChunkMap.end() && chunksCreated < bufferPerFrame) {
+                chunksCreated++;
                 auto result = m_ChunkMap.try_emplace(vec, chunkX + ix, 0, chunkZ + iz);
                 chunk = &(result.first->second);
-            }
-            else {
-                chunk = &(find->second);
-
-                if (chunk->needsBuffering) {
-                    if (chunksBuffered < bufferPerFrame) {
-                        chunk->BufferData();
-                        chunksBuffered++;
-                    }
-                }
-                else if (!chunk->needsRemeshing) {
-                    m_ChunkDrawVector.push_back(chunk);
-                }
-            }
-
-            if (chunksRemeshed < bufferPerFrame && chunk->needsRemeshing) {
-                chunksRemeshed++;
-
-                m_ThreadPool.push_task([chunk, this] {
+                m_MeshPool.push_task([chunk, this] {
                     std::ifstream rf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", m_WorldName, chunk->pos.x, chunk->pos.y, chunk->pos.z), std::ios::in | std::ios::binary);
                     if (!rf) {
-                        chunk->TerrainGen(this->m_Noise, this->gen, this->distrib);
+                        chunk->TerrainGen(m_Noise, gen, distrib);
+                        chunk->UnloadToFile(m_WorldName);
                     }else {
                         rf.read((char *)&chunk->m_Voxels[0], CS_P3 * sizeof(BlockInt));
                         rf.close();
                     }
                     chunk->CreateMesh();
                     chunk->firstBufferTime = static_cast<float>(glfwGetTime());
+                    m_ChunkBufferQueue.enqueue(chunk);
                 });
-            }
+            } 
+            mtx.unlock();
         }
     }
-    m_ThreadPool.wait_for_tasks();
+    
+    // Buffer chunks that
+    for (int i = 0; i < bufferPerFrame; i++){
+        Chunk* chunk = nullptr;
+        bool success = m_ChunkBufferQueue.try_dequeue(chunk);
+        if (success) {
+            chunk->BufferData();
+            m_ChunkDrawVector.push_back(chunk);
+        }
+    }
 }
 
 void engine::World::DrawBlocks(Shader& chunkShader) {
@@ -113,7 +120,7 @@ engine::World::~World() {
 
     // Unload all remaining chunks
     for (auto& [key, chunk]: m_ChunkMap) {
-        if (chunk.needsUnloading) {
+        if (chunk.dirty) {
             chunk.UnloadToFile(m_WorldName);
         }
     }

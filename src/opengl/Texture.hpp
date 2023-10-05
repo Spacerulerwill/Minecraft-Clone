@@ -147,7 +147,6 @@ namespace engine {
                         data);           // pixel data
 
                     glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
-
                     glTexParameteri(GL_TEXTURE_2D_ARRAY,
                         GL_TEXTURE_MIN_FILTER,
                         GL_NEAREST_MIPMAP_LINEAR);

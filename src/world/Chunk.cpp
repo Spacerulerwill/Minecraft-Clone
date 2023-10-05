@@ -134,9 +134,6 @@ void engine::Chunk::CreateMesh()
     m_VertexCount = m_Vertices.size();
     m_WaterVertexCount = m_WaterVertices.size();
     m_CustomModelVertexCount = m_CustomModelVertices.size();
-
-	needsRemeshing = false;
-	needsBuffering = true;
 }
 
 void engine::Chunk::UnloadToFile(const char* worldName)
@@ -150,7 +147,7 @@ void engine::Chunk::UnloadToFile(const char* worldName)
     if (!wf.good()) {
         LOG_ERROR(fmt::format("Failed to unload chunk {}. File writing error!", std::string(pos)));
     }
-    needsUnloading = false;
+    dirty = false;
 }
 
 void engine::Chunk::BufferData()
@@ -169,19 +166,17 @@ void engine::Chunk::BufferData()
         m_CustomModelVBO.BufferData(m_CustomModelVertices.data(), m_CustomModelVertexCount * sizeof(float), GL_STATIC_DRAW);
         std::vector<float>().swap(m_CustomModelVertices);
     }
-
-	needsBuffering = false;
 }
 
 void engine::Chunk::Draw(Shader& shader)
 {
 	if (m_VertexCount > 0) {
-		 m_VAO.Bind();
+		m_VAO.Bind();
 		shader.setMat4("model", m_Model);
 		shader.setFloat("time", static_cast<float>(glfwGetTime()) - firstBufferTime);
 
-			glDrawArrays(GL_TRIANGLES, 0, m_VertexCount);
-		}
+		glDrawArrays(GL_TRIANGLES, 0, m_VertexCount);
+	}
 }
 
 void engine::Chunk::DrawWater(Shader& shader)

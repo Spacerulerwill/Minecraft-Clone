@@ -8,6 +8,7 @@ LICENSE: MIT
 
 #include <unordered_map>
 #include <BS_thread_pool.hpp>
+#include <concurrentqueue.h>
 #include <PerlinNoise.hpp>
 #include <core/Shader.hpp>
 #include <world/Chunk.hpp>
@@ -28,8 +29,10 @@ namespace engine {
         Chunk* GetChunk(int chunkX, int chunkZ);
         ~World();
     private:
+        std::mutex mtx;
         const char* m_WorldName = nullptr;
-        BS::thread_pool m_ThreadPool = BS::thread_pool(32);
+        BS::thread_pool m_MeshPool;
+        moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
         std::vector<Chunk*> m_ChunkDrawVector;
         std::unordered_map<Vec2<int>, Chunk> m_ChunkMap;
         siv::PerlinNoise m_Noise = siv::PerlinNoise(0);

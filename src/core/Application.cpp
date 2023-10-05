@@ -64,6 +64,7 @@ void engine::Application::Run(const char* worldName)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_SAMPLES, 4);
 
 #ifdef __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -97,6 +98,7 @@ void engine::Application::Run(const char* worldName)
 	OpenGl setting configuration. We are enabling blend for alpha transparency blending and using the default blend function
 	We also enable culling faces as an optimisation using the default winding order.
 	*/
+    glEnable(GL_MULTISAMPLE);  
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
@@ -222,16 +224,22 @@ void engine::Application::Run(const char* worldName)
         }
 
         // Create chunks every frame
-        m_World->CreateChunks(chunkX, chunkZ, 8, 2);
+        m_World->CreateChunks(chunkX, chunkZ, 5, 20);
 
         // Raycast outwards to find a block to highlight
         m_BlockSelectRaycastResult = VoxelRaycast(m_World, m_Camera->GetPosition(), m_Camera->GetDirection(), 15.0f);
         Chunk* chunk = m_BlockSelectRaycastResult.chunk;
-        Vec3<int> raycastBlockPos(
-            chunk->pos.x * CS + m_BlockSelectRaycastResult.blockPos.x - 1, 
-            chunk->pos.y * CS + m_BlockSelectRaycastResult.blockPos.y - 1,
-            chunk->pos.z * CS + m_BlockSelectRaycastResult.blockPos.z - 1
-        );
+        Vec3<int> raycastBlockPos;
+
+        if (chunk != nullptr) {
+            raycastBlockPos = Vec3<int>(
+                chunk->pos.x * CS + m_BlockSelectRaycastResult.blockPos.x - 1, 
+                chunk->pos.y * CS + m_BlockSelectRaycastResult.blockPos.y - 1,
+                chunk->pos.z * CS + m_BlockSelectRaycastResult.blockPos.z - 1
+            );
+        } else {
+            raycastBlockPos = Vec3<int>(0,0,0);
+        }
 
         // Bind our framebuffer and render to it
         p_Framebuffer->Bind();
