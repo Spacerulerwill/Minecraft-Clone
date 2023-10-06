@@ -144,6 +144,14 @@ namespace engine {
 	};
 }
 
+namespace std {
+	template<engine::Arithmetic T> struct hash<engine::Vec3<T>> {
+		std::size_t operator()(engine::Vec3<T> const& vec) const noexcept {		
+			return (((int)vec.x * 73856093) ^ ((int)vec.y * 19349663) ^ ((int)vec.z * 83492791)) % 3; // or use boost::hash_combine (see Discussion) https://en.cppreference.com/w/Talk:cpp/utility/hash
+		}
+	};
+}
+
 namespace YAML
 {    
     template <engine::Arithmetic T>

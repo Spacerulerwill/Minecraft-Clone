@@ -210,6 +210,9 @@ void engine::Application::Run(const char* worldName)
         int chunkX = m_Camera->GetPosition().x / CS;
         if (m_Camera->GetPosition().x < 0) chunkX -= 1;
 
+        int chunkY = m_Camera->GetPosition().y / CS;
+        if (m_Camera->GetPosition().y < 0) chunkY -= 1;
+
         int chunkZ = m_Camera->GetPosition().z / CS;
         if (m_Camera->GetPosition().z < 0) chunkZ -= 1;
 
@@ -224,7 +227,7 @@ void engine::Application::Run(const char* worldName)
         }
 
         // Create chunks every frame
-        m_World->CreateChunks(chunkX, chunkZ, 5, 20);
+        m_World->CreateChunks(chunkX, chunkY, chunkZ, 10, 20);
 
         // Raycast outwards to find a block to highlight
         m_BlockSelectRaycastResult = VoxelRaycast(m_World, m_Camera->GetPosition(), m_Camera->GetDirection(), 15.0f);
@@ -414,22 +417,22 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
                         // chunk edge cases 
                         if (blockPlacePosition.x == CS_P_MINUS_ONE) {
                             blockPlacePosition.x = 1;
-                            chunk = m_World->GetChunk(chunk->pos.x + 1, chunk->pos.z);
+                            chunk = m_World->GetChunk(chunk->pos.x + 1, chunk->pos.y, chunk->pos.z);
                         }
 
                         if (blockPlacePosition.x == 0) {
                             blockPlacePosition.x = CS;
-                            chunk = m_World->GetChunk(chunk->pos.x - 1, chunk->pos.z);
+                            chunk = m_World->GetChunk(chunk->pos.x - 1, chunk->pos.y, chunk->pos.z);
                         }
 
                         if (blockPlacePosition.z == CS_P_MINUS_ONE) {
                             blockPlacePosition.z = 1;
-                            chunk = m_World->GetChunk(chunk->pos.x, chunk->pos.z + 1);
+                            chunk = m_World->GetChunk(chunk->pos.x, chunk->pos.y, chunk->pos.z + 1);
                         }
 
                         if (blockPlacePosition.z == 0) {
                             blockPlacePosition.z = CS;
-                            chunk = m_World->GetChunk(chunk->pos.x, chunk->pos.z - 1);
+                            chunk = m_World->GetChunk(chunk->pos.x, chunk->pos.y, chunk->pos.z - 1);
                         }
 
                         BlockInt blockAtPlacePosition = chunk->GetBlock(blockPlacePosition);

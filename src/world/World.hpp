@@ -25,8 +25,8 @@ namespace engine {
         void DrawBlocks(Shader& shader);
         void DrawWater(Shader& shader);
         void DrawCustomModelBlocks(Shader& shader);
-        void CreateChunks(int chunkX, int chunkY, int radius, int bufferPerFrame);
-        Chunk* GetChunk(int chunkX, int chunkZ);
+        void CreateChunks(int chunkX, int chunkY, int chunkZ, int radius, int bufferPerFrame);
+        Chunk* GetChunk(int chunkX, int chunkY, int chunkZ);
         ~World();
     private:
         std::mutex mtx;
@@ -34,7 +34,7 @@ namespace engine {
         BS::thread_pool m_MeshPool;
         moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
         std::vector<Chunk*> m_ChunkDrawVector;
-        std::unordered_map<Vec2<int>, Chunk> m_ChunkMap;
+        std::unordered_map<Vec3<int>, Chunk> m_ChunkMap;
         siv::PerlinNoise m_Noise = siv::PerlinNoise(0);
         
         std::random_device rd;

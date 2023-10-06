@@ -15,67 +15,78 @@ engine::World::World(const char* worldName) : m_WorldName(worldName) {
     m_Noise.reseed(seed);
 }
 
-void engine::World::CreateChunks(int chunkX, int chunkZ, int radius, int bufferPerFrame) {
+void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius, int bufferPerFrame) {
     int chunksCreated = 0;
 
     // erase chunks no longer within the view distance from the m_ChunkDrawVector
-    m_ChunkDrawVector.erase(std::remove_if(m_ChunkDrawVector.begin(), m_ChunkDrawVector.end(), [chunkX, chunkZ, radius](Chunk* chunk) { 
+    m_ChunkDrawVector.erase(std::remove_if(m_ChunkDrawVector.begin(), m_ChunkDrawVector.end(), [chunkX, chunkY, chunkZ, radius](Chunk* chunk) { 
         return chunk->pos.x < chunkX-radius ||
         chunk->pos.x > chunkX+radius - 1||
+        chunk->pos.y < chunkY-radius ||
+        chunk->pos.y > chunkY+radius-1 ||
         chunk->pos.z < chunkZ-radius ||
         chunk->pos.z > chunkZ+radius - 1;
     }), m_ChunkDrawVector.end());
 
-
+    
     // Lock mutex for map access and unload each chunk outside view distance (single threaded)
-    mtx.lock();
-    for (auto it = m_ChunkMap.begin(); it != m_ChunkMap.end();) {
-        Chunk* chunk = &((*it).second);
-        if (
-            chunk->pos.x < chunkX - radius ||
-            chunk->pos.x > chunkX + radius - 1 ||
-            chunk->pos.z < chunkZ - radius ||
-            chunk->pos.z > chunkZ + radius - 1
-        ) {
-            if (chunk->dirty) {
-                chunk->UnloadToFile(m_WorldName);
+    if (m_MeshPool.get_tasks_total()==0) {
+        for (auto it = m_ChunkMap.begin(); it != m_ChunkMap.end();) {
+            Chunk* chunk = &((*it).second);
+            if (
+                chunk->pos.x < chunkX - radius ||
+                chunk->pos.x > chunkX + radius - 1 ||
+                chunk->pos.y < chunkY - radius ||
+                chunk->pos.y > chunkY + radius - 1 ||
+                chunk->pos.z < chunkZ - radius ||
+                chunk->pos.z > chunkZ + radius - 1
+            ) {
+                if (chunk->dirty) {
+                    chunk->UnloadToFile(m_WorldName);
+                }
+                mtx.lock();
+                m_ChunkMap.erase(it++);
+                mtx.unlock();
+            } else {
+                ++it;
             }
-            m_ChunkMap.erase(it++);
-        } else {
-            ++it;
         }
     }
-    mtx.unlock();
-
     // Generate new chunks
     for (int iz = -radius; iz < radius; iz++) {
-        for (int ix = -radius; ix < radius; ix++) {
-            
-            Vec2 vec = Vec2(chunkX + ix, chunkZ + iz);
-            Chunk* chunk = nullptr;
+        for (int iy = -radius; iy < radius; iy++) {
+            for (int ix = -radius; ix < radius; ix++) {
+                
+                Vec3 vec = Vec3(chunkX + ix, chunkY + iy, chunkZ + iz);
+                Chunk* chunk = nullptr;
 
-            mtx.lock();
-            auto find = m_ChunkMap.find(vec);
-            
-            if (find == m_ChunkMap.end() && chunksCreated < bufferPerFrame) {
-                chunksCreated++;
-                auto result = m_ChunkMap.try_emplace(vec, chunkX + ix, 0, chunkZ + iz);
-                chunk = &(result.first->second);
-                m_MeshPool.push_task([chunk, this] {
-                    std::ifstream rf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", m_WorldName, chunk->pos.x, chunk->pos.y, chunk->pos.z), std::ios::in | std::ios::binary);
-                    if (!rf) {
-                        chunk->TerrainGen(m_Noise, gen, distrib);
-                        chunk->UnloadToFile(m_WorldName);
-                    }else {
-                        rf.read((char *)&chunk->m_Voxels[0], CS_P3 * sizeof(BlockInt));
-                        rf.close();
+                auto find = m_ChunkMap.find(vec); 
+                auto end = m_ChunkMap.end();   
+                if (find == end && chunksCreated < bufferPerFrame) {
+                    if (chunkY + iy < 2 && chunkY + iy >= 0) {
+                        chunksCreated++;
+                        auto result = m_ChunkMap.try_emplace(vec, chunkX + ix, chunkY + iy, chunkZ + iz);
+                        chunk = &(result.first->second);
+                        m_MeshPool.push_task([chunk, chunkY, iy, this] {
+                            std::ifstream rf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", m_WorldName, chunk->pos.x, chunk->pos.y, chunk->pos.z), std::ios::in | std::ios::binary);
+                            if (!rf) {
+                                if (chunkY + iy < 1) {
+                                    chunk->TerrainGen(STONE);
+                                } else {
+                                    chunk->TerrainGen(m_Noise, gen, distrib);
+                                }
+                                chunk->UnloadToFile(m_WorldName);
+                            }else {
+                                rf.read((char*)&chunk->m_Voxels[0], CS_P3 * sizeof(BlockInt));
+                                rf.close();
+                            }
+                            chunk->CreateMesh();
+                            chunk->firstBufferTime = static_cast<float>(glfwGetTime());
+                            m_ChunkBufferQueue.enqueue(chunk);
+                        });
                     }
-                    chunk->CreateMesh();
-                    chunk->firstBufferTime = static_cast<float>(glfwGetTime());
-                    m_ChunkBufferQueue.enqueue(chunk);
-                });
-            } 
-            mtx.unlock();
+                }
+            }
         }
     }
     
@@ -106,8 +117,8 @@ void engine::World::DrawCustomModelBlocks(Shader& customModelShader) {
     }
 }
 
-engine::Chunk* engine::World::GetChunk(int chunkX, int chunkY) {
-    auto find = m_ChunkMap.find(Vec2(chunkX, chunkY));
+engine::Chunk* engine::World::GetChunk(int chunkX, int chunkY, int chunkZ) {
+    auto find = m_ChunkMap.find(Vec3(chunkX, chunkY, chunkZ));
 
     if (find == m_ChunkMap.end()) {
         return nullptr;

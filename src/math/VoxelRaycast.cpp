@@ -71,7 +71,7 @@ engine::VoxelRaycastResult engine::VoxelRaycast(World* world, const Vec3<float>&
                         chunkPos.z -= 1;
                     }
 
-                    Chunk* chunk = world->GetChunk(chunkPos.x, chunkPos.z);
+                    Chunk* chunk = world->GetChunk(chunkPos.x, chunkPos.y, chunkPos.z);
                     return VoxelRaycastResult {
                         chunk,
                         blockHitPos,
@@ -103,7 +103,7 @@ engine::VoxelRaycastResult engine::VoxelRaycast(World* world, const Vec3<float>&
                         blockHitPos.z = CS_P - blockHitPos.z - 1;
                         chunkPos.z -= 1;
                     }
-                    Chunk* chunk = world->GetChunk(chunkPos.x, chunkPos.z);
+                    Chunk* chunk = world->GetChunk(chunkPos.x, chunkPos.y, chunkPos.z);
                     return VoxelRaycastResult {
                         chunk,
                         blockHitPos,
@@ -158,7 +158,7 @@ engine::VoxelRaycastResult engine::VoxelRaycast(World* world, const Vec3<float>&
                         chunkPos.z -= 1;
                     }
 
-                    Chunk* chunk = world->GetChunk(chunkPos.x, chunkPos.z);
+                    Chunk* chunk = world->GetChunk(chunkPos.x, chunkPos.y, chunkPos.z);
                     return VoxelRaycastResult {
                         chunk,
                         blockHitPos,
@@ -187,7 +187,7 @@ engine::VoxelRaycastResult engine::VoxelRaycast(World* world, const Vec3<float>&
             chunkPos.z -= 1;
         }
 
-        Chunk* chunk = world->GetChunk(chunkPos.x, chunkPos.z);
+        Chunk* chunk = world->GetChunk(chunkPos.x, chunkPos.y, chunkPos.z);
         if (chunk == nullptr) {
             return VoxelRaycastResult {
                 chunk,

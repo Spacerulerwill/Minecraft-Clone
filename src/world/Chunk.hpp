@@ -19,6 +19,7 @@ LICENSE: MIT
 #include <world/ChunkMesher.hpp>
 #include <PerlinNoise.hpp>
 #include <util/Constants.hpp>
+#include <atomic>
 
 #define VOXEL_INDEX(x,y,z) (z) + ((x) << CHUNK_SIZE_EXP) + ((y) << CHUNK_SIZE_EXP_X2)
 
