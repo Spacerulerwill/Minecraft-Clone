@@ -16,7 +16,6 @@ LICENSE: MIT
 #include <algorithm>
 #include <memory>
 #include <vector>
-#include <mutex>
 
 namespace engine {
     class World {
@@ -29,7 +28,6 @@ namespace engine {
         Chunk* GetChunk(int chunkX, int chunkY, int chunkZ);
         ~World();
     private:
-        std::mutex mtx;
         const char* m_WorldName = nullptr;
         BS::thread_pool m_MeshPool;
         moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;

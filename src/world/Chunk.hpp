@@ -20,6 +20,7 @@ LICENSE: MIT
 #include <PerlinNoise.hpp>
 #include <util/Constants.hpp>
 #include <atomic>
+#include <mutex>
 
 #define VOXEL_INDEX(x,y,z) (z) + ((x) << CHUNK_SIZE_EXP) + ((y) << CHUNK_SIZE_EXP_X2)
 
@@ -62,6 +63,7 @@ namespace engine {
 
 		Mat4<float> m_Model = scale(Vec3<float>(BLOCK_SCALE));
 	public:
+        std::mutex mtx;
     	BlockInt* m_Voxels = new BlockInt[CS_P3];
 		bool dirty = false;
         Vec3<int> pos = Vec3<int>(0);
