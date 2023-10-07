@@ -195,7 +195,7 @@ void engine::Application::Run(const char* worldName)
 
     m_Camera = new Camera(playerPosition, playerYaw, playerPitch);
     m_World = new World(worldName);
-    int radius = 5;
+    const int radius = 5;
 
     // Main game loop
     while (!glfwWindowShouldClose(p_Window)) { 
@@ -228,7 +228,7 @@ void engine::Application::Run(const char* worldName)
         }
 
         // Create chunks every frame
-        m_World->CreateChunks(chunkX, chunkY, chunkZ, radius, 1);
+        m_World->CreateChunks(chunkX, chunkY, chunkZ, radius, 20);
 
         // Raycast outwards to find a block to highlight
         m_BlockSelectRaycastResult = VoxelRaycast(m_World, m_Camera->GetPosition(), m_Camera->GetDirection(), 15.0f);

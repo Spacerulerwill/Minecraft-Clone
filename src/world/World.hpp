@@ -16,7 +16,6 @@ LICENSE: MIT
 #include <algorithm>
 #include <memory>
 #include <vector>
-#include <mutex>
 
 namespace engine {
     class World {
@@ -30,9 +29,9 @@ namespace engine {
         Chunk* GetChunk(int chunkX, int chunkY, int chunkZ);
         ~World();
     private:
-        std::mutex mtx;
         const char* m_WorldName = nullptr;
         BS::thread_pool m_MeshPool;
+        BS::thread_pool m_UnloadPool;
         moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
         std::vector<Chunk*> m_ChunkDrawVector;
         std::unordered_map<Vec3<int>, Chunk> m_ChunkMap;

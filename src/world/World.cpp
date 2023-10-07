@@ -28,8 +28,9 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
         chunk->pos.z < chunkZ-radius ||
         chunk->pos.z > chunkZ+radius - 1;
     }), m_ChunkDrawVector.end());
-
     
+    std::vector<std::unordered_map<engine::Vec3<int>, engine::Chunk>::iterator> iterators;
+
     // Lock mutex for map access and unload each chunk outside view distance (single threaded)
     for (auto it = m_ChunkMap.begin(); it != m_ChunkMap.end();) {
         Chunk* chunk = &((*it).second);
@@ -43,13 +44,19 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
             && !chunk->isBeingMeshed && !chunk->isInBufferQueue
         ) {
             if (chunk->dirty) {
-                chunk->UnloadToFile(m_WorldName);
+                m_UnloadPool.push_task([chunk, this]{
+                    chunk->UnloadToFile(m_WorldName);
+                });
             }
-            m_ChunkMap.erase(it++);   
+            iterators.push_back(it);
+            it++;
         } else {
             ++it;
         }
     } 
+    m_UnloadPool.wait_for_tasks();
+    for (const auto& it: iterators)
+        m_ChunkMap.erase(it);
     
     // Generate new chunks
     for (int iz = -radius; iz < radius; iz++) {
