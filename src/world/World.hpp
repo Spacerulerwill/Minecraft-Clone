@@ -16,6 +16,7 @@ LICENSE: MIT
 #include <algorithm>
 #include <memory>
 #include <vector>
+#include <mutex>
 
 namespace engine {
     class World {
@@ -24,10 +25,12 @@ namespace engine {
         void DrawBlocks(Shader& shader);
         void DrawWater(Shader& shader);
         void DrawCustomModelBlocks(Shader& shader);
+        void CreateSpawnChunks(int radius);
         void CreateChunks(int chunkX, int chunkY, int chunkZ, int radius, int bufferPerFrame);
         Chunk* GetChunk(int chunkX, int chunkY, int chunkZ);
         ~World();
     private:
+        std::mutex mtx;
         const char* m_WorldName = nullptr;
         BS::thread_pool m_MeshPool;
         moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;

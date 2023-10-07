@@ -62,8 +62,12 @@ namespace engine {
 		size_t m_CustomModelVertexCount = 0;
 
 		Mat4<float> m_Model = scale(Vec3<float>(BLOCK_SCALE));
-	public:
         std::mutex mtx;
+
+	public:
+        std::atomic<bool> isBeingMeshed = false;
+        std::atomic<bool> isInBufferQueue = false;
+
         bool dirty = false;
     	BlockInt* m_Voxels = new BlockInt[CS_P3];
         Vec3<int> pos = Vec3<int>(0);
@@ -71,6 +75,7 @@ namespace engine {
         float firstBufferTime = 0.0f;
 
 		Chunk(int chunkX, int chunkY, int chunkZ);
+        Chunk(Vec3<int> chunkPos);
 		~Chunk();
         
 		void TerrainGen(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);

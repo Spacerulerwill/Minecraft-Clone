@@ -34,12 +34,13 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
     for (auto it = m_ChunkMap.begin(); it != m_ChunkMap.end();) {
         Chunk* chunk = &((*it).second);
         if (
-            chunk->pos.x < chunkX - radius ||
+            (chunk->pos.x < chunkX - radius ||
             chunk->pos.x > chunkX + radius - 1 ||
             chunk->pos.y < chunkY - radius ||
             chunk->pos.y > chunkY + radius - 1 ||
             chunk->pos.z < chunkZ - radius ||
-            chunk->pos.z > chunkZ + radius - 1
+            chunk->pos.z > chunkZ + radius - 1)
+            && !chunk->isBeingMeshed && !chunk->isInBufferQueue
         ) {
             if (chunk->dirty) {
                 chunk->UnloadToFile(m_WorldName);
@@ -49,7 +50,6 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
             ++it;
         }
     } 
-
     
     // Generate new chunks
     for (int iz = -radius; iz < radius; iz++) {
@@ -66,7 +66,9 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
                     if (chunkY + iy < 3 && chunkY + iy >= 0) {
                         chunksCreated++;
                         auto result = m_ChunkMap.try_emplace(vec, chunkX + ix, chunkY + iy, chunkZ + iz);
-                        chunk = &(result.first->second);
+                        chunk = &(result.first->second);        
+
+                        chunk->isBeingMeshed = true;
                         m_MeshPool.push_task([chunk, chunkY, iy, this] {
                             std::ifstream rf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", m_WorldName, chunk->pos.x, chunk->pos.y, chunk->pos.z), std::ios::in | std::ios::binary);
                             if (!rf) {
@@ -82,7 +84,9 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
                             }
                             chunk->CreateMesh();
                             chunk->firstBufferTime = static_cast<float>(glfwGetTime());
+                            chunk->isInBufferQueue = true;
                             m_ChunkBufferQueue.enqueue(chunk);
+                            chunk->isBeingMeshed = false;
                         });
                     }
                 }
@@ -97,6 +101,7 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
         Chunk* chunk = nullptr;
         bool success = m_ChunkBufferQueue.try_dequeue(chunk);
         if (success) {
+            chunk->isInBufferQueue = false;
             chunk->BufferData();
             m_ChunkDrawVector.push_back(chunk);
         }
