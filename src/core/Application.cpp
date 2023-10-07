@@ -227,7 +227,7 @@ void engine::Application::Run(const char* worldName)
         }
 
         // Create chunks every frame
-        m_World->CreateChunks(chunkX, chunkY, chunkZ, 10, 20);
+        m_World->CreateChunks(chunkX, chunkY, chunkZ, 12, 20);
 
         // Raycast outwards to find a block to highlight
         m_BlockSelectRaycastResult = VoxelRaycast(m_World, m_Camera->GetPosition(), m_Camera->GetDirection(), 15.0f);
@@ -267,7 +267,7 @@ void engine::Application::Run(const char* worldName)
         chunkShader.SetInt("drawBlockHighlight", m_BlockSelectRaycastResult.blockHit != AIR);
         if (m_BlockSelectRaycastResult.blockHit != AIR  && chunk != nullptr)
             chunkShader.setIVec3("blockPos", raycastBlockPos);
-        m_World->DrawBlocks(chunkShader);
+        //m_World->DrawBlocks(chunkShader);
 
         glDisable(GL_CULL_FACE);
         customModelShader.Bind();
@@ -277,7 +277,7 @@ void engine::Application::Run(const char* worldName)
         chunkShader.SetInt("drawBlockHighlight", m_BlockSelectRaycastResult.blockHit != AIR);
         if (m_BlockSelectRaycastResult.blockHit != AIR  && chunk != nullptr)
             chunkShader.setIVec3("blockPos", raycastBlockPos);
-        m_World->DrawCustomModelBlocks(customModelShader);
+        //m_World->DrawCustomModelBlocks(customModelShader);
         glEnable(GL_CULL_FACE);
 
         glDepthFunc(GL_LEQUAL);
@@ -288,7 +288,7 @@ void engine::Application::Run(const char* worldName)
         waterShader.setMat4("projection", perspective);
         waterShader.setMat4("view", view);
         waterShader.SetInt("tex_array", 0);
-        m_World->DrawWater(waterShader);
+        //m_World->DrawWater(waterShader);
         
         /* 
         Unbind our framebuffer, binding the default framebuffer and render the result texture to a quad

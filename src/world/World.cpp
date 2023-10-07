@@ -16,6 +16,7 @@ engine::World::World(const char* worldName) : m_WorldName(worldName) {
 }
 
 void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius, int bufferPerFrame) {
+
     int chunksCreated = 0;
 
     // erase chunks no longer within the view distance from the m_ChunkDrawVector
@@ -32,7 +33,6 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
     // Lock mutex for map access and unload each chunk outside view distance (single threaded)
     for (auto it = m_ChunkMap.begin(); it != m_ChunkMap.end();) {
         Chunk* chunk = &((*it).second);
-        chunk->mtx.lock();
         if (
             chunk->pos.x < chunkX - radius ||
             chunk->pos.x > chunkX + radius - 1 ||
@@ -41,16 +41,13 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
             chunk->pos.z < chunkZ - radius ||
             chunk->pos.z > chunkZ + radius - 1
         ) {
-            if (m_MeshPool.get_tasks_total()==0) {
-                if (chunk->dirty) {
-                    chunk->UnloadToFile(m_WorldName);
-                }
-                m_ChunkMap.erase(it++);
+            if (chunk->dirty) {
+                chunk->UnloadToFile(m_WorldName);
             }
+            m_ChunkMap.erase(it++);   
         } else {
             ++it;
         }
-        chunk->mtx.unlock();
     } 
 
     
@@ -66,15 +63,14 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
                 auto end = m_ChunkMap.end();  
 
                 if (find == end && chunksCreated < bufferPerFrame) {
-                    if (chunkY + iy < 1 && chunkY + iy >= 0) {
+                    if (chunkY + iy < 3 && chunkY + iy >= 0) {
                         chunksCreated++;
                         auto result = m_ChunkMap.try_emplace(vec, chunkX + ix, chunkY + iy, chunkZ + iz);
                         chunk = &(result.first->second);
                         m_MeshPool.push_task([chunk, chunkY, iy, this] {
-                            chunk->mtx.lock();
                             std::ifstream rf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", m_WorldName, chunk->pos.x, chunk->pos.y, chunk->pos.z), std::ios::in | std::ios::binary);
                             if (!rf) {
-                                if (chunkY + iy < 0) {
+                                if (chunkY + iy < 2) {
                                     chunk->TerrainGen(STONE);
                                 } else {
                                     chunk->TerrainGen(m_Noise, gen, distrib);
@@ -86,7 +82,6 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
                             }
                             chunk->CreateMesh();
                             chunk->firstBufferTime = static_cast<float>(glfwGetTime());
-                            chunk->mtx.unlock();
                             m_ChunkBufferQueue.enqueue(chunk);
                         });
                     }
@@ -94,16 +89,16 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
             }
         }
     }
+
+    //m_MeshPool.wait_for_tasks();
     
     // Buffer chunks that
     for (int i = 0; i < bufferPerFrame; i++){
         Chunk* chunk = nullptr;
         bool success = m_ChunkBufferQueue.try_dequeue(chunk);
         if (success) {
-            chunk->mtx.lock();
             chunk->BufferData();
             m_ChunkDrawVector.push_back(chunk);
-            chunk->mtx.unlock();
         }
     }
 }

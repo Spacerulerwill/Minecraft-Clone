@@ -64,8 +64,8 @@ namespace engine {
 		Mat4<float> m_Model = scale(Vec3<float>(BLOCK_SCALE));
 	public:
         std::mutex mtx;
+        bool dirty = false;
     	BlockInt* m_Voxels = new BlockInt[CS_P3];
-		bool dirty = false;
         Vec3<int> pos = Vec3<int>(0);
         
         float firstBufferTime = 0.0f;
@@ -101,7 +101,8 @@ namespace engine {
 			m_Voxels[VOXEL_INDEX(pos.x,pos.y,pos.z)] = block;
             dirty = true;
 		}
-	};
+
+    };
 }
 
 #endif // !CHUNK_H

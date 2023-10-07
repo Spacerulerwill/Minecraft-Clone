@@ -174,7 +174,6 @@ void engine::Chunk::Draw(Shader& shader)
 		m_VAO.Bind();
 		shader.setMat4("model", m_Model);
 		shader.setFloat("time", static_cast<float>(glfwGetTime()) - firstBufferTime);
-
 		glDrawArrays(GL_TRIANGLES, 0, m_VertexCount);
 	}
 }
