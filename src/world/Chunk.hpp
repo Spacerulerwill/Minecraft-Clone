@@ -22,8 +22,6 @@ LICENSE: MIT
 #include <atomic>
 #include <mutex>
 
-#define VOXEL_INDEX(x,y,z) (z) + ((x) << CHUNK_SIZE_EXP) + ((y) << CHUNK_SIZE_EXP_X2)
-
 namespace engine {
 
 	constexpr float BLOCK_SCALE = 1.0f;
@@ -44,6 +42,9 @@ namespace engine {
     The first 2 buffers used vertexs packed to 8 bytes, however the vertices in the custom
     block model buffer cannot be packed and are each 6 floats, totalling 24 bytes
     */
+    inline int voxelIndex(int x, int y, int z) {
+        return z + (x << CHUNK_SIZE_EXP) + (y << CHUNK_SIZE_EXP_X2);
+    }
 	class Chunk {
 	private:        
 		BufferObject<GL_ARRAY_BUFFER> m_VBO;
@@ -70,10 +71,8 @@ namespace engine {
 
         bool dirty = false;
     	BlockInt* m_Voxels = new BlockInt[CS_P3];
-        Vec3<int> pos = Vec3<int>(0);
+        Vec3<int> m_Pos = Vec3<int>(0);
         
-        float firstBufferTime = 0.0f;
-
 		Chunk(int chunkX, int chunkY, int chunkZ);
         Chunk(Vec3<int> chunkPos);
 		~Chunk();
@@ -89,21 +88,21 @@ namespace engine {
 		void DrawWater(Shader& shader);
         void DrawCustomModelBlocks(Shader& shader);
 
-		inline BlockInt GetBlock(unsigned int x, unsigned int y, unsigned int z) const {
-			return m_Voxels[VOXEL_INDEX(x,y,z)];
+		inline BlockInt GetBlock(int x, int y, int z) const {
+			return m_Voxels[voxelIndex(x,y,z)];
 		}
 
         inline BlockInt GetBlock(Vec3<int> pos) {
-            return m_Voxels[VOXEL_INDEX(pos.x, pos.y, pos.z)];
+            return m_Voxels[voxelIndex(pos.x, pos.y, pos.z)];
         }
 
-		inline void SetBlock(BlockInt block, unsigned int x, unsigned int y, unsigned int z) {
-			m_Voxels[VOXEL_INDEX(x,y,z)] = block;
+		inline void SetBlock(BlockInt block, int x, int y, int z) {
+			m_Voxels[voxelIndex(x,y,z)] = block;
             dirty = true;
 		}
 
         inline void SetBlock(BlockInt block, Vec3<int> pos) {
-			m_Voxels[VOXEL_INDEX(pos.x,pos.y,pos.z)] = block;
+			m_Voxels[voxelIndex(pos.x,pos.y,pos.z)] = block;
             dirty = true;
 		}
 

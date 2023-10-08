@@ -19,7 +19,7 @@ namespace engine {
 		BlockInt blockHit;
 	};
 
-    engine::VoxelRaycastResult VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, float distance);
+    engine::VoxelRaycastResult VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, int distance);
 }
 
 #endif // !VOXELRAYCAST_HPP

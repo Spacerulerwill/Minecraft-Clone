@@ -24,16 +24,17 @@ namespace engine {
         void DrawBlocks(Shader& shader);
         void DrawWater(Shader& shader);
         void DrawCustomModelBlocks(Shader& shader);
-        void CreateSpawnChunks(int radius);
+        Chunk* CreateChunk(Vec3<int> pos);
         void CreateChunks(int chunkX, int chunkY, int chunkZ, int radius, int bufferPerFrame);
         Chunk* GetChunk(int chunkX, int chunkY, int chunkZ);
+        Chunk* GetChunk(Vec3<int> pos);
+        const char* m_WorldName = nullptr;
+        std::vector<Chunk*> m_ChunkDrawVector;
         ~World();
     private:
-        const char* m_WorldName = nullptr;
         BS::thread_pool m_MeshPool;
         BS::thread_pool m_UnloadPool;
         moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
-        std::vector<Chunk*> m_ChunkDrawVector;
         std::unordered_map<Vec3<int>, Chunk> m_ChunkMap;
         siv::PerlinNoise m_Noise = siv::PerlinNoise(0);
         

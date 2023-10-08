@@ -78,7 +78,7 @@ namespace engine {
 		Vec2 operator / (T scalar) const {
             assert(scalar != T(0));
             T inverse_scalar = T(1) / scalar;
-            return Vec2(x * scalar, y * scalar);
+            return Vec2(x * inverse_scalar, y * inverse_scalar);
         }
 
 		void operator /= (T scalar) {

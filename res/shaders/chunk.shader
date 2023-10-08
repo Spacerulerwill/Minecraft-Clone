@@ -7,7 +7,6 @@ layout (location = 0) in uvec2 data;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform float time;
 
 out vec3 FragNormal;
 out uint FragNormalIndex;
@@ -24,9 +23,6 @@ uniform vec3 NORMALS[6] = {
   vec3( 0, 0, 1 ),
   vec3( 0, 0, -1 )
 };
-
-const float s = 64.0;
-const float t = 5.0;
 
 void main()
 {
@@ -48,7 +44,7 @@ void main()
     isFoliage = float((data.y >> 20)&uint(1));
     isGrass = float((data.y >> 21)&uint(1));
 
-    gl_Position = projection * view * model * vec4(x,y + (min(time - 2, 0)) * 25,z,1.0);;
+    gl_Position = projection * view * model * vec4(x,y,z,1.0);
    
 }
 
@@ -61,7 +57,6 @@ uniform sampler2D grass_mask;
 
 uniform vec3 grassColor = vec3(0.0, 1.0, 0.0);
 uniform vec3 foliageColor = vec3(0.0, 1.0,0.0);
-uniform float time;
 uniform ivec3 blockPos;
 uniform bool drawBlockHighlight;
 
@@ -73,7 +68,7 @@ in float isGrass;
 in float isFoliage;
 out vec4 FragColor;
 
-const float errorMargin = 0.0001;
+const float errorMargin = 0.01;
 
 void main() {
 	vec4 texColor = texture(tex_array, TexCoords);

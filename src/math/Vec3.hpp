@@ -99,8 +99,7 @@ namespace engine {
 
 		Vec3 operator/(T scalar) {
             assert(scalar != T(0));
-            T inverse_scalar = T(1) / scalar;
-            return Vec3(x * scalar, y * scalar, z * scalar);
+            return Vec3(x / scalar, y / scalar, z / scalar);
         }
 
 		void operator/=(T scalar) {

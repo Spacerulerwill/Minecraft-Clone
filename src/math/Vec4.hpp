@@ -89,7 +89,7 @@ namespace engine {
 		Vec4 operator/(T scalar) const {
             assert(scalar != T(0));
             T inverse_scalar = T(1) / scalar;
-            return Vec4(x * scalar, y * scalar, z * scalar, w * scalar);
+            return Vec4(x * inverse_scalar, y * inverse_scalar, z * inverse_scalar, w * inverse_scalar);
         }
 
 		void operator/=(T scalar) {

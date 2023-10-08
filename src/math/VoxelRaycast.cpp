@@ -7,204 +7,144 @@ License: MIT
 #include <math/VoxelRaycast.hpp>
 #include <math.h>
 
-int signum(float x) {
-  return x > 0 ? 1 : x < 0 ? -1 : 0;
+namespace engine {
+    VoxelRaycastResult GenerateVoxelRaycastResult(World* world, Vec3<int> normal, Vec3<int> globalBlockPos) {
+        // process first voxel
+        Vec3<int> chunkPos;
+
+        chunkPos.y = globalBlockPos.y / CS;
+        if (globalBlockPos.x >= 0) {
+            chunkPos.x = globalBlockPos.x / CS;
+        } else {
+            chunkPos.x = ((globalBlockPos.x + 1) / CS) - 1;
+        }
+
+        if (globalBlockPos.z >= 0) {
+            chunkPos.z = globalBlockPos.z / CS;
+        } else {
+            chunkPos.z = ((globalBlockPos.z + 1) / CS) - 1;
+        }
+
+        Vec3<int> blockHitPos;
+        blockHitPos.y = 1 + abs(globalBlockPos.y) % CS;
+
+        if (globalBlockPos.x >= 0) {
+            blockHitPos.x = 1 + abs(globalBlockPos.x) % CS;
+        } else {
+            blockHitPos.x = CS_P_MINUS_ONE - (1 + (abs(globalBlockPos.x) - 1) % CS);
+        }
+
+        if (globalBlockPos.z >= 0) {
+            blockHitPos.z = 1 + abs(globalBlockPos.z) % CS;
+        } else {
+            blockHitPos.z = CS_P_MINUS_ONE - (1 + (abs(globalBlockPos.z) - 1) % CS);
+        }
+
+        Chunk* chunk = world->GetChunk(chunkPos);
+
+        if (chunk == nullptr) {
+            return VoxelRaycastResult{
+                chunk,
+                blockHitPos,
+                normal,
+                AIR
+            };
+        } else {
+            BlockInt blockHit = chunk->GetBlock(blockHitPos);
+            return VoxelRaycastResult{
+                chunk,
+                blockHitPos,
+                normal,
+                blockHit
+            };
+        }
+    }
 }
 
-float ceil2(float s) { if (s == 0.0f) return 1.0f; else return ceil(s); }
-
-float intbound(float s, float ds)
-{
-    bool sIsInteger = round(s) == s;
-    if (ds < 0 && sIsInteger)
-        return 0;
-
-    return (ds > 0 ? ceil2(s) - s : s - floor(s)) / abs(ds);
-}
-
-engine::VoxelRaycastResult engine::VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, float distance) {
-    // Cube containing origin point.
-    Vec3<int> blockPos(floor(start.x), floor(start.y), floor(start.z));
-
-    if (start.x < 0) {
-        blockPos.x += 1;
-    }
-
-    if (start.z < 0) {
-        blockPos.z += 1;
-    }
-
-    // Direction to increment x,y,z when stepping.
-    Vec3<int> steps(signum(direction.x), signum(direction.y), signum(direction.z));
-
-    // See description above. The initial values depend on the fractional
-    // part of the origin.
-    Vec3<float> tMax(intbound(start.x, direction.x), intbound(start.y, direction.y), intbound(start.z, direction.z));
-
-    // The change in t when taking a step (always positive).
-    Vec3<float> tDelta(steps.x / direction.x, steps.y / direction.y, steps.z / direction.z);
+engine::VoxelRaycastResult engine::VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, int distance) {
 
     if (direction.x == 0 && direction.y == 0 && direction.z == 0) {
         throw std::runtime_error("Cannot perform voxel raycast with 0 direction!");
     }
 
-    distance /= sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
-    int face[3] = {0,0,0};
+    #define SIGN(x) (x > 0 ? 1 : (x < 0 ? -1 : 0))
+    #define FRAC0(x) (x - floorf(x))
+    #define FRAC1(x) (1 - x + floorf(x))
 
-    while (true)
+    float tMaxX, tMaxY, tMaxZ, tDeltaX, tDeltaY, tDeltaZ;
+
+    Vec3<float> end = start + direction * distance;
+
+    Vec3<int> step = Vec3<int>(
+        direction.x > 0 ? : (direction.x < 0 ? - 1 : 0),
+        direction.y > 0 ? : (direction.y < 0 ? - 1 : 0),
+        direction.z > 0 ? : (direction.z < 0 ? - 1 : 0)
+    );
+
+    Vec3<int> voxel = Vec3<int>(
+        std::floor(start.x),
+        std::floor(start.y),
+        std::floor(start.z)
+    ); 
+
+    Vec3<int> normal(0);
+
+    if (step.x != 0) tDeltaX = fmin(step.x / (end.x - start.x), std::numeric_limits<float>::max()); else tDeltaX =  std::numeric_limits<float>::max();
+    if (step.x > 0) tMaxX = tDeltaX * FRAC1(start.x); else tMaxX = tDeltaX * FRAC0(start.x);
+
+    if (step.y != 0) tDeltaY = fmin(step.y / (end.y- start.y), std::numeric_limits<float>::max()); else tDeltaY =  std::numeric_limits<float>::max();
+    if (step.y > 0) tMaxY = tDeltaY * FRAC1(start.y); else tMaxY = tDeltaY * FRAC0(start.y);
+
+    if (step.z != 0) tDeltaZ = fmin(step.z / (end.z - start.z), std::numeric_limits<float>::max()); else tDeltaZ =  std::numeric_limits<float>::max();
+    if (step.z > 0) tMaxZ = tDeltaZ * FRAC1(start.z); else tMaxZ = tDeltaZ * FRAC0(start.z);
+
+    // process first voxel
     {
-        if (tMax.x < tMax.y)
-        {
-            if (tMax.x < tMax.z)
-            {
-                if (tMax.x > distance) {
-                    Vec3<int> chunkPos(blockPos.x / CS, blockPos.y / CS, blockPos.z / CS);
-                    Vec3<int> blockHitPos = Vec3<int>(1) + (blockPos.abs() % CS);
-
-                    if (blockPos.x < 0) { 
-                        blockHitPos.x = CS_P - blockHitPos.x - 1;
-                        chunkPos.x -= 1;
-                    }
-                    
-                    if (blockPos.z < 0)  {
-                        blockHitPos.z = CS_P - blockHitPos.z - 1;
-                        chunkPos.z -= 1;
-                    }
-
-                    Chunk* chunk = world->GetChunk(chunkPos.x, chunkPos.y, chunkPos.z);
-                    return VoxelRaycastResult {
-                        chunk,
-                        blockHitPos,
-                        Vec3<int>(0),
-                        AIR
-                    };
-                }
-                // Update which cube we are now in.
-                blockPos.x += steps.x;
-                // Adjust tMaxX to the next X-oriented boundary crossing.
-                tMax.x += tDelta.x;
-                // Record the normal vector of the cube face we entered.
-                face[0] = -steps.x;
-                face[1] = 0;
-                face[2] = 0;
-            }
-            else
-            {
-                if (tMax.z > distance) {
-                    Vec3<int> chunkPos(blockPos.x / CS, blockPos.y / CS, blockPos.z / CS);
-                    Vec3<int> blockHitPos = Vec3<int>(1) + (blockPos.abs() % CS);
-
-                    if (blockPos.x < 0) { 
-                        blockHitPos.x = CS_P - blockHitPos.x - 1;
-                        chunkPos.x -= 1;
-                    }
-                    
-                    if (blockPos.z < 0)  {
-                        blockHitPos.z = CS_P - blockHitPos.z - 1;
-                        chunkPos.z -= 1;
-                    }
-                    Chunk* chunk = world->GetChunk(chunkPos.x, chunkPos.y, chunkPos.z);
-                    return VoxelRaycastResult {
-                        chunk,
-                        blockHitPos,
-                        Vec3<int>(0),
-                        AIR
-                    };
-                }
-                blockPos.z += steps.z;
-                tMax.z += tDelta.z;
-                face[0] = 0;
-                face[1] = 0;
-                face[2] = -steps.z;
-            }
+        VoxelRaycastResult res = GenerateVoxelRaycastResult(world, normal, voxel);
+        if (res.blockHit != AIR) {
+            return res;
         }
-        else
-        {
-            if (tMax.y < tMax.z)
-            {
-                if (tMax.y > distance) {
-                    Vec3<int> chunkPos(blockPos.x / CS, blockPos.y / CS, blockPos.z / CS);
-                    Vec3<int> blockHitPos = Vec3<int>(1) + (blockPos.abs() % CS);
+    }
 
-                    if (blockPos.x < 0) { 
-                        blockHitPos.x = CS_P - blockHitPos.x - 1;
-                        chunkPos.x -= 1;
-                    }
-                    
-                    if (blockPos.z < 0)  {
-                        blockHitPos.z = CS_P - blockHitPos.z - 1;
-                        chunkPos.z -= 1;
-                    }
-                }
-                blockPos.y += steps.y;
-                tMax.y += tDelta.y;
-                face[0] = 0;
-                face[1] = -steps.y;
-                face[2] = 0;
+    while (true) {
+        if (tMaxX < tMaxY) {
+            if (tMaxX < tMaxZ) {
+                voxel.x += step.x;
+                tMaxX += tDeltaX;
+                normal.x = -step.x;
+                normal.y = 0;
+                normal.z = 0;
+            } else {
+                voxel.z += step.z;
+                tMaxZ += tDeltaZ;
+                normal.x = 0;
+                normal.y = 0;
+                normal.z = -step.z;
             }
-            else
-            {
-                if (tMax.z > distance) {
-                    Vec3<int> chunkPos(blockPos.x / CS, blockPos.y / CS, blockPos.z / CS);
-                    Vec3<int> blockHitPos = Vec3<int>(1) + (blockPos.abs() % CS);
-
-                    if (blockPos.x < 0) { 
-                        blockHitPos.x = CS_P - blockHitPos.x - 1;
-                        chunkPos.x -= 1;
-                    }
-                    
-                    if (blockPos.z < 0)  {
-                        blockHitPos.z = CS_P - blockHitPos.z - 1;
-                        chunkPos.z -= 1;
-                    }
-
-                    Chunk* chunk = world->GetChunk(chunkPos.x, chunkPos.y, chunkPos.z);
-                    return VoxelRaycastResult {
-                        chunk,
-                        blockHitPos,
-                        Vec3<int>(0),
-                        AIR
-                    };
-                }
-                blockPos.z += steps.z;
-                tMax.z += tDelta.z;
-                face[0] = 0;
-                face[1] = 0;
-                face[2] = -steps.z;
-            }
-        }
-
-        Vec3<int> chunkPos(blockPos.x / CS, blockPos.y / CS, blockPos.z / CS);
-        Vec3<int> blockHitPos = Vec3<int>(1) + (blockPos.abs() % CS);
-
-        if (blockPos.x < 0) { 
-            blockHitPos.x = CS_P - blockHitPos.x - 1;
-            chunkPos.x -= 1;
-        }
-        
-        if (blockPos.z < 0)  {
-            blockHitPos.z = CS_P - blockHitPos.z - 1;
-            chunkPos.z -= 1;
-        }
-
-        Chunk* chunk = world->GetChunk(chunkPos.x, chunkPos.y, chunkPos.z);
-        if (chunk == nullptr) {
-            return VoxelRaycastResult {
-                chunk,
-                blockHitPos,
-                Vec3<int>(0),
-                AIR
-            };
         } else {
-            BlockInt block = chunk->GetBlock(blockHitPos);
-
-            if (block != AIR) {
-                return VoxelRaycastResult {
-                        chunk,
-                        blockHitPos,
-                        Vec3<int>(face[0], face[1], face[2]),
-                        block
-                };
+            if (tMaxY < tMaxZ) {
+                voxel.y += step.y;
+                tMaxY += tDeltaY;
+                normal.x = 0;
+                normal.y = -step.y;
+                normal.z = 0;
+            } else {
+                voxel.z += step.z;
+                tMaxZ += tDeltaZ;
+                normal.x = 0;
+                normal.y = 0;
+                normal.z = -step.z;
+            }
+        }
+        if (tMaxX > 1 && tMaxY > 1 && tMaxZ > 1) {
+            // process last voxel
+            VoxelRaycastResult res = GenerateVoxelRaycastResult(world, normal, voxel);
+            return res;
+        } else {
+            // process intermediate voxels
+            VoxelRaycastResult res = GenerateVoxelRaycastResult(world, normal, voxel);
+            if (res.blockHit != AIR) {
+                return res;
             }
         }
     }

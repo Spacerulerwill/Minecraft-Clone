@@ -184,7 +184,7 @@ void engine::Application::Run(const char* worldName)
     Shader customModelShader("res/shaders/custom_model.shader");
     Shader framebufferShader("res/shaders/framebuffer.shader");
 
-    double lastTime = 0.00f;
+    double lastTime = 0.0f;
     int currentAtlasIndex = 0;
     int totalFrameDuration = 0;
     
@@ -231,15 +231,15 @@ void engine::Application::Run(const char* worldName)
         m_World->CreateChunks(chunkX, chunkY, chunkZ, radius, 20);
 
         // Raycast outwards to find a block to highlight
+        Vec3<int> raycastBlockPos = Vec3<int>(0);
         m_BlockSelectRaycastResult = VoxelRaycast(m_World, m_Camera->GetPosition(), m_Camera->GetDirection(), 15.0f);
         Chunk* chunk = m_BlockSelectRaycastResult.chunk;
-        Vec3<int> raycastBlockPos;
 
         if (chunk != nullptr) {
             raycastBlockPos = Vec3<int>(
-                chunk->pos.x * CS + m_BlockSelectRaycastResult.blockPos.x - 1, 
-                chunk->pos.y * CS + m_BlockSelectRaycastResult.blockPos.y - 1,
-                chunk->pos.z * CS + m_BlockSelectRaycastResult.blockPos.z - 1
+                chunk->m_Pos.x * CS + m_BlockSelectRaycastResult.blockPos.x - 1, 
+                chunk->m_Pos.y * CS + m_BlockSelectRaycastResult.blockPos.y - 1,
+                chunk->m_Pos.z * CS + m_BlockSelectRaycastResult.blockPos.z - 1
             );
         } else {
             raycastBlockPos = Vec3<int>(0,0,0);
@@ -364,7 +364,7 @@ void engine::Application::ProcessInput()
     if (glfwGetKey(p_Window, GLFW_KEY_LEFT_SHIFT))
         m_Camera->SetMovementSpeed(100.0f);
     else
-        m_Camera->SetMovementSpeed(20.0f);
+        m_Camera->SetMovementSpeed(2.5f);
 }
 
 void engine::Application::GLFWMouseMoveCallback(GLFWwindow* window, double xposIn, double yposIn)
@@ -399,7 +399,7 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
         case GLFW_MOUSE_BUTTON_LEFT: {
             if (action == GLFW_PRESS) {
                 Chunk* chunk = m_BlockSelectRaycastResult.chunk;
-                if (chunk != nullptr && m_BlockSelectRaycastResult.blockHit != AIR) {
+                if (chunk != nullptr) {
                     chunk->SetBlock(AIR, m_BlockSelectRaycastResult.blockPos);
                     chunk->CreateMesh();
                     chunk->BufferData();
@@ -415,25 +415,37 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
                     if (blockToPlaceOn != AIR) {
                         Vec3<int> blockPlacePosition = m_BlockSelectRaycastResult.blockPos + m_BlockSelectRaycastResult.normal;
 
+                        // if making a new vertical chunk we can exit early
+                        if (blockPlacePosition.y == CS_P_MINUS_ONE) {
+                            blockPlacePosition.y = 1;
+                            Chunk* newChunk = m_World->CreateChunk((chunk->m_Pos + Vec3<int>(0,1,0)));
+                            newChunk->SetBlock(m_SelectedBlock, blockPlacePosition);
+                            newChunk->UnloadToFile(m_World->m_WorldName);
+                            newChunk->CreateMesh();
+                            newChunk->BufferData();
+                            m_World->m_ChunkDrawVector.push_back(newChunk);
+                            return;
+                        }
+
                         // chunk edge cases 
                         if (blockPlacePosition.x == CS_P_MINUS_ONE) {
                             blockPlacePosition.x = 1;
-                            chunk = m_World->GetChunk(chunk->pos.x + 1, chunk->pos.y, chunk->pos.z);
+                            chunk = m_World->GetChunk(chunk->m_Pos.x + 1, chunk->m_Pos.y, chunk->m_Pos.z);
                         }
 
                         if (blockPlacePosition.x == 0) {
                             blockPlacePosition.x = CS;
-                            chunk = m_World->GetChunk(chunk->pos.x - 1, chunk->pos.y, chunk->pos.z);
+                            chunk = m_World->GetChunk(chunk->m_Pos.x - 1, chunk->m_Pos.y, chunk->m_Pos.z);
                         }
 
                         if (blockPlacePosition.z == CS_P_MINUS_ONE) {
                             blockPlacePosition.z = 1;
-                            chunk = m_World->GetChunk(chunk->pos.x, chunk->pos.y, chunk->pos.z + 1);
+                            chunk = m_World->GetChunk(chunk->m_Pos.x, chunk->m_Pos.y, chunk->m_Pos.z + 1);
                         }
 
                         if (blockPlacePosition.z == 0) {
                             blockPlacePosition.z = CS;
-                            chunk = m_World->GetChunk(chunk->pos.x, chunk->pos.y, chunk->pos.z - 1);
+                            chunk = m_World->GetChunk(chunk->m_Pos.x, chunk->m_Pos.y, chunk->m_Pos.z - 1);
                         }
 
                         BlockInt blockAtPlacePosition = chunk->GetBlock(blockPlacePosition);

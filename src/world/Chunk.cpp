@@ -11,8 +11,9 @@ LICENSE: MIT
 #include <math/Math.hpp>
 #include <GLFW/glfw3.h>
 
-engine::Chunk::Chunk(int x, int y, int z): pos(x, y, z)
+engine::Chunk::Chunk(int x, int y, int z): m_Pos(x, y, z)
 {
+    memset(m_Voxels, AIR, CS_P3);
     m_Model *= translate(Vec3<float>(static_cast<float>(x * CS), static_cast<float>(y * CS), static_cast<float>(z * CS)));
 
     VertexBufferLayout bufLayout;
@@ -27,9 +28,10 @@ engine::Chunk::Chunk(int x, int y, int z): pos(x, y, z)
     m_CustomModelVAO.AddBuffer(m_CustomModelVBO, customModelBufLayout);
 }
 
-engine::Chunk::Chunk(Vec3<int> chunkPos): pos(chunkPos.x, chunkPos.y, chunkPos.z)
+engine::Chunk::Chunk(Vec3<int> chunkPos): m_Pos(chunkPos.x, chunkPos.y, chunkPos.z)
 {
-    m_Model *= translate(Vec3<float>(static_cast<float>(chunkPos.x * CS), 0.0f, static_cast<float>(chunkPos.z * CS)));
+    memset(m_Voxels, AIR, CS_P3);
+    m_Model *= translate(Vec3<float>(static_cast<float>(chunkPos.x * CS), static_cast<float>(chunkPos.y * CS), static_cast<float>(chunkPos.z * CS)));
 
     VertexBufferLayout bufLayout;
 	bufLayout.AddAttribute<unsigned int>(2);
@@ -50,12 +52,11 @@ engine::Chunk::~Chunk()
 
 void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin,std::mt19937& gen, std::uniform_int_distribution<>& distrib)
 {
-  memset(m_Voxels, AIR, CS_P3);
   const unsigned int water_level = 32;
   
   for (int x = 1; x < CS_P_MINUS_ONE; x++) {
       for (int z = 1; z < CS_P_MINUS_ONE; z++){
-          float heightMultiplayer = perlin.octave2D_01((pos.x * CS + x) * 0.0125 , (pos.z * CS + z) * 0.0125, 4, 0.5);
+          float heightMultiplayer = perlin.octave2D_01((m_Pos.x * CS + x) * 0.0125 , (m_Pos.z * CS + z) * 0.0125, 4, 0.5);
           int height = 1 + (heightMultiplayer * CS_MINUS_ONE);
 
           int dirt_height = height - 1;
@@ -69,7 +70,7 @@ void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin,std::mt19937& gen,
           
           if (height < water_level - 1) {
             
-            float oceanFloorNoise = perlin.octave2D_01((pos.x * CS + x) * 0.125 , (pos.z * CS + z) * 0.125, 8, 0.1);
+            float oceanFloorNoise = perlin.octave2D_01((m_Pos.x * CS + x) * 0.125 , (m_Pos.z * CS + z) * 0.125, 8, 0.1);
 
             if (oceanFloorNoise < 0.33) {
                 SetBlock(CLAY, x, height, z);
@@ -119,7 +120,6 @@ void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin,std::mt19937& gen,
 void engine::Chunk::TerrainGen(BlockInt block)
 {
     std::lock_guard<std::mutex> lock(mtx);
-	memset(m_Voxels, AIR, CS_P3);
 	for (int x = 1; x < CS_P_MINUS_ONE; x++) {
 		for (int y = 1; y < CS_P_MINUS_ONE; y++) {
 			for (int z = 1; z < CS_P_MINUS_ONE; z++) {
@@ -157,14 +157,14 @@ void engine::Chunk::CreateMesh()
 void engine::Chunk::UnloadToFile(const char* worldName)
 {
     std::lock_guard<std::mutex> lock(mtx);
-    std::ofstream wf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", worldName, pos.x, pos.y, pos.z), std::ios::out | std::ios::binary);
+    std::ofstream wf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", worldName, m_Pos.x, m_Pos.y, m_Pos.z), std::ios::out | std::ios::binary);
     if (!wf) {
-        LOG_ERROR(fmt::format("Failed to unload chunk {}. File creation error!", std::string(pos)));
+        LOG_ERROR(fmt::format("Failed to unload chunk {}. File creation error!", std::string(m_Pos)));
     }
     wf.write((char *)&m_Voxels[0], CS_P3 * sizeof(BlockInt));
     wf.close();
     if (!wf.good()) {
-        LOG_ERROR(fmt::format("Failed to unload chunk {}. File writing error!", std::string(pos)));
+        LOG_ERROR(fmt::format("Failed to unload chunk {}. File writing error!", std::string(m_Pos)));
     }
     dirty = false;
 }
@@ -194,7 +194,6 @@ void engine::Chunk::Draw(Shader& shader)
 	if (m_VertexCount > 0) {
 		m_VAO.Bind();
 		shader.setMat4("model", m_Model);
-		shader.setFloat("time", static_cast<float>(glfwGetTime()) - firstBufferTime);
 		glDrawArrays(GL_TRIANGLES, 0, m_VertexCount);
 	}
 }
@@ -205,8 +204,6 @@ void engine::Chunk::DrawWater(Shader& shader)
 	if (m_WaterVertexCount > 0) {
 		m_WaterVAO.Bind();
 		shader.setMat4("model", m_Model);
-		shader.setFloat("time", static_cast<float>(glfwGetTime()) - firstBufferTime);
-
 		glDrawArrays(GL_TRIANGLES, 0, m_WaterVertexCount);
     }
 }
@@ -218,8 +215,6 @@ void engine::Chunk::DrawCustomModelBlocks(Shader& shader)
 
 		m_CustomModelVAO.Bind();
 		shader.setMat4("model", m_Model);
-		shader.setFloat("time", static_cast<float>(glfwGetTime()) - firstBufferTime);
-
         glDrawArrays(GL_TRIANGLES, 0, m_CustomModelVertexCount);
     }
 }

@@ -15,18 +15,23 @@ engine::World::World(const char* worldName) : m_WorldName(worldName) {
     m_Noise.reseed(seed);
 }
 
+engine::Chunk* engine::World::CreateChunk(Vec3<int> pos) {
+    auto result = m_ChunkMap.try_emplace(pos, pos);
+    return  &(result.first->second);   
+}
+
 void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius, int bufferPerFrame) {
 
     int chunksCreated = 0;
 
     // erase chunks no longer within the view distance from the m_ChunkDrawVector
     m_ChunkDrawVector.erase(std::remove_if(m_ChunkDrawVector.begin(), m_ChunkDrawVector.end(), [chunkX, chunkY, chunkZ, radius](Chunk* chunk) { 
-        return chunk->pos.x < chunkX-radius ||
-        chunk->pos.x > chunkX+radius - 1||
-        chunk->pos.y < chunkY-radius ||
-        chunk->pos.y > chunkY+radius-1 ||
-        chunk->pos.z < chunkZ-radius ||
-        chunk->pos.z > chunkZ+radius - 1;
+        return chunk->m_Pos.x < chunkX-radius ||
+        chunk->m_Pos.x > chunkX+radius - 1||
+        chunk->m_Pos.y < chunkY-radius ||
+        chunk->m_Pos.y > chunkY+radius-1 ||
+        chunk->m_Pos.z < chunkZ-radius ||
+        chunk->m_Pos.z > chunkZ+radius - 1;
     }), m_ChunkDrawVector.end());
     
     std::vector<std::unordered_map<engine::Vec3<int>, engine::Chunk>::iterator> iterators;
@@ -35,12 +40,12 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
     for (auto it = m_ChunkMap.begin(); it != m_ChunkMap.end();) {
         Chunk* chunk = &((*it).second);
         if (
-            (chunk->pos.x < chunkX - radius ||
-            chunk->pos.x > chunkX + radius - 1 ||
-            chunk->pos.y < chunkY - radius ||
-            chunk->pos.y > chunkY + radius - 1 ||
-            chunk->pos.z < chunkZ - radius ||
-            chunk->pos.z > chunkZ + radius - 1)
+            (chunk->m_Pos.x < chunkX - radius ||
+            chunk->m_Pos.x > chunkX + radius - 1 ||
+            chunk->m_Pos.y < chunkY - radius ||
+            chunk->m_Pos.y > chunkY + radius - 1 ||
+            chunk->m_Pos.z < chunkZ - radius ||
+            chunk->m_Pos.z > chunkZ + radius - 1)
             && !chunk->isBeingMeshed && !chunk->isInBufferQueue
         ) {
             if (chunk->dirty) {
@@ -49,7 +54,7 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
                 });
             }
             iterators.push_back(it);
-            it++;
+            ++it;
         } else {
             ++it;
         }
@@ -77,7 +82,7 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
 
                         chunk->isBeingMeshed = true;
                         m_MeshPool.push_task([chunk, chunkY, iy, this] {
-                            std::ifstream rf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", m_WorldName, chunk->pos.x, chunk->pos.y, chunk->pos.z), std::ios::in | std::ios::binary);
+                            std::ifstream rf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", m_WorldName, chunk->m_Pos.x, chunk->m_Pos.y, chunk->m_Pos.z), std::ios::in | std::ios::binary);
                             if (!rf) {
                                 if (chunkY + iy < 2) {
                                     chunk->TerrainGen(STONE);
@@ -90,7 +95,6 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
                                 rf.close();
                             }
                             chunk->CreateMesh();
-                            chunk->firstBufferTime = static_cast<float>(glfwGetTime());
                             chunk->isInBufferQueue = true;
                             m_ChunkBufferQueue.enqueue(chunk);
                             chunk->isBeingMeshed = false;
@@ -100,8 +104,6 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
             }
         }
     }
-
-    //m_MeshPool.wait_for_tasks();
     
     // Buffer chunks that
     for (int i = 0; i < bufferPerFrame; i++){
@@ -133,6 +135,16 @@ void engine::World::DrawCustomModelBlocks(Shader& customModelShader) {
 
 engine::Chunk* engine::World::GetChunk(int chunkX, int chunkY, int chunkZ) {
     auto find = m_ChunkMap.find(Vec3(chunkX, chunkY, chunkZ));
+
+    if (find == m_ChunkMap.end()) {
+        return nullptr;
+    } else {
+        return &(find->second);
+    }
+}
+
+engine::Chunk* engine::World::GetChunk(Vec3<int> pos) {
+    auto find = m_ChunkMap.find(pos);
 
     if (find == m_ChunkMap.end()) {
         return nullptr;
