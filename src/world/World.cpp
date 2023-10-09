@@ -27,11 +27,11 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
     // erase chunks no longer within the view distance from the m_ChunkDrawVector
     m_ChunkDrawVector.erase(std::remove_if(m_ChunkDrawVector.begin(), m_ChunkDrawVector.end(), [chunkX, chunkY, chunkZ, radius](Chunk* chunk) { 
         return chunk->m_Pos.x < chunkX-radius ||
-        chunk->m_Pos.x > chunkX+radius - 1||
+        chunk->m_Pos.x > chunkX+radius ||
         chunk->m_Pos.y < chunkY-radius ||
-        chunk->m_Pos.y > chunkY+radius-1 ||
+        chunk->m_Pos.y > chunkY+radius ||
         chunk->m_Pos.z < chunkZ-radius ||
-        chunk->m_Pos.z > chunkZ+radius - 1;
+        chunk->m_Pos.z > chunkZ+radius ;
     }), m_ChunkDrawVector.end());
     
     std::vector<std::unordered_map<engine::Vec3<int>, engine::Chunk>::iterator> iterators;
@@ -41,11 +41,11 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
         Chunk* chunk = &((*it).second);
         if (
             (chunk->m_Pos.x < chunkX - radius ||
-            chunk->m_Pos.x > chunkX + radius - 1 ||
+            chunk->m_Pos.x > chunkX + radius  ||
             chunk->m_Pos.y < chunkY - radius ||
-            chunk->m_Pos.y > chunkY + radius - 1 ||
+            chunk->m_Pos.y > chunkY + radius ||
             chunk->m_Pos.z < chunkZ - radius ||
-            chunk->m_Pos.z > chunkZ + radius - 1)
+            chunk->m_Pos.z > chunkZ + radius)
             && !chunk->isBeingMeshed && !chunk->isInBufferQueue
         ) {
             if (chunk->dirty) {
@@ -64,9 +64,9 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
         m_ChunkMap.erase(it);
     
     // Generate new chunks
-    for (int iz = -radius; iz < radius; iz++) {
-        for (int iy = -radius; iy < radius; iy++) {
-            for (int ix = -radius; ix < radius; ix++) {
+    for (int iz = -radius; iz < radius + 1; iz++) {
+        for (int iy = -radius; iy < radius + 1; iy++) {
+            for (int ix = -radius; ix < radius + 1; ix++) {
                 
                 Vec3 vec = Vec3(chunkX + ix, chunkY + iy, chunkZ + iz);
                 Chunk* chunk = nullptr;
