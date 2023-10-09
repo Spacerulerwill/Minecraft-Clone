@@ -28,6 +28,10 @@ namespace engine {
     constexpr float CHUNK_SCALE = CS * BLOCK_SCALE;
 	constexpr float INV_BLOCK_SCALE = 1 / BLOCK_SCALE;
 
+    inline int voxelIndex(int x, int y, int z) {
+        return z + (x << CHUNK_SIZE_EXP) + (y << CHUNK_SIZE_EXP_X2);
+    }
+
     /*
     Chunks are 62^3 and are stored in vertical columns for memory efficency when
     setting blocks. Voxels are stored in a 64^3 array of integers, utilizing a layer
@@ -42,9 +46,6 @@ namespace engine {
     The first 2 buffers used vertexs packed to 8 bytes, however the vertices in the custom
     block model buffer cannot be packed and are each 6 floats, totalling 24 bytes
     */
-    inline int voxelIndex(int x, int y, int z) {
-        return z + (x << CHUNK_SIZE_EXP) + (y << CHUNK_SIZE_EXP_X2);
-    }
 	class Chunk {
 	private:        
 		BufferObject<GL_ARRAY_BUFFER> m_VBO;
@@ -64,7 +65,6 @@ namespace engine {
 
 		Mat4<float> m_Model = scale(Vec3<float>(BLOCK_SCALE));
         std::mutex mtx;
-
 	public:
         std::atomic<bool> isBeingMeshed = false;
         std::atomic<bool> isInBufferQueue = false;

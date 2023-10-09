@@ -9,6 +9,7 @@ LICENSE: MIT
 #include <world/Block.hpp>
 #include <util/Constants.hpp>
 #include <util/Log.hpp>
+#include <math/Vec2.hpp>
 #include <vector>
 
 namespace engine {
@@ -27,9 +28,10 @@ namespace engine {
         6 bits for x texture coordinate (0-63)
         6 bits for y texture coordinate (0-63)
         8 bits for z texture coordinate (0-255)
+        2 bits for ambient occlusion value
         1 bit for if the block type is grass
         1 bit for if the block type is foliage
-        Total 22/32 bits used
+        Total 24/32 bits used
         */
 		uint32_t dat2;
 	};
@@ -48,12 +50,27 @@ namespace engine {
     /*
     Pack all the vertex data into a ChunkVertex struct, to save space
     */
-    inline const ChunkVertex GetVertex(uint32_t x, uint32_t y, uint32_t z, uint32_t texX, uint32_t texY, uint32_t type, uint32_t norm, bool isGrass, bool isFoliage) {
+    inline const ChunkVertex GetVertex(uint32_t x, uint32_t y, uint32_t z, uint32_t norm, uint32_t texX, uint32_t texY, uint32_t type, uint32_t ambientOcclusion, bool isGrass, bool isFoliage) {
         return {
             (norm << 18) | ((z - 1) << 12) | ((y - 1) << 6) | (x - 1),
-            (isGrass << 21) | (isFoliage << 20) | (type << 12) | ((texY) << 6) | (texX)
+            (isFoliage << 23) | (isGrass << 22) | (ambientOcclusion << 20 ) | (type << 12) | ((texY) << 6)| (texX)
         };
     }
+
+    inline uint32_t CalculateVertexAO(bool side1, bool side2, bool corner) {
+        return 3 - (side1 + side2 + corner);
+    }
+    
+    inline Vec2<int> ao_dirs[8] = {
+        {0, -1},
+        {0, 1},
+        {-1, 0},
+        {1, 0},
+        {-1, -1},
+        {-1, 1},
+        {1, -1},
+        {1, 1}
+    };
 };
 
 #endif // !CHUNKMESHER_H

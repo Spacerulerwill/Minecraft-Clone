@@ -12,6 +12,7 @@ out vec3 FragNormal;
 out uint FragNormalIndex;
 out vec3 FragPos;
 out vec3 TexCoords;
+out float AOMultiplier;
 out float isGrass;
 out float isFoliage;
 
@@ -23,6 +24,13 @@ uniform vec3 NORMALS[6] = {
   vec3( 0, 0, 1 ),
   vec3( 0, 0, -1 )
 };
+
+const float AO_MIN = 0.3;
+const float AO_PART = (1.0 - AO_MIN) / 3.0;
+
+float calculateAOMultiplier(uint AOLevel) {
+    return AO_MIN + (AOLevel * AO_PART);
+}
 
 void main()
 {
@@ -40,12 +48,13 @@ void main()
 	);
 
 	FragPos = vec3(model * vec4(x,y,z, 1.0));
+    isFoliage = float((data.y >> 23)&uint(1));
+    isGrass = float((data.y >> 22)&uint(1));
 
-    isFoliage = float((data.y >> 20)&uint(1));
-    isGrass = float((data.y >> 21)&uint(1));
+    uint AOLevel = uint((data.y >> 20)&uint(3));
+    AOMultiplier = calculateAOMultiplier(AOLevel);
 
-    gl_Position = projection * view * model * vec4(x,y,z,1.0);
-   
+    gl_Position = projection * view * model * vec4(x,y,z,1.0);  
 }
 
 #shader fragment
@@ -64,6 +73,7 @@ in vec3 FragNormal;
 flat in uint FragNormalIndex;
 in vec3 FragPos;
 in vec3 TexCoords;
+in float AOMultiplier;
 in float isGrass;
 in float isFoliage;
 out vec4 FragColor;
@@ -95,5 +105,5 @@ void main() {
 		texColor.b += 0.5;
     }
 
-	FragColor = texColor;
+	FragColor = texColor * vec4(vec3(AOMultiplier), 1.0);
 }

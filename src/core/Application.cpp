@@ -228,7 +228,7 @@ void engine::Application::Run(const char* worldName)
         }
 
         // Create chunks every frame
-        m_World->CreateChunks(chunkX, chunkY, chunkZ, radius, 20);
+        m_World->CreateChunks(chunkX, chunkY, chunkZ, radius, 12);
 
         // Raycast outwards to find a block to highlight
         Vec3<int> raycastBlockPos = Vec3<int>(0);

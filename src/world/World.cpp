@@ -99,7 +99,7 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
                             m_ChunkBufferQueue.enqueue(chunk);
                             chunk->isBeingMeshed = false;
                         });
-                    }
+                    } 
                 }
             }
         }
