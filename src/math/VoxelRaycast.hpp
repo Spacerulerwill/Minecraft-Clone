@@ -10,10 +10,11 @@ License: MIT
 #include <math/Vec3.hpp>
 #include <world/Chunk.hpp>
 #include <world/World.hpp>
+#include <memory>
 
 namespace engine {
     struct VoxelRaycastResult {
-        Chunk* chunk;
+        std::shared_ptr<Chunk> chunk;
         Vec3<int> blockPos;
         Vec3<int> normal;
 		BlockInt blockHit;

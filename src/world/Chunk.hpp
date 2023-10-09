@@ -21,6 +21,7 @@ LICENSE: MIT
 #include <util/Constants.hpp>
 #include <atomic>
 #include <mutex>
+#include <memory>
 
 namespace engine {
 
