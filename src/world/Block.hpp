@@ -41,6 +41,25 @@ namespace engine {
         GRAVEL,
 		NUM_BLOCKS
 	};
+
+    // enum of material IDs
+	enum Material : MaterialInt {
+		MATERIAL_AIR,
+		MATERIAL_GRAVEL,
+		MATERIAL_STONE,
+		MATERIAL_WOOD,
+		MATERIAL_GLASS,
+		MATERIAL_GRASS,
+        MATERIAL_SAND,
+		NUM_MATERIALS
+	};
+
+    
+    //Block materials determine what sound a block makes when it is placed or destroyed
+	struct MaterialDataStruct {
+		std::vector<std::string> breakSounds;
+		std::vector<std::string> placeSounds;
+	};
     
     // enum of model IDs
 	enum BlockModel: uint8_t {
@@ -71,12 +90,13 @@ namespace engine {
 
     // Global arrays used to fetch certain information by integer ID, using array indexing
 	extern BlockDataStruct BlockData[NUM_BLOCKS];
+	extern MaterialDataStruct MaterialData[NUM_MATERIALS];
 	extern BlockModelStruct BlockModelData[NUM_MODELS];
 
     inline constexpr unsigned int TEXTURE_SIZE = 16;
     inline constexpr unsigned int MAX_ANIMATION_FRAMES = 32;
 
-	void RegisterBlocks();
+	void InitBlocks();
 };
 
 #endif // !BLOCK_H

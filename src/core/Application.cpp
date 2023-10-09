@@ -107,7 +107,12 @@ void engine::Application::Run(const char* worldName)
     glCullFace(GL_BACK);
 
     // Load our block data - this must happen before any other part of the game starts
-    RegisterBlocks();
+    InitBlocks();
+
+    /*
+    Create an anonymous scope to ensure that all OpenGL objects created are deleted and cleaned up
+    before calling glfwTerminate()
+    */
 
     // Load texture atlases
     glActiveTexture(GL_TEXTURE0);
@@ -228,7 +233,7 @@ void engine::Application::Run(const char* worldName)
         // Raycast outwards to find a block to highlight
         Vec3<int> raycastBlockPos = Vec3<int>(0);
         m_BlockSelectRaycastResult = VoxelRaycast(m_World, m_Camera->GetPosition(), m_Camera->GetDirection(), 15.0f);
-        std::shared_ptr<Chunk> chunk = m_BlockSelectRaycastResult.chunk;
+        Chunk* chunk = m_BlockSelectRaycastResult.chunk;
 
         if (chunk != nullptr) {
             raycastBlockPos = Vec3<int>(
@@ -393,7 +398,7 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT: {
             if (action == GLFW_PRESS) {
-                std::shared_ptr<Chunk> chunk = m_BlockSelectRaycastResult.chunk;
+                Chunk* chunk = m_BlockSelectRaycastResult.chunk;
                 if (chunk != nullptr) {
                     chunk->SetBlock(AIR, m_BlockSelectRaycastResult.blockPos);
                     chunk->CreateMesh();
@@ -404,7 +409,7 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
         }
         case GLFW_MOUSE_BUTTON_RIGHT: {
             if (action == GLFW_PRESS) {
-                std::shared_ptr<Chunk> chunk = m_BlockSelectRaycastResult.chunk;
+                Chunk* chunk = m_BlockSelectRaycastResult.chunk;
                 if (chunk != nullptr && m_BlockSelectRaycastResult.blockHit != AIR) {
                     BlockInt blockToPlaceOn = chunk->GetBlock(m_BlockSelectRaycastResult.blockPos);
                     if (blockToPlaceOn != AIR) {
@@ -413,12 +418,12 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
                         // if making a new vertical chunk we can exit early
                         if (blockPlacePosition.y == CS_P_MINUS_ONE) {
                             blockPlacePosition.y = 1;
-                            std::shared_ptr<Chunk> newChunk = m_World->CreateChunk((chunk->m_Pos + Vec3<int>(0,1,0)));
+                            Chunk* newChunk = m_World->CreateChunk((chunk->m_Pos + Vec3<int>(0,1,0)));
                             newChunk->SetBlock(m_SelectedBlock, blockPlacePosition);
                             newChunk->UnloadToFile(m_World->m_WorldName);
                             newChunk->CreateMesh();
                             newChunk->BufferData();
-                            m_World->m_ChunkDrawVector.push_back(newChunk.get());
+                            m_World->m_ChunkDrawVector.push_back(newChunk);
                             return;
                         }
 

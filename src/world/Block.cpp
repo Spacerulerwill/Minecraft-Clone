@@ -28,12 +28,46 @@ float crossVertices[84] = {
 };
 
 engine::BlockDataStruct engine::BlockData[engine::NUM_BLOCKS];
+engine::MaterialDataStruct engine::MaterialData[engine::NUM_MATERIALS];
 engine::BlockModelStruct engine::BlockModelData[engine::NUM_MODELS] = {
 	{}, // Cube has no custom model for obvious reasons,
 	{&crossVertices[0], &crossVertices[84]}
 };
 
-void engine::RegisterBlocks() {
+void engine::InitBlocks() {
+	// Load block sounds
+	for (const auto& file : std::filesystem::directory_iterator("res/sound/block")) {
+		auto char_path = file.path().string();
+	}
+
+	// Load materials from materials.yml
+	YAML::Node materials_yml = YAML::LoadFile("res/materials.yml");
+	int index = 0;
+	for (YAML::const_iterator it = materials_yml.begin(); it != materials_yml.end(); ++it, index++) {
+		std::string materialName = it->first.as<std::string>();
+		
+		std::string breakType = it->second["break"].as<std::string>();
+		int breakCount = it->second["break_count"].as<int>();
+		std::vector<std::string> breakSounds;
+
+		std::string placeType = it->second["place"].as<std::string>();
+		int placeCount = it->second["place_count"].as<int>();
+		std::vector<std::string> placeSounds;
+
+		for (int i = 0; i < breakCount; i++) {
+			breakSounds.push_back(fmt::format("res/sound/block/{}{}.ogg", breakType, i+1));
+		}
+
+		for (int i = 0; i < placeCount; i++) {
+			placeSounds.push_back(fmt::format("res/sound/block/{}{}.ogg", placeType, i+1));
+		}
+
+		MaterialData[index] = MaterialDataStruct{
+			breakSounds,
+			placeSounds
+		};
+	}
+
 	//Load block data from blocks.yml
 	YAML::Node blocks_yml = YAML::LoadFile("res/blocks.yml");
 

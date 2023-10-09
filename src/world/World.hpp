@@ -24,10 +24,10 @@ namespace engine {
         void DrawBlocks(Shader& shader);
         void DrawWater(Shader& shader);
         void DrawCustomModelBlocks(Shader& shader);
-        std::shared_ptr<Chunk> CreateChunk(Vec3<int> pos);
+        Chunk* CreateChunk(Vec3<int> pos);
         void CreateChunks(int chunkX, int chunkY, int chunkZ, int radius, int bufferPerFrame);
-        std::shared_ptr<Chunk> GetChunk(int chunkX, int chunkY, int chunkZ);
-        std::shared_ptr<Chunk> GetChunk(Vec3<int> pos);
+        Chunk* GetChunk(int chunkX, int chunkY, int chunkZ);
+        Chunk* GetChunk(Vec3<int> pos);
         const char* m_WorldName = nullptr;
         std::vector<Chunk*> m_ChunkDrawVector;
         ~World();
@@ -35,7 +35,7 @@ namespace engine {
         BS::thread_pool m_MeshPool;
         BS::thread_pool m_UnloadPool;
         moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
-        std::unordered_map<Vec3<int>, std::shared_ptr<Chunk>> m_ChunkMap;
+        std::unordered_map<Vec3<int>, Chunk> m_ChunkMap;
         siv::PerlinNoise m_Noise = siv::PerlinNoise(0);
         
         std::random_device rd;

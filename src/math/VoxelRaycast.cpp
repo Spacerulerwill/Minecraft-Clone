@@ -40,7 +40,7 @@ namespace engine {
             blockHitPos.z = CS_P_MINUS_ONE - (1 + (abs(globalBlockPos.z) - 1) % CS);
         }
 
-        std::shared_ptr<Chunk> chunk = world->GetChunk(chunkPos);
+        Chunk* chunk = world->GetChunk(chunkPos);
 
         if (chunk == nullptr) {
             return VoxelRaycastResult{

@@ -15,10 +15,9 @@ engine::World::World(const char* worldName) : m_WorldName(worldName) {
     m_Noise.reseed(seed);
 }
 
-std::shared_ptr<engine::Chunk> engine::World::CreateChunk(Vec3<int> pos) {
-    std::shared_ptr<Chunk> chunk = std::make_shared<Chunk>(pos);
-    m_ChunkMap.insert(std::make_pair(pos, chunk));
-    return chunk;   
+engine::Chunk* engine::World::CreateChunk(Vec3<int> pos) {
+    auto result = m_ChunkMap.try_emplace(pos, pos);
+    return  &(result.first->second);   
 }
 
 void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius, int bufferPerFrame) {
@@ -35,11 +34,11 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
         chunk->m_Pos.z > chunkZ+radius ;
     }), m_ChunkDrawVector.end());
     
-    std::vector<std::unordered_map<Vec3<int>, std::shared_ptr<Chunk>>::iterator> iterators;
+    std::vector<std::unordered_map<engine::Vec3<int>, engine::Chunk>::iterator> iterators;
 
     // Lock mutex for map access and unload each chunk outside view distance (single threaded)
     for (auto it = m_ChunkMap.begin(); it != m_ChunkMap.end();) {
-        std::shared_ptr<Chunk> chunk = (*it).second;
+        Chunk* chunk = &((*it).second);
         if (
             (chunk->m_Pos.x < chunkX - radius ||
             chunk->m_Pos.x > chunkX + radius  ||
@@ -78,27 +77,27 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
                 if (find == end && chunksCreated < bufferPerFrame) {
                     if (chunkY + iy < 3 && chunkY + iy >= 0) {
                         chunksCreated++;
-                        std::shared_ptr<Chunk> chunk = std::make_shared<Chunk>(vec);
-                        m_ChunkMap.insert(std::make_pair(vec, chunk));
-                        Chunk* c = chunk.get();
+                        auto result = m_ChunkMap.try_emplace(vec, chunkX + ix, chunkY + iy, chunkZ + iz);
+                        chunk = &(result.first->second);        
+
                         chunk->isBeingMeshed = true;
-                        m_MeshPool.push_task([c, chunkY, iy, this] {
-                            std::ifstream rf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", m_WorldName, c->m_Pos.x, c->m_Pos.y, c->m_Pos.z), std::ios::in | std::ios::binary);
+                        m_MeshPool.push_task([chunk, chunkY, iy, this] {
+                            std::ifstream rf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", m_WorldName, chunk->m_Pos.x, chunk->m_Pos.y, chunk->m_Pos.z), std::ios::in | std::ios::binary);
                             if (!rf) {
                                 if (chunkY + iy < 2) {
-                                    c->TerrainGen(STONE);
+                                    chunk->TerrainGen(STONE);
                                 } else {
-                                    c->TerrainGen(m_Noise, gen, distrib);
+                                    chunk->TerrainGen(m_Noise, gen, distrib);
                                 }
-                                c->UnloadToFile(m_WorldName);
+                                chunk->UnloadToFile(m_WorldName);
                             }else {
-                                rf.read((char*)&c->m_Voxels[0], CS_P3 * sizeof(BlockInt));
+                                rf.read((char*)&chunk->m_Voxels[0], CS_P3 * sizeof(BlockInt));
                                 rf.close();
                             }
-                            c->CreateMesh();
-                            c->isInBufferQueue = true;
-                            m_ChunkBufferQueue.enqueue(c);
-                            c->isBeingMeshed = false;
+                            chunk->CreateMesh();
+                            chunk->isInBufferQueue = true;
+                            m_ChunkBufferQueue.enqueue(chunk);
+                            chunk->isBeingMeshed = false;
                         });
                     } 
                 }
@@ -119,38 +118,38 @@ void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius,
 }
 
 void engine::World::DrawBlocks(Shader& chunkShader) {
-    for (auto chunk : m_ChunkDrawVector){
+    for (Chunk* chunk : m_ChunkDrawVector){
         chunk->Draw(chunkShader);
     }
 }
 void engine::World::DrawWater(Shader& waterShader) {
-     for (auto chunk : m_ChunkDrawVector){
+     for (Chunk* chunk : m_ChunkDrawVector){
         chunk->DrawWater(waterShader);
     }
 }
 void engine::World::DrawCustomModelBlocks(Shader& customModelShader) {
-     for (auto chunk : m_ChunkDrawVector){
+     for (Chunk* chunk : m_ChunkDrawVector){
         chunk->DrawCustomModelBlocks(customModelShader);
     }
 }
 
-std::shared_ptr<engine::Chunk> engine::World::GetChunk(int chunkX, int chunkY, int chunkZ) {
+engine::Chunk* engine::World::GetChunk(int chunkX, int chunkY, int chunkZ) {
     auto find = m_ChunkMap.find(Vec3(chunkX, chunkY, chunkZ));
 
     if (find == m_ChunkMap.end()) {
         return nullptr;
     } else {
-        return find->second;
+        return &(find->second);
     }
 }
 
-std::shared_ptr<engine::Chunk> engine::World::GetChunk(Vec3<int> pos) {
+engine::Chunk* engine::World::GetChunk(Vec3<int> pos) {
     auto find = m_ChunkMap.find(pos);
 
     if (find == m_ChunkMap.end()) {
         return nullptr;
     } else {
-        return find->second;
+        return &(find->second);
     }
 }
 
@@ -158,8 +157,8 @@ engine::World::~World() {
 
     // Unload all remaining chunks
     for (auto& [key, chunk]: m_ChunkMap) {
-        if (chunk->dirty) {
-            chunk->UnloadToFile(m_WorldName);
+        if (chunk.dirty) {
+            chunk.UnloadToFile(m_WorldName);
         }
     }
 }
