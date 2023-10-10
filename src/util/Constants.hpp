@@ -7,19 +7,21 @@ LICENSE: MIT
 #define CONSTANTS_H
 
 // Chunk size exponents (used when calculating array index to find block at x,y,z)
-constexpr int CHUNK_SIZE_EXP = 6;
-constexpr int CHUNK_SIZE_EXP_X2 = CHUNK_SIZE_EXP * 2;
+namespace engine {
+    constexpr int CHUNK_SIZE_EXP = 6;
+    constexpr int CHUNK_SIZE_EXP_X2 = CHUNK_SIZE_EXP * 2;
 
-// Chunk sizes with padding
-constexpr int CS_P = 1 << CHUNK_SIZE_EXP;
-constexpr int CS_P2 = 1 << CHUNK_SIZE_EXP_X2;
-constexpr int CS_P3 = CS_P2 * CS_P;
+    // Chunk sizes with padding
+    constexpr int CS_P = 1 << CHUNK_SIZE_EXP;
+    constexpr int CS_P2 = 1 << CHUNK_SIZE_EXP_X2;
+    constexpr int CS_P3 = CS_P2 * CS_P;
 
-constexpr int CS_P_MINUS_ONE  = CS_P -1;
+    constexpr int CS_P_MINUS_ONE  = CS_P -1;
 
-// Chunk size without paddings
-constexpr int CS = CS_P - 2;
-constexpr int CS_MINUS_ONE = CS - 1;
+    // Chunk size without paddings
+    constexpr int CS = CS_P - 2;
+    constexpr int CS_MINUS_ONE = CS - 1;
+};
 
 #endif // !CONSTANTS_H
 
