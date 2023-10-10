@@ -224,7 +224,6 @@ void engine::Application::Run(const char* worldName)
             glActiveTexture(GL_TEXTURE0);
             atlases[currentAtlasIndex]->Bind();
             lastTime = currentTime;
-            //LOG_TRACE(totalFrameDuration);
         }
 
         // Create chunks every frame
