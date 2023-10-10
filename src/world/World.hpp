@@ -32,6 +32,8 @@ namespace engine {
         std::vector<Chunk*> m_ChunkDrawVector;
         ~World();
     private:
+        Vec3<int> playerChunkPos;
+
         BS::thread_pool m_MeshPool;
         BS::thread_pool m_UnloadPool;
         moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;

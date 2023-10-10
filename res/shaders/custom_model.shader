@@ -3,8 +3,7 @@
 #version 450 core
 
 layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aTexCoords;
-layout (location = 2) in float aIsFoliage;
+layout (location = 1) in uint data;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -16,8 +15,12 @@ out vec3 FragPos;
 
 void main()
 {
-    isFoliage = aIsFoliage;
-    TexCoords = aTexCoords;
+    isFoliage = float((data >> 20)&uint(1));
+    TexCoords = vec3(
+        float(data&uint(63)),
+		float((data >> 6)&uint(63)),
+		float((data >> 12)&uint(255))
+    );
     FragPos = vec3(model * vec4(aPos.x,aPos.y,aPos.z, 1.0));
 	gl_Position = projection * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);
 }

@@ -193,7 +193,7 @@ void engine::Application::Run(const char* worldName)
     float playerYaw = playerYaml["yaw"].as<float>();
     float playerPitch = playerYaml["pitch"].as<float>();
 
-    m_Camera = new Camera(playerPosition, playerYaw, playerPitch);
+    m_Camera = new Camera(playerPosition, playerPitch, playerYaw);
     m_World = new World(worldName);
     const int radius = 5;
 
@@ -328,14 +328,13 @@ void engine::Application::Run(const char* worldName)
     std::string playerYamlLocation = fmt::format("worlds/{}/player.yml", worldName);
     YAML::Node worldYaml = YAML::LoadFile(playerYamlLocation);
     worldYaml["position"] = m_Camera->GetPosition();
-    worldYaml["yaw"] = m_Camera->m_Yaw;
-    worldYaml["pitch"] = m_Camera->m_Pitch;
+    worldYaml["yaw"] = m_Camera->GetYaw();
+    worldYaml["pitch"] = m_Camera->GetPitch();
     std::ofstream fout(playerYamlLocation); 
     fout << worldYaml;
     fout.close();
 
     delete m_Camera;
-
     delete p_Framebuffer;
     glfwDestroyWindow(p_Window);
     spdlog::shutdown();
@@ -372,20 +371,7 @@ void engine::Application::GLFWMouseMoveCallback(GLFWwindow* window, double xposI
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
-    if (m_FirstMouse) // initially set to true
-    {
-        m_LastMouseX = xpos;
-        m_LastMouseY = ypos;
-        m_FirstMouse = false;
-    }
-
-    float xoffset = xpos - m_LastMouseX;
-    float yoffset = m_LastMouseY - ypos; // reversed since y-coordinates go from bottom to top
-
-    m_LastMouseX = xpos;
-    m_LastMouseY = ypos;
-
-    m_Camera->ProcessMouseMovement(xoffset, yoffset, true);
+    m_Camera->ProcessMouseMovement(xpos, ypos);
 }
 
 void engine::Application::GLFWScrollCallback(GLFWwindow* window, double xoffset, double yoffset)

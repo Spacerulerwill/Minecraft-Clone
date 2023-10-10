@@ -21,6 +21,7 @@ LICENSE: MIT
 #include <util/Constants.hpp>
 #include <atomic>
 #include <mutex>
+#include <fstream>
 
 namespace engine {
 
@@ -39,28 +40,30 @@ namespace engine {
     edge data are copied into the padding layers to allow for cross chunk meshing.
 
     Each chunk has 3 vertex buffers:
-    * A regular vertex buffer
-    * A water vertex buffer
-    * A custom block model vertex buffer
+    * A regular vertex buffer - 8 byte vertices
+    * A water vertex buffer - 8 byte vertices
+    * A custom block model vertex buffer -24 byte vertices
     
-    The first 2 buffers used vertexs packed to 8 bytes, however the vertices in the custom
-    block model buffer cannot be packed and are each 6 floats, totalling 24 bytes
+    Due to data constraints, the vertex data for each cube block can be packed to 8 bytes.
+    See engine::CubeChunkVertex for for information on the packing layout.
+
+    Custom model blocks, cannot be packed to 8 bytes
     */
 	class Chunk {
 	private:        
 		BufferObject<GL_ARRAY_BUFFER> m_VBO;
 		VertexArray m_VAO;
-		std::vector<ChunkVertex> m_Vertices;
+		std::vector<CubeChunkVertex> m_Vertices;
 		size_t m_VertexCount = 0;
 
 		BufferObject<GL_ARRAY_BUFFER> m_WaterVBO;
 		VertexArray m_WaterVAO;
-		std::vector<ChunkVertex> m_WaterVertices;
+		std::vector<CubeChunkVertex> m_WaterVertices;
 		size_t m_WaterVertexCount = 0;
 
         BufferObject<GL_ARRAY_BUFFER> m_CustomModelVBO;
 		VertexArray m_CustomModelVAO;
-		std::vector<float> m_CustomModelVertices;
+		std::vector<CustomModelChunkVertex> m_CustomModelVertices;
 		size_t m_CustomModelVertexCount = 0;
 
 		Mat4<float> m_Model = scale(Vec3<float>(BLOCK_SCALE));
@@ -81,6 +84,7 @@ namespace engine {
 		void TerrainGen(BlockInt block);
 		void CreateMesh();
 
+        void ReadFileToBlockArray(std::ifstream& stream);
         void UnloadToFile(const char* worldName);
 
 		void BufferData();

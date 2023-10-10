@@ -5,6 +5,8 @@ License: MIT
 
 #include <core/Camera.hpp>
 #include <glad/gl.h>
+#include <assert.h>
+#include <algorithm>
 
 engine::Camera::Camera() {
     UpdateCameraVectors();
@@ -14,7 +16,7 @@ engine::Camera::Camera(engine::Vec3<float> pos): m_Position(pos) {
     UpdateCameraVectors();
 }
 
-engine::Camera::Camera(engine::Vec3<float> pos, float yaw, float pitch): m_Position(pos), m_Yaw(yaw), m_Pitch(pitch) {
+engine::Camera::Camera(engine::Vec3<float> pos, float pitch, float yaw): m_Position(pos), m_Yaw(yaw), m_Pitch(pitch) {
     UpdateCameraVectors();
 }
 
@@ -27,6 +29,7 @@ engine::Mat4<float> engine::Camera::GetPerspectiveMatrix() const {
 }
 
 void engine::Camera::SetFOV(float FOV) {
+    assert(FOV > 0.0f);
     if (m_FOV != FOV) {
         m_PerspectiveMatrix = perspective(radians(FOV), m_Aspect, m_Near, m_Far);
     }
@@ -35,6 +38,24 @@ void engine::Camera::SetFOV(float FOV) {
 
 float engine::Camera::GetFOV() const {
     return m_FOV;
+}
+
+void engine::Camera::SetPitch(float pitch) {
+    assert(pitch > -180.0f && pitch < 180.0f);
+    m_Pitch = pitch;
+}
+
+float engine::Camera::GetPitch() const {
+    return m_Pitch;
+}
+
+void engine::Camera::SetYaw(float yaw) {
+    assert(yaw > -180.0f && yaw < 180.0f);
+    m_Yaw = yaw;
+}
+
+float engine::Camera::GetYaw() const {
+    return m_Yaw;
 }
 
 void engine::Camera::SetMovementSpeed(float speed) {
@@ -66,24 +87,27 @@ void engine::Camera::ProcessKeyboard(CameraMovement direction, float deltaTime)
     m_Position += directionMultiplier * velocity;
 }
 
-void engine::Camera::ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch)
+void engine::Camera::ProcessMouseMovement(float xpos, float ypos)
 {
+    if (m_FirstMouse) // initially set to true
+    {
+        m_LastMouseX = xpos;
+        m_LastMouseY = ypos;
+        m_FirstMouse = false;
+    }
+
+    float xoffset = xpos - m_LastMouseX;
+    float yoffset = m_LastMouseY - ypos; // reversed since y-coordinates go from bottom to top
+
+    m_LastMouseX = xpos;
+    m_LastMouseY = ypos;
+
     xoffset *= m_MouseSensitivity;
     yoffset *= m_MouseSensitivity;
 
-    m_Yaw += xoffset;
-    m_Pitch += yoffset;
+    m_Pitch = std::clamp(m_Pitch + yoffset, -89.0f, 89.0f);
+    m_Yaw = fmod((m_Yaw + xoffset), 180);
 
-    // make sure that when pitch is out of bounds, screen doesn't get flipped
-    if (constrainPitch)
-    {
-        if (m_Pitch > 89.0f)
-            m_Pitch = 89.0f;
-        if (m_Pitch < -89.0f)
-            m_Pitch = -89.0f;
-    }
-
-    // update Front, Right and Up Vectors using the updated Euler angles
     UpdateCameraVectors();
 }
 
@@ -98,14 +122,14 @@ void engine::Camera::ProcessMouseScroll(float yoffset)
 
 void engine::Camera::UpdateCameraVectors()
 {
-    // Calculate the new front vector
+    // Calculate new front vector
     Vec3<float> front;
     front.x = cos(radians(m_Yaw)) * cos(radians(m_Pitch));
     front.y = sin(radians(m_Pitch));
     front.z = sin(radians(m_Yaw)) * cos(radians(m_Pitch));
     m_Front = Vec3<float>::normalised(front);
 
-    // also recalculate right and up vector
+    // Calculate up and right vectors
     m_Right = Vec3<float>::normalised(Vec3<float>::cross(m_Front, m_WorldUp));
     m_Up = Vec3<float>::normalised(Vec3<float>::cross(m_Right, m_Front));
 }

@@ -6,10 +6,10 @@ License: MIT
 #include <util/Log.hpp>
 #include <math/VoxelRaycast.hpp>
 #include <math.h>
+#include <assert.h>
 
 namespace engine {
     VoxelRaycastResult GenerateVoxelRaycastResult(World* world, Vec3<int> normal, Vec3<int> globalBlockPos) {
-        // process first voxel
         Vec3<int> chunkPos;
 
         chunkPos.y = globalBlockPos.y / CS;
@@ -59,17 +59,18 @@ namespace engine {
             };
         }
     }
+
+    float fract0(float x) {
+        return x - floorf(x);
+    }
+
+    float fract1(float x) {
+        return 1 - x + floorf(x);
+    }
 }
 
 engine::VoxelRaycastResult engine::VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, int distance) {
-
-    if (direction.x == 0 && direction.y == 0 && direction.z == 0) {
-        throw std::runtime_error("Cannot perform voxel raycast with 0 direction!");
-    }
-
-    #define SIGN(x) (x > 0 ? 1 : (x < 0 ? -1 : 0))
-    #define FRAC0(x) (x - floorf(x))
-    #define FRAC1(x) (1 - x + floorf(x))
+    assert(!(direction.x == 0 && direction.y == 0 && direction.z == 0));
 
     float tMaxX, tMaxY, tMaxZ, tDeltaX, tDeltaY, tDeltaZ;
 
@@ -90,13 +91,13 @@ engine::VoxelRaycastResult engine::VoxelRaycast(World* world, const Vec3<float>&
     Vec3<int> normal(0);
 
     if (step.x != 0) tDeltaX = fmin(step.x / (end.x - start.x), std::numeric_limits<float>::max()); else tDeltaX =  std::numeric_limits<float>::max();
-    if (step.x > 0) tMaxX = tDeltaX * FRAC1(start.x); else tMaxX = tDeltaX * FRAC0(start.x);
+    if (step.x > 0) tMaxX = tDeltaX * fract1(start.x); else tMaxX = tDeltaX * fract0(start.x);
 
     if (step.y != 0) tDeltaY = fmin(step.y / (end.y- start.y), std::numeric_limits<float>::max()); else tDeltaY =  std::numeric_limits<float>::max();
-    if (step.y > 0) tMaxY = tDeltaY * FRAC1(start.y); else tMaxY = tDeltaY * FRAC0(start.y);
+    if (step.y > 0) tMaxY = tDeltaY * fract1(start.y); else tMaxY = tDeltaY * fract0(start.y);
 
     if (step.z != 0) tDeltaZ = fmin(step.z / (end.z - start.z), std::numeric_limits<float>::max()); else tDeltaZ =  std::numeric_limits<float>::max();
-    if (step.z > 0) tMaxZ = tDeltaZ * FRAC1(start.z); else tMaxZ = tDeltaZ * FRAC0(start.z);
+    if (step.z > 0) tMaxZ = tDeltaZ * fract1(start.z); else tMaxZ = tDeltaZ * fract0(start.z);
 
     // process first voxel
     {

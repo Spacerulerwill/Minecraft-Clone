@@ -31,13 +31,13 @@ namespace engine {
         ShaderSources ParseShader(const std::string& filepath);
         GLuint CompileShader(GLenum type, std::string& source);
         GLuint CreateShader(std::string& vertex_source, std::string& fragmement_source);
+        GLint GetLocation(std::string name);
     public:
         Shader(std::string filepath);
         ~Shader();
 
         void Bind() const;
         void Unbind() const;
-        GLint GetLocation(std::string name);
 
         template<std::floating_point T> 
         void setMat4(const std::string& name, const Mat4<T>& mat) {

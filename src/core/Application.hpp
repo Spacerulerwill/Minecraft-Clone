@@ -21,22 +21,21 @@ namespace engine {
 	private:
 		Application();
 		static std::unique_ptr<Application> s_Instance;
+
         GLFWwindow* p_Window = nullptr;
         Camera* m_Camera = nullptr;
         Framebuffer* p_Framebuffer = nullptr;
         World* m_World = nullptr;
         VoxelRaycastResult m_BlockSelectRaycastResult {};
         BlockInt m_SelectedBlock = GRASS;
+        bool m_Wireframe = false;
 
         float m_DeltaTime = 0.0f;
         float m_LastFrame = 0.0f;
-        bool m_Wireframe = false;
-		bool m_FirstMouse = true;
-		float m_LastMouseX = 0.0f;
-		float m_LastMouseY = 0.0f;
 
         void ProcessInput();
 	public:
+    
 		static void Init();
 		void Run(const char* worldName);
 		static std::unique_ptr<Application>& GetInstance();

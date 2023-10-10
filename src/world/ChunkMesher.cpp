@@ -5,37 +5,54 @@ LICENSE: MIT
 
 #include <world/ChunkMesher.hpp>
 #include <world/Chunk.hpp>
+#include <world/Block.hpp>
+#include <util/Log.hpp>
 
 namespace engine {
     #ifdef _MSC_VER
     #include <intrin.h>
-    inline const int CTZ(uint64_t &x) {
+    int CTZ(uint64_t &x) {
     unsigned long index;
     _BitScanForward64(&index, x);
     return static_cast<int>(index);
     }
     #else
-    inline const int CTZ(uint64_t x) {
+    int CTZ(uint64_t x) {
     return __builtin_ctzll(x);
     }
     #endif
 
-    inline const bool SolidCheck(BlockInt voxel) {
+    bool SolidCheck(BlockInt voxel) {
         return voxel > 0;
     }
 
-    inline const bool OpaqueCheck(BlockInt voxel) {
+    bool OpaqueCheck(BlockInt voxel) {
         BlockDataStruct data = BlockData[voxel];
         return data.opaque && data.model == CUBE;
     }
 
-    inline const int GetAxisI(const int &axis, const int &a, const int &b, const int &c) {
+    int GetAxisI(const int &axis, const int &a, const int &b, const int &c) {
         if (axis == 0) return b + (a * CS_P) + (c * CS_P2);
         else if (axis == 1) return a + (c * CS_P) + (b* CS_P2);
         else return c + (b * CS_P) + (a * CS_P2);
     }
+    
+    uint32_t CalculateVertexAO(bool side1, bool side2, bool corner) {
+        return 3 - (side1 + side2 + corner);
+    }
+    
+    Vec2<int> ao_dirs[8] = {
+        {0, -1},
+        {0, 1},
+        {-1, 0},
+        {1, 0},
+        {-1, -1},
+        {-1, 1},
+        {1, -1},
+        {1, 1}
+    };
 
-    inline const bool CompareAO(const BlockInt* voxels, int axis, int forward, int right, int c, int forward_offset, int right_offset) {
+    bool CompareAO(const BlockInt* voxels, int axis, int forward, int right, int c, int forward_offset, int right_offset) {
         for (const auto& ao_dir : ao_dirs) {
             if (OpaqueCheck(voxels[GetAxisI(axis, right + ao_dir.x, forward + ao_dir.y, c)]) !=
                 OpaqueCheck(voxels[GetAxisI(axis, right + right_offset + ao_dir.x, forward + forward_offset + ao_dir.y, c)])
@@ -46,17 +63,17 @@ namespace engine {
         return true;
     }
 
-    inline const bool CompareForward(const BlockInt* voxels, int axis, int forward, int right, int bit_pos, int light_dir) {
+    bool CompareForward(const BlockInt* voxels, int axis, int forward, int right, int bit_pos, int light_dir) {
         return voxels[GetAxisI(axis, right, forward, bit_pos)] == voxels[GetAxisI(axis, right, forward + 1, bit_pos)]
         && CompareAO(voxels, axis, forward, right, bit_pos + light_dir, 1, 0);
     }
 
-    inline const bool CompareRight(const BlockInt* voxels, int axis, int forward, int right, int bit_pos, int light_dir) {
+    bool CompareRight(const BlockInt* voxels, int axis, int forward, int right, int bit_pos, int light_dir) {
         return voxels[GetAxisI(axis, right, forward, bit_pos)] == voxels[GetAxisI(axis, right + 1, forward, bit_pos)]
         && CompareAO(voxels, axis, forward, right, bit_pos + light_dir, 0, 1);
     }
 
-    inline const void InsertQuad(std::vector<ChunkVertex>& vertices, ChunkVertex v1, ChunkVertex v2, ChunkVertex v3, ChunkVertex v4, bool flipped) {
+    void InsertQuad(std::vector<CubeChunkVertex>& vertices, CubeChunkVertex v1, CubeChunkVertex v2, CubeChunkVertex v3, CubeChunkVertex v4, bool flipped) {
         if (flipped) {
             vertices.insert(vertices.end(), { v1, v2, v4, v4, v2, v3 });
         }
@@ -66,7 +83,7 @@ namespace engine {
     }
 }
 
-void engine::GreedyTranslucent(std::vector<engine::ChunkVertex>& vertices, std::vector<engine::ChunkVertex>& waterVertices, const engine::BlockInt* voxels) {
+void engine::GreedyTranslucent(std::vector<engine::CubeChunkVertex>& vertices, std::vector<engine::CubeChunkVertex>& waterVertices, const engine::BlockInt* voxels) {
     uint64_t axis_cols[CS_P2 * 3] = { 0 };
     uint64_t col_face_masks[CS_P2 * 6];
 
@@ -163,57 +180,57 @@ void engine::GreedyTranslucent(std::vector<engine::ChunkVertex>& vertices, std::
                         continue;
                     }
 
-                    ChunkVertex v1, v2, v3, v4;
+                    CubeChunkVertex v1, v2, v3, v4;
                     bool isGrass = type  == GRASS;
                     bool isFoliage = type == TALL_GRASS | type == OAK_LEAVES;
 
                     switch(face) {
                     case 0: {
                         TextureInt texZ = blockData.top_face;
-                        v1 = GetVertex(mesh_left, mesh_up, mesh_front, face, 0, 0, texZ, 3, isGrass, isFoliage);
-                        v2 = GetVertex(mesh_left, mesh_up, mesh_back, face, 0, mesh_back - mesh_front, texZ, 3, isGrass, isFoliage);
-                        v3 = GetVertex(mesh_right, mesh_up, mesh_back, face, mesh_right-mesh_left, mesh_back-mesh_front, texZ, 3, isGrass, isFoliage);
-                        v4 = GetVertex(mesh_right, mesh_up, mesh_front, face, mesh_right-mesh_left, 0, texZ, 3, isGrass, isFoliage);
+                        v1 = GetCubeBlockVertex(mesh_left, mesh_up, mesh_front, face, 0, 0, texZ, 3, isGrass, isFoliage);
+                        v2 = GetCubeBlockVertex(mesh_left, mesh_up, mesh_back, face, 0, mesh_back - mesh_front, texZ, 3, isGrass, isFoliage);
+                        v3 = GetCubeBlockVertex(mesh_right, mesh_up, mesh_back, face, mesh_right-mesh_left, mesh_back-mesh_front, texZ, 3, isGrass, isFoliage);
+                        v4 = GetCubeBlockVertex(mesh_right, mesh_up, mesh_front, face, mesh_right-mesh_left, 0, texZ, 3, isGrass, isFoliage);
                         break;
                     }
                     case 1: {
                         TextureInt texZ = blockData.bottom_face;
-                        v1 = GetVertex(mesh_left, mesh_up, mesh_back, face, 0, mesh_back-mesh_front, texZ, 3, isGrass, isFoliage);
-                        v2 = GetVertex(mesh_left, mesh_up, mesh_front, face, 0, 0, texZ, 3, isGrass, isFoliage);
-                        v3 = GetVertex(mesh_right, mesh_up, mesh_front, face, mesh_right-mesh_left, 0, texZ, 3, isGrass, isFoliage);
-                        v4 = GetVertex(mesh_right, mesh_up, mesh_back, face, mesh_right-mesh_left, mesh_back-mesh_front, texZ, 3, isGrass, isFoliage);
+                        v1 = GetCubeBlockVertex(mesh_left, mesh_up, mesh_back, face, 0, mesh_back-mesh_front, texZ, 3, isGrass, isFoliage);
+                        v2 = GetCubeBlockVertex(mesh_left, mesh_up, mesh_front, face, 0, 0, texZ, 3, isGrass, isFoliage);
+                        v3 = GetCubeBlockVertex(mesh_right, mesh_up, mesh_front, face, mesh_right-mesh_left, 0, texZ, 3, isGrass, isFoliage);
+                        v4 = GetCubeBlockVertex(mesh_right, mesh_up, mesh_back, face, mesh_right-mesh_left, mesh_back-mesh_front, texZ, 3, isGrass, isFoliage);
                         break;
                     }
                     case 2: { 
                         TextureInt texZ = blockData.right_face;
-                        v1 = GetVertex(mesh_up, mesh_front, mesh_left, face, 0, mesh_back - mesh_front, texZ, 3, isGrass, isFoliage);
-                        v2 = GetVertex(mesh_up, mesh_back, mesh_left, face, 0, 0, texZ, 3, isGrass, isFoliage);
-                        v3 = GetVertex(mesh_up, mesh_back, mesh_right, face, mesh_right - mesh_left, 0, texZ, 3, isGrass, isFoliage);
-                        v4 = GetVertex(mesh_up, mesh_front, mesh_right, face, mesh_right - mesh_left, mesh_back - mesh_front, texZ, 3, isGrass, isFoliage);
+                        v1 = GetCubeBlockVertex(mesh_up, mesh_front, mesh_left, face, 0, mesh_back - mesh_front, texZ, 3, isGrass, isFoliage);
+                        v2 = GetCubeBlockVertex(mesh_up, mesh_back, mesh_left, face, 0, 0, texZ, 3, isGrass, isFoliage);
+                        v3 = GetCubeBlockVertex(mesh_up, mesh_back, mesh_right, face, mesh_right - mesh_left, 0, texZ, 3, isGrass, isFoliage);
+                        v4 = GetCubeBlockVertex(mesh_up, mesh_front, mesh_right, face, mesh_right - mesh_left, mesh_back - mesh_front, texZ, 3, isGrass, isFoliage);
                         break;
                     }
                     case 3: {
                         TextureInt texZ = blockData.left_face;
-                        v1 = GetVertex(mesh_up, mesh_back, mesh_left, face, 0, 0, texZ, 3, isGrass, isFoliage);
-                        v2 = GetVertex(mesh_up, mesh_front, mesh_left, face, 0, mesh_back - mesh_front, texZ, 3, isGrass, isFoliage);
-                        v3 = GetVertex(mesh_up, mesh_front, mesh_right, face, mesh_right - mesh_left, mesh_back - mesh_front, texZ, 3, isGrass, isFoliage);
-                        v4 = GetVertex(mesh_up, mesh_back, mesh_right, face, mesh_right - mesh_left, 0, texZ, 3, isGrass, isFoliage);
+                        v1 = GetCubeBlockVertex(mesh_up, mesh_back, mesh_left, face, 0, 0, texZ, 3, isGrass, isFoliage);
+                        v2 = GetCubeBlockVertex(mesh_up, mesh_front, mesh_left, face, 0, mesh_back - mesh_front, texZ, 3, isGrass, isFoliage);
+                        v3 = GetCubeBlockVertex(mesh_up, mesh_front, mesh_right, face, mesh_right - mesh_left, mesh_back - mesh_front, texZ, 3, isGrass, isFoliage);
+                        v4 = GetCubeBlockVertex(mesh_up, mesh_back, mesh_right, face, mesh_right - mesh_left, 0, texZ, 3, isGrass, isFoliage);
                         break;
                     }
                     case 4: {
                         TextureInt texZ = blockData.back_face;
-                        v1 = GetVertex(mesh_front, mesh_left, mesh_up, face, 0, mesh_right - mesh_left, texZ, 3, isGrass, isFoliage);
-                        v2 = GetVertex(mesh_back, mesh_left, mesh_up, face, mesh_back - mesh_front, mesh_right - mesh_left, texZ, 3, isGrass, isFoliage);
-                        v3 = GetVertex(mesh_back, mesh_right, mesh_up, face, mesh_back - mesh_front, 0, texZ , 3, isGrass, isFoliage);
-                        v4 = GetVertex(mesh_front, mesh_right, mesh_up, face, 0, 0, texZ, 3, isGrass, isFoliage);
+                        v1 = GetCubeBlockVertex(mesh_front, mesh_left, mesh_up, face, 0, mesh_right - mesh_left, texZ, 3, isGrass, isFoliage);
+                        v2 = GetCubeBlockVertex(mesh_back, mesh_left, mesh_up, face, mesh_back - mesh_front, mesh_right - mesh_left, texZ, 3, isGrass, isFoliage);
+                        v3 = GetCubeBlockVertex(mesh_back, mesh_right, mesh_up, face, mesh_back - mesh_front, 0, texZ , 3, isGrass, isFoliage);
+                        v4 = GetCubeBlockVertex(mesh_front, mesh_right, mesh_up, face, 0, 0, texZ, 3, isGrass, isFoliage);
                         break;
                     }
                     case 5: {
                         TextureInt texZ = blockData.front_face;
-                        v1 = GetVertex(mesh_back, mesh_left, mesh_up, face, 0, mesh_right - mesh_left, texZ, 3, isGrass, isFoliage);
-                        v2 = GetVertex(mesh_front, mesh_left, mesh_up, face, mesh_back - mesh_front, mesh_right - mesh_left, texZ, 3, isGrass, isFoliage);
-                        v3 = GetVertex(mesh_front, mesh_right, mesh_up, face, mesh_back - mesh_front, 0, texZ, 3, isGrass, isFoliage);
-                        v4 = GetVertex(mesh_back, mesh_right, mesh_up, face, 0, 0, texZ, 3, isGrass, isFoliage);
+                        v1 = GetCubeBlockVertex(mesh_back, mesh_left, mesh_up, face, 0, mesh_right - mesh_left, texZ, 3, isGrass, isFoliage);
+                        v2 = GetCubeBlockVertex(mesh_front, mesh_left, mesh_up, face, mesh_back - mesh_front, mesh_right - mesh_left, texZ, 3, isGrass, isFoliage);
+                        v3 = GetCubeBlockVertex(mesh_front, mesh_right, mesh_up, face, mesh_back - mesh_front, 0, texZ, 3, isGrass, isFoliage);
+                        v4 = GetCubeBlockVertex(mesh_back, mesh_right, mesh_up, face, 0, 0, texZ, 3, isGrass, isFoliage);
                         break;
                     }
                     }
@@ -228,7 +245,7 @@ void engine::GreedyTranslucent(std::vector<engine::ChunkVertex>& vertices, std::
     }
 }
 
-void engine::GreedyOpaque(std::vector<engine::ChunkVertex>& vertices, const engine::BlockInt* voxels) {
+void engine::GreedyOpaque(std::vector<engine::CubeChunkVertex>& vertices, const engine::BlockInt* voxels) {
     uint64_t axis_cols[CS_P2 * 3] = { 0 };
     uint64_t not_opaque_axis_cols[CS_P2 * 3] = { 0 };
     uint64_t col_face_masks[CS_P2 * 6];
@@ -339,58 +356,58 @@ void engine::GreedyOpaque(std::vector<engine::ChunkVertex>& vertices, const engi
                     merged_forward[(right * CS_P) + bit_pos] = 0;
                     merged_right[bit_pos] = 0;
 
-                    ChunkVertex v1, v2, v3, v4;
+                    CubeChunkVertex v1, v2, v3, v4;
                     bool isGrass = type == GRASS;
                     bool isFoliage = type == type == OAK_LEAVES;
 
                     switch(face) {
                     case 0: {
                         TextureInt texZ = blockData.top_face;
-                        v1 = GetVertex(mesh_left, mesh_up, mesh_front, face, 0, 0, texZ, ao_LF, isGrass, isFoliage);
-                        v2 = GetVertex(mesh_left, mesh_up, mesh_back,face, 0, mesh_back - mesh_front, texZ, ao_LB, isGrass, isFoliage);
-                        v3 = GetVertex(mesh_right, mesh_up, mesh_back, face, mesh_right-mesh_left, mesh_back-mesh_front, texZ, ao_RB, isGrass, isFoliage);
-                        v4 = GetVertex(mesh_right, mesh_up, mesh_front,face, mesh_right-mesh_left, 0, texZ, ao_RF, isGrass, isFoliage);
+                        v1 = GetCubeBlockVertex(mesh_left, mesh_up, mesh_front, face, 0, 0, texZ, ao_LF, isGrass, isFoliage);
+                        v2 = GetCubeBlockVertex(mesh_left, mesh_up, mesh_back,face, 0, mesh_back - mesh_front, texZ, ao_LB, isGrass, isFoliage);
+                        v3 = GetCubeBlockVertex(mesh_right, mesh_up, mesh_back, face, mesh_right-mesh_left, mesh_back-mesh_front, texZ, ao_RB, isGrass, isFoliage);
+                        v4 = GetCubeBlockVertex(mesh_right, mesh_up, mesh_front,face, mesh_right-mesh_left, 0, texZ, ao_RF, isGrass, isFoliage);
                         break;
                     }
                     case 1: {
                         TextureInt texZ = blockData.bottom_face;
-                        v1 = GetVertex(mesh_left, mesh_up, mesh_back, face, 0, mesh_back-mesh_front, texZ, ao_LB, isGrass, isFoliage);
-                        v2 = GetVertex(mesh_left, mesh_up, mesh_front, face, 0, 0, texZ, ao_LF, isGrass, isFoliage);
-                        v3 = GetVertex(mesh_right, mesh_up, mesh_front, face, mesh_right-mesh_left, 0, texZ, ao_RF, isGrass, isFoliage);
-                        v4 = GetVertex(mesh_right, mesh_up, mesh_back, face, mesh_right-mesh_left, mesh_back-mesh_front, texZ, ao_RB, isGrass, isFoliage);
+                        v1 = GetCubeBlockVertex(mesh_left, mesh_up, mesh_back, face, 0, mesh_back-mesh_front, texZ, ao_LB, isGrass, isFoliage);
+                        v2 = GetCubeBlockVertex(mesh_left, mesh_up, mesh_front, face, 0, 0, texZ, ao_LF, isGrass, isFoliage);
+                        v3 = GetCubeBlockVertex(mesh_right, mesh_up, mesh_front, face, mesh_right-mesh_left, 0, texZ, ao_RF, isGrass, isFoliage);
+                        v4 = GetCubeBlockVertex(mesh_right, mesh_up, mesh_back, face, mesh_right-mesh_left, mesh_back-mesh_front, texZ, ao_RB, isGrass, isFoliage);
                         
                         break;
                     }
                     case 2: { 
                         TextureInt texZ = blockData.right_face;
-                        v1 = GetVertex(mesh_up, mesh_front, mesh_left, face, 0, mesh_back - mesh_front, texZ, ao_LF, isGrass, isFoliage);
-                        v2 = GetVertex(mesh_up, mesh_back, mesh_left, face, 0, 0, texZ, ao_LB, isGrass, isFoliage);
-                        v3 = GetVertex(mesh_up, mesh_back, mesh_right, face, mesh_right - mesh_left, 0, texZ, ao_RB, isGrass, isFoliage);
-                        v4 = GetVertex(mesh_up, mesh_front, mesh_right, face, mesh_right - mesh_left, mesh_back - mesh_front, texZ, ao_RF, isGrass, isFoliage);
+                        v1 = GetCubeBlockVertex(mesh_up, mesh_front, mesh_left, face, 0, mesh_back - mesh_front, texZ, ao_LF, isGrass, isFoliage);
+                        v2 = GetCubeBlockVertex(mesh_up, mesh_back, mesh_left, face, 0, 0, texZ, ao_LB, isGrass, isFoliage);
+                        v3 = GetCubeBlockVertex(mesh_up, mesh_back, mesh_right, face, mesh_right - mesh_left, 0, texZ, ao_RB, isGrass, isFoliage);
+                        v4 = GetCubeBlockVertex(mesh_up, mesh_front, mesh_right, face, mesh_right - mesh_left, mesh_back - mesh_front, texZ, ao_RF, isGrass, isFoliage);
                         break;
                     }
                     case 3: {
                         TextureInt texZ = blockData.left_face;
-                        v1 = GetVertex(mesh_up, mesh_back, mesh_left, face, 0, 0, texZ, ao_LB, isGrass, isFoliage);
-                        v2 = GetVertex(mesh_up, mesh_front, mesh_left, face, 0, mesh_back - mesh_front, texZ, ao_LF, isGrass, isFoliage);
-                        v3 = GetVertex(mesh_up, mesh_front, mesh_right, face, mesh_right - mesh_left, mesh_back - mesh_front, texZ, ao_RF, isGrass, isFoliage);
-                        v4 = GetVertex(mesh_up, mesh_back, mesh_right,  face, mesh_right - mesh_left, 0, texZ, ao_RB, isGrass, isFoliage);
+                        v1 = GetCubeBlockVertex(mesh_up, mesh_back, mesh_left, face, 0, 0, texZ, ao_LB, isGrass, isFoliage);
+                        v2 = GetCubeBlockVertex(mesh_up, mesh_front, mesh_left, face, 0, mesh_back - mesh_front, texZ, ao_LF, isGrass, isFoliage);
+                        v3 = GetCubeBlockVertex(mesh_up, mesh_front, mesh_right, face, mesh_right - mesh_left, mesh_back - mesh_front, texZ, ao_RF, isGrass, isFoliage);
+                        v4 = GetCubeBlockVertex(mesh_up, mesh_back, mesh_right,  face, mesh_right - mesh_left, 0, texZ, ao_RB, isGrass, isFoliage);
                         break;
                     }
                     case 4: {
                         TextureInt texZ = blockData.back_face;
-                        v1 = GetVertex(mesh_front, mesh_left, mesh_up, face, 0, mesh_right - mesh_left, texZ, ao_LF, isGrass, isFoliage);
-                        v2 = GetVertex(mesh_back, mesh_left, mesh_up, face, mesh_back - mesh_front, mesh_right - mesh_left, texZ, ao_LB, isGrass, isFoliage);
-                        v3 = GetVertex(mesh_back, mesh_right, mesh_up, face, mesh_back - mesh_front, 0, texZ, ao_RB, isGrass, isFoliage);
-                        v4 = GetVertex(mesh_front, mesh_right, mesh_up, face, 0, 0, texZ, ao_RF, isGrass, isFoliage);
+                        v1 = GetCubeBlockVertex(mesh_front, mesh_left, mesh_up, face, 0, mesh_right - mesh_left, texZ, ao_LF, isGrass, isFoliage);
+                        v2 = GetCubeBlockVertex(mesh_back, mesh_left, mesh_up, face, mesh_back - mesh_front, mesh_right - mesh_left, texZ, ao_LB, isGrass, isFoliage);
+                        v3 = GetCubeBlockVertex(mesh_back, mesh_right, mesh_up, face, mesh_back - mesh_front, 0, texZ, ao_RB, isGrass, isFoliage);
+                        v4 = GetCubeBlockVertex(mesh_front, mesh_right, mesh_up, face, 0, 0, texZ, ao_RF, isGrass, isFoliage);
                         break;
                     }
                     case 5: {
                         TextureInt texZ = blockData.front_face;
-                        v1 = GetVertex(mesh_back, mesh_left, mesh_up, face, 0, mesh_right - mesh_left, texZ, ao_LB, isGrass, isFoliage);
-                        v2 = GetVertex(mesh_front, mesh_left, mesh_up, face, mesh_back - mesh_front, mesh_right - mesh_left, texZ, ao_LF, isGrass, isFoliage);
-                        v3 = GetVertex(mesh_front, mesh_right, mesh_up, face, mesh_back - mesh_front, 0, texZ, ao_RF, isGrass, isFoliage);
-                        v4 = GetVertex(mesh_back, mesh_right, mesh_up, face, 0, 0, texZ, ao_RB, isGrass, isFoliage);
+                        v1 = GetCubeBlockVertex(mesh_back, mesh_left, mesh_up, face, 0, mesh_right - mesh_left, texZ, ao_LB, isGrass, isFoliage);
+                        v2 = GetCubeBlockVertex(mesh_front, mesh_left, mesh_up, face, mesh_back - mesh_front, mesh_right - mesh_left, texZ, ao_LF, isGrass, isFoliage);
+                        v3 = GetCubeBlockVertex(mesh_front, mesh_right, mesh_up, face, mesh_back - mesh_front, 0, texZ, ao_RF, isGrass, isFoliage);
+                        v4 = GetCubeBlockVertex(mesh_back, mesh_right, mesh_up, face, 0, 0, texZ, ao_RB, isGrass, isFoliage);
                         break;
                     }
                     }
@@ -402,7 +419,7 @@ void engine::GreedyOpaque(std::vector<engine::ChunkVertex>& vertices, const engi
     }
 }
 
-void engine::MeshCustomModelBlocks(std::vector<float>& vertices, const engine::BlockInt* voxels) {
+void engine::MeshCustomModelBlocks(std::vector<CustomModelChunkVertex>& vertices, const engine::BlockInt* voxels) {
     for (int x = 1; x < CS_P_MINUS_ONE; x++){
         for (int y = 1; y < CS_P_MINUS_ONE; y++) {
             for (int z =1; z < CS_P_MINUS_ONE; z++) {
@@ -417,15 +434,21 @@ void engine::MeshCustomModelBlocks(std::vector<float>& vertices, const engine::B
                     !BlockData[voxels[voxelIndex(x,y,z-1)]].opaque
                 )) {
                     BlockModelStruct modelData = BlockModelData[blockData.model];
-                    std::vector<float> modelVerts(modelData.begin, modelData.end);
-                    for (int i = 0; i < modelVerts.size() - 1; i += 7) {
-                        modelVerts[i] += x-1;
-                        modelVerts[i+1] += y-1;
-                        modelVerts[i+2] += z-1;
-                        modelVerts[i+5] = blockData.top_face;
-                        modelVerts[i+6] = static_cast<float>(type == TALL_GRASS);
+                    std::vector<float> modelFloatVerts(modelData.begin, modelData.end);
+                    std::vector<CustomModelChunkVertex> modelPackedVerts;
+                    for (int i = 0; i < modelFloatVerts.size() - 1; i += 7) {
+                        modelPackedVerts.push_back(GetCustomModelBlockVertex(
+                                modelFloatVerts[i] + x - 1, 
+                                modelFloatVerts[i+1] + y - 1,
+                                modelFloatVerts[i+2] + z - 1,
+                                modelFloatVerts[i+3],
+                                modelFloatVerts[i+4],
+                                blockData.top_face,
+                                static_cast<float>(type == TALL_GRASS)
+                            )
+                        );
                     }
-                    vertices.insert(vertices.end(), modelVerts.begin(), modelVerts.end());
+                    vertices.insert(vertices.end(), modelPackedVerts.begin(), modelPackedVerts.end());
                 }
             }
         }

@@ -23,8 +23,7 @@ engine::Chunk::Chunk(int x, int y, int z): m_Pos(x, y, z)
 
     VertexBufferLayout customModelBufLayout;
     customModelBufLayout.AddAttribute<float>(3);
-    customModelBufLayout.AddAttribute<float>(3);
-    customModelBufLayout.AddAttribute<float>(1);
+    customModelBufLayout.AddAttribute<unsigned int>(1);
     m_CustomModelVAO.AddBuffer(m_CustomModelVBO, customModelBufLayout);
 }
 
@@ -173,18 +172,18 @@ void engine::Chunk::BufferData()
 {
     std::lock_guard<std::mutex> lock(mtx);
     if (m_VertexCount > 0){
-        m_VBO.BufferData(m_Vertices.data(), m_VertexCount * sizeof(ChunkVertex), GL_STATIC_DRAW);
-        std::vector<ChunkVertex>().swap(m_Vertices);
+        m_VBO.BufferData(m_Vertices.data(), m_VertexCount * sizeof(CubeChunkVertex), GL_STATIC_DRAW);
+        std::vector<CubeChunkVertex>().swap(m_Vertices);
     }
 
     if (m_WaterVertexCount > 0){
-        m_WaterVBO.BufferData(m_WaterVertices.data(), m_WaterVertexCount * sizeof(ChunkVertex), GL_STATIC_DRAW);
-        std::vector<ChunkVertex>().swap(m_WaterVertices);
+        m_WaterVBO.BufferData(m_WaterVertices.data(), m_WaterVertexCount * sizeof(CubeChunkVertex), GL_STATIC_DRAW);
+        std::vector<CubeChunkVertex>().swap(m_WaterVertices);
     }
 
     if (m_CustomModelVertexCount > 0) {
-        m_CustomModelVBO.BufferData(m_CustomModelVertices.data(), m_CustomModelVertexCount * sizeof(float), GL_STATIC_DRAW);
-        std::vector<float>().swap(m_CustomModelVertices);
+        m_CustomModelVBO.BufferData(m_CustomModelVertices.data(), m_CustomModelVertexCount * sizeof(CustomModelChunkVertex), GL_STATIC_DRAW);
+        std::vector<CustomModelChunkVertex>().swap(m_CustomModelVertices);
     }
 }
 
