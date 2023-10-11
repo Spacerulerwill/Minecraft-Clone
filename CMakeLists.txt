@@ -45,6 +45,7 @@ add_executable(${PROJECT_NAME}
     src/util/Log.hpp
     src/util/Concepts.hpp
     src/util/Constants.hpp
+    src/util/IO.hpp
 )
 
 add_subdirectory(submodules/glfw)

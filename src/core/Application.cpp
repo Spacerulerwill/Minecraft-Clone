@@ -5,6 +5,7 @@ License: MIT
 
 #include <glad/gl.h>
 #include <util/Log.hpp>
+#include <util/IO.hpp>
 #include <core/Application.hpp>
 #include <core/Shader.hpp>
 #include <opengl/Texture.hpp>
@@ -21,7 +22,6 @@ License: MIT
 #include <memory>
 #include <chrono>
 #include <PerlinNoise.hpp>
-#include <yaml-cpp/yaml.h>
 #include <fstream>
 
 using namespace std::chrono;
@@ -188,12 +188,10 @@ void engine::Application::Run(const char* worldName)
     int currentAtlasIndex = 0;
     int totalFrameDuration = 0;
     
-    YAML::Node playerYaml = YAML::LoadFile(fmt::format("worlds/{}/player.yml", worldName));
-    Vec3 playerPosition = playerYaml["position"].as<Vec3<float>>();
-    float playerYaw = playerYaml["yaw"].as<float>();
-    float playerPitch = playerYaml["pitch"].as<float>();
+    PlayerSave playerSave;
+    ReadStructFromDisk(fmt::format("worlds/{}/player.dat", worldName), playerSave);
 
-    m_Camera = new Camera(playerPosition, playerPitch, playerYaw);
+    m_Camera = new Camera(playerSave.position, playerSave.pitch, playerSave.yaw);
     m_World = new World(worldName);
     const int radius = 5;
 
@@ -323,15 +321,11 @@ void engine::Application::Run(const char* worldName)
     }
     delete m_World;
 
-     // save player position into player.yaml
-    std::string playerYamlLocation = fmt::format("worlds/{}/player.yml", worldName);
-    YAML::Node worldYaml = YAML::LoadFile(playerYamlLocation);
-    worldYaml["position"] = m_Camera->GetPosition();
-    worldYaml["yaw"] = m_Camera->GetYaw();
-    worldYaml["pitch"] = m_Camera->GetPitch();
-    std::ofstream fout(playerYamlLocation); 
-    fout << worldYaml;
-    fout.close();
+    // save player
+    playerSave.position = m_Camera->GetPosition();
+    playerSave.pitch = m_Camera->GetPitch();
+    playerSave.yaw = m_Camera->GetYaw();
+    WriteStructToDisk(fmt::format("worlds/{}/player.dat", worldName), playerSave);
 
     delete m_Camera;
     delete p_Framebuffer;

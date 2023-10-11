@@ -63,6 +63,7 @@ void main() {
 	vec4 texColor = texture(tex_array, TexCoords);
 	if (texColor.a < 0.5)
 		discard;
+        
     if (isFoliage > 0.5)
         texColor.rgb *= foliageColor;
 

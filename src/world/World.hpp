@@ -18,6 +18,17 @@ LICENSE: MIT
 #include <vector>
 
 namespace engine {
+
+    struct WorldSave {
+        siv::PerlinNoise::seed_type seed;
+    };
+
+    struct PlayerSave {
+        Vec3<float> position;
+        float pitch;
+        float yaw;
+    };
+
     class World {
     public:
         World(const char* worldName);

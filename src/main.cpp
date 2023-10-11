@@ -2,6 +2,9 @@
 #include <stb_image.h>
 
 #include <util/Log.hpp>
+#include <util/IO.hpp>
+#include <math/Vec3.hpp>
+#include <world/World.hpp>
 #include <core/Application.hpp>
 #include <system_error>
 #include <filesystem>
@@ -54,12 +57,18 @@ int main() {
         std::hash<std::string> hasher;
         siv::PerlinNoise::seed_type seed = static_cast<siv::PerlinNoise::seed_type>(hasher(seedString));
 
-        // create world.yml
-        YAML::Node worldNode;
-        worldNode["seed"] = seed;
-        std::ofstream fWorldOut(fmt::format("worlds/{}/world.yml", worldName), std::ofstream::trunc);
-        fWorldOut << worldNode;
-        fWorldOut.close();
+        // Create world data file
+        engine::WorldSave worldSave {
+            .seed = seed
+        };
+        engine::WriteStructToDisk(fmt::format("worlds/{}/world.dat", worldName), worldSave);
+
+        engine::PlayerSave playerSave {
+            .position = engine::Vec3<float>(0.0f),
+            .pitch = 0.0f,
+            .yaw = -90.0f
+        };
+        engine::WriteStructToDisk(fmt::format("worlds/{}/player.dat", worldName), playerSave);
 
         // create player.yml
         YAML::Node playerNode;

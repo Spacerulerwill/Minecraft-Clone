@@ -6,13 +6,13 @@ LICENSE: MIT
 #include <world/World.hpp>
 #include <GLFW/glfw3.h>
 #include <util/Log.hpp>
+#include <util/IO.hpp>
 #include <fmt/format.h>
-#include <yaml-cpp/yaml.h>
 
 engine::World::World(const char* worldName) : m_WorldName(worldName) {
-    YAML::Node worldYaml = YAML::LoadFile(fmt::format("worlds/{}/world.yml", worldName));
-    siv::PerlinNoise::seed_type seed = worldYaml["seed"].as<siv::PerlinNoise::seed_type>();
-    m_Noise.reseed(seed);
+    WorldSave save;
+    ReadStructFromDisk(fmt::format("worlds/{}/world.dat", worldName), save);
+    m_Noise.reseed(save.seed);
 }
 
 engine::Chunk* engine::World::CreateChunk(Vec3<int> pos) {
