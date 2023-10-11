@@ -69,15 +69,6 @@ int main() {
             .yaw = -90.0f
         };
         engine::WriteStructToDisk(fmt::format("worlds/{}/player.dat", worldName), playerSave);
-
-        // create player.yml
-        YAML::Node playerNode;
-        playerNode["position"] = engine::Vec3<float>(0.0f,0.0f,0.0f);
-        playerNode["yaw"] = -90.0f;
-        playerNode["pitch"] = 0.0f;
-        std::ofstream fPlayerOut(fmt::format("worlds/{}/player.yml", worldName), std::ofstream::trunc);
-        fPlayerOut << playerNode;
-        fPlayerOut.close();
     }
 
     engine::Log::Init();

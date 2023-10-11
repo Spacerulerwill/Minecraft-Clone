@@ -21,7 +21,6 @@ License: MIT
 #include <filesystem>
 #include <memory>
 #include <chrono>
-#include <PerlinNoise.hpp>
 #include <fstream>
 
 using namespace std::chrono;
@@ -109,12 +108,7 @@ void engine::Application::Run(const char* worldName)
     // Load our block data - this must happen before any other part of the game starts
     InitBlocks();
 
-    /*
-    Create an anonymous scope to ensure that all OpenGL objects created are deleted and cleaned up
-    before calling glfwTerminate()
-    */
-
-    // Load texture atlases
+    // Load texture atlases into an array so we can cycle through them
     glActiveTexture(GL_TEXTURE0);
     
     std::unique_ptr<Texture<GL_TEXTURE_2D_ARRAY>> atlases[MAX_ANIMATION_FRAMES];
@@ -148,6 +142,7 @@ void engine::Application::Run(const char* worldName)
 
     // Orthographic projection matrix maps normalised device coordinates to pixel screen space coordinates
 	Mat4 ortho = orthographic(0.0f, SCREEN_HEIGHT, 0.0f, SCREEN_WIDTH, -1.0f, 100.0f);
+    
     // Load crosshair texture
     glActiveTexture(GL_TEXTURE1);
     Texture<GL_TEXTURE_2D> crosshairTexture("res/textures/ui/crosshair.png"); 
