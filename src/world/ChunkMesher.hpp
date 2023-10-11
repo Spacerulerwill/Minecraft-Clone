@@ -21,7 +21,7 @@ namespace engine {
         * 6 bits for x coordinate (0-63)
         * 6 bits for y coordinate (0-63)
         * 6 bits for z coordinate (0-63)
-        * 3 bits for normal direction (0-5)
+        * 3 bits for normal direction (0-8) (only needing 0-5)
         Total 21/32 bits used
         */
 		uint32_t data1;
@@ -39,23 +39,29 @@ namespace engine {
 
     /*
     The vertex data for vertex for a block with a custom model.
-    The position coordinates are stored as regular floats as they
-    are not required to be integers like cubic blocks. The rest 
-    of the data is packed into a 4 byte unsigned integer. 
-    Total used 116/128 bits (16 bytes).
+    Position coordinates are stored as integers representing 16ths.
+    This means that custom model blocks can be no bigger than 1 cube voxel 
+    and that the vertices can only be in multiples of 16th's, correspending
+    to the pixel tile size. 
+    The rest of the data is packed into a 4 byte unsigned integer. 
+    Total used 49/64 bits.
     */
     struct CustomModelChunkVertex {
-        float x;
-        float y;
-        float z;
-         /*
-        6 bits for x texture coordinate (0-63)
-        6 bits for y texture coordinate (0-63)
-        8 bits for z texture coordinate (0-255)
-        1 bit for if the block type is foliage
-        Total 21/32 bits used
+        /*
+        * 10 bits for x coordinate (0-31) (only needing 0-16)
+        * 10 bits for y coordinate (0-31) (only needing 0-16)
+        * 10 bits for z coordinate (0-31) (only needing 0-16)
+        Total 30/32 bits used
         */
-		uint32_t dat;
+        uint32_t data1;
+         /*
+        * 5 bits for x coordinate (0-31) (only needing 0-16)
+        * 5 bits for y coordinate (0-31) (only needing 0-16)
+        * 8 bits for z coordinate (0-255)
+        * 1 bit for if the block type is foliage
+        Total 19/32 bits used
+        */
+		uint32_t data2;
     };
 
     /*
@@ -72,19 +78,17 @@ namespace engine {
     /*
     Pack all the vertex data into a ChunkVertex struct, to save space
     */
-    inline const CubeChunkVertex GetCubeBlockVertex(uint32_t x, uint32_t y, uint32_t z, uint32_t norm, uint32_t texX, uint32_t texY, uint32_t type, uint32_t ambientOcclusion, bool isGrass, bool isFoliage) {
+    inline CubeChunkVertex GetCubeBlockVertex(uint32_t x, uint32_t y, uint32_t z, uint32_t norm, uint32_t texX, uint32_t texY, uint32_t type, uint32_t ambientOcclusion, bool isGrass, bool isFoliage) {
         return {
             (norm << 18) | ((z - 1) << 12) | ((y - 1) << 6) | (x - 1),
             (isFoliage << 23) | (isGrass << 22) | (ambientOcclusion << 20 ) | (type << 12) | ((texY) << 6)| (texX)
         };
     }
 
-    inline const CustomModelChunkVertex GetCustomModelBlockVertex(float x, float y, float z, uint32_t texX, uint32_t texY, uint32_t type, bool isFoliage) {
+    inline CustomModelChunkVertex GetCustomModelBlockVertex(uint32_t x, uint32_t y, uint32_t z, uint32_t texX, uint32_t texY, uint32_t type, bool isFoliage) {
         return {
-            x,
-            y,
-            z,
-            (isFoliage << 20) | (type << 12) | (texY << 6) | (texX)
+            ((z) << 20)| ((y) << 10) | (x),
+            (isFoliage << 18) | (type << 10) | (texY << 5) | (texX)
         };
     }
 };

@@ -3,10 +3,10 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 LICENSE: MIT
 */
 
+#include <util/Log.hpp>
 #include <world/ChunkMesher.hpp>
 #include <world/Chunk.hpp>
 #include <world/Block.hpp>
-#include <util/Log.hpp>
 
 namespace engine {
     #ifdef _MSC_VER
@@ -434,19 +434,18 @@ void engine::MeshCustomModelBlocks(std::vector<CustomModelChunkVertex>& vertices
                     !BlockData[voxels[voxelIndex(x,y,z-1)]].opaque
                 )) {
                     BlockModelStruct modelData = BlockModelData[blockData.model];
-                    std::vector<float> modelFloatVerts(modelData.begin, modelData.end);
+                    std::vector<uint32_t> modelVerts(modelData.begin, modelData.end);
                     std::vector<CustomModelChunkVertex> modelPackedVerts;
-                    for (int i = 0; i < modelFloatVerts.size() - 1; i += 7) {
+                    for (int i = 0; i < modelVerts.size()-1; i += 7) {                  
                         modelPackedVerts.push_back(GetCustomModelBlockVertex(
-                                modelFloatVerts[i] + x - 1, 
-                                modelFloatVerts[i+1] + y - 1,
-                                modelFloatVerts[i+2] + z - 1,
-                                modelFloatVerts[i+3],
-                                modelFloatVerts[i+4],
+                                modelVerts[i] + ((x-1)*16), 
+                                modelVerts[i+1] + ((y-1)*16),
+                                modelVerts[i+2] + ((z-1)*16),
+                                modelVerts[i+3],
+                                modelVerts[i+4],
                                 blockData.top_face,
-                                static_cast<float>(type == TALL_GRASS)
-                            )
-                        );
+                                type == TALL_GRASS
+                        ));    
                     }
                     vertices.insert(vertices.end(), modelPackedVerts.begin(), modelPackedVerts.end());
                 }

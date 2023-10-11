@@ -20,11 +20,7 @@ engine::Chunk::Chunk(int x, int y, int z): m_Pos(x, y, z)
 	bufLayout.AddAttribute<unsigned int>(2);
     m_VAO.AddBuffer(m_VBO, bufLayout);
     m_WaterVAO.AddBuffer(m_WaterVBO, bufLayout);
-
-    VertexBufferLayout customModelBufLayout;
-    customModelBufLayout.AddAttribute<float>(3);
-    customModelBufLayout.AddAttribute<unsigned int>(1);
-    m_CustomModelVAO.AddBuffer(m_CustomModelVBO, customModelBufLayout);
+    m_CustomModelVAO.AddBuffer(m_CustomModelVBO, bufLayout);
 }
 
 engine::Chunk::Chunk(Vec3<int> chunkPos): m_Pos(chunkPos.x, chunkPos.y, chunkPos.z)
@@ -36,12 +32,7 @@ engine::Chunk::Chunk(Vec3<int> chunkPos): m_Pos(chunkPos.x, chunkPos.y, chunkPos
 	bufLayout.AddAttribute<unsigned int>(2);
     m_VAO.AddBuffer(m_VBO, bufLayout);
     m_WaterVAO.AddBuffer(m_WaterVBO, bufLayout);
-
-    VertexBufferLayout customModelBufLayout;
-    customModelBufLayout.AddAttribute<float>(3);
-    customModelBufLayout.AddAttribute<float>(3);
-    customModelBufLayout.AddAttribute<float>(1);
-    m_CustomModelVAO.AddBuffer(m_CustomModelVBO, customModelBufLayout);
+    m_CustomModelVAO.AddBuffer(m_CustomModelVBO, bufLayout);
 }
 
 engine::Chunk::~Chunk()
@@ -211,7 +202,6 @@ void engine::Chunk::DrawCustomModelBlocks(Shader& shader)
 {
     std::lock_guard<std::mutex> lock(mtx);
 	if (m_CustomModelVertexCount > 0) {
-
 		m_CustomModelVAO.Bind();
 		shader.setMat4("model", m_Model);
         glDrawArrays(GL_TRIANGLES, 0, m_CustomModelVertexCount);

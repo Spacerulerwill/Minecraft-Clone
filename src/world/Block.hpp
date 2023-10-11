@@ -52,8 +52,8 @@ namespace engine {
     // Block models only consist of a pointer to the start and end of a vector stored
     // somewhere else to save memory
 	struct BlockModelStruct {
-		float* begin = nullptr;
-		float* end = nullptr;
+		uint32_t* begin = nullptr;
+		uint32_t* end = nullptr;
 	};
 
 	struct BlockDataStruct {

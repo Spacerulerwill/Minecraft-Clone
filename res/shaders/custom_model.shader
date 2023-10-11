@@ -2,8 +2,7 @@
 
 #version 450 core
 
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in uint data;
+layout (location = 0) in uvec2 data;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -13,16 +12,35 @@ out vec3 TexCoords;
 out float isFoliage;
 out vec3 FragPos;
 
+const float ONE_SIXTEENTH = 1.0/16.0;
+
 void main()
 {
-    isFoliage = float((data >> 20)&uint(1));
+    // unpack x,y,z coordinates from 10 bit 16th representation
+    uint x_packed = uint(data.x&uint(1023));
+	uint y_packed = uint((data.x >> 10)&uint(1023));
+	uint z_packed = uint((data.x >> 20)&uint(1023));
+
+    float x_whole = float(x_packed / 16);
+    float x_fract = (x_packed - (x_whole * 16)) * ONE_SIXTEENTH;
+    float x = x_whole + x_fract;
+
+    float y_whole = float(y_packed / 16);
+    float y_fract = (y_packed - (y_whole * 16.0)) * ONE_SIXTEENTH;
+    float y = y_whole + y_fract;
+
+    float z_whole = float(z_packed / 16);
+    float z_fract = (z_packed - (z_whole * 16.0)) * ONE_SIXTEENTH;
+    float z = z_whole + z_fract;
+
+    isFoliage = float((data.y >> 18)&uint(1));
     TexCoords = vec3(
-        float(data&uint(63)),
-		float((data >> 6)&uint(63)),
-		float((data >> 12)&uint(255))
+        float(data.y&uint(31)) * ONE_SIXTEENTH,
+		float((data.y >> 5)&uint(31)) * ONE_SIXTEENTH,
+		float((data.y >> 10)&uint(255))
     );
-    FragPos = vec3(model * vec4(aPos.x,aPos.y,aPos.z, 1.0));
-	gl_Position = projection * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);
+    FragPos = vec3(model * vec4(x,y,z, 1.0));
+	gl_Position = projection * view * model * vec4(x, y, z, 1.0);
 }
 
 #shader fragment
