@@ -64,28 +64,28 @@ void engine::Application::Run(const char* worldName)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_SAMPLES, 4);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
 #ifdef __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Voxel Engine", NULL, NULL);
+	p_Window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Voxel Engine", NULL, NULL);
 
-	if (window == NULL)
+	if (p_Window == NULL)
 	{
 		glfwTerminate();
 		throw std::runtime_error("Failed to create GLFW Window");
 	}
-
-    p_Window = window;
 
     glfwSetWindowSizeCallback(p_Window, framebuffer_size_callback);
     glfwSetCursorPosCallback(p_Window, mouse_move_callback);
     glfwSetMouseButtonCallback(p_Window, mouse_button_callback);
     glfwSetScrollCallback(p_Window, scroll_callback);
     glfwSetKeyCallback(p_Window, key_callback);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	glfwMakeContextCurrent(window);
+	glfwMakeContextCurrent(p_Window);
+    glfwSetInputMode(p_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwHideWindow(p_Window);
 
     // Load OpenGL function pointers
     if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
@@ -190,8 +190,10 @@ void engine::Application::Run(const char* worldName)
     m_World = new World(worldName);
     const int radius = 10;
 
+    LOG_TRACE("Loading world...");
     m_World->CreateSpawnChunks(radius);
-
+    glfwShowWindow(p_Window);
+    
     // Main game loop
     while (!glfwWindowShouldClose(p_Window)) { 
         auto start = high_resolution_clock::now();
