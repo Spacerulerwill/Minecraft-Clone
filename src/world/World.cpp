@@ -15,106 +15,124 @@ engine::World::World(const char* worldName) : m_WorldName(worldName) {
     m_Noise.reseed(save.seed);
 }
 
-engine::Chunk* engine::World::CreateChunk(Vec3<int> pos) {
-    auto result = m_ChunkMap.try_emplace(pos, pos);
-    return  &(result.first->second);   
-}
+void engine::World::CreateSpawnChunks(int radius) {
 
-void engine::World::CreateChunks(int chunkX, int chunkY, int chunkZ, int radius, int bufferPerFrame) {
-
-    int chunksCreated = 0;
-
-    // erase chunks no longer within the view distance from the m_ChunkDrawVector
-    m_ChunkDrawVector.erase(std::remove_if(m_ChunkDrawVector.begin(), m_ChunkDrawVector.end(), [chunkX, chunkY, chunkZ, radius](Chunk* chunk) { 
-        return chunk->m_Pos.x < chunkX-radius ||
-        chunk->m_Pos.x > chunkX+radius ||
-        chunk->m_Pos.y < chunkY-radius ||
-        chunk->m_Pos.y > chunkY+radius ||
-        chunk->m_Pos.z < chunkZ-radius ||
-        chunk->m_Pos.z > chunkZ+radius ;
-    }), m_ChunkDrawVector.end());
-    
-    std::vector<std::unordered_map<engine::Vec3<int>, engine::Chunk>::iterator> iterators;
-
-    // Lock mutex for map access and unload each chunk outside view distance (single threaded)
-    for (auto it = m_ChunkMap.begin(); it != m_ChunkMap.end();) {
-        Chunk* chunk = &((*it).second);
-        if (
-            (chunk->m_Pos.x < chunkX - radius ||
-            chunk->m_Pos.x > chunkX + radius  ||
-            chunk->m_Pos.y < chunkY - radius ||
-            chunk->m_Pos.y > chunkY + radius ||
-            chunk->m_Pos.z < chunkZ - radius ||
-            chunk->m_Pos.z > chunkZ + radius)
-            && !chunk->isBeingMeshed && !chunk->isInBufferQueue
-        ) {
-            if (chunk->dirty) {
-                m_UnloadPool.push_task([chunk, this]{
-                    chunk->UnloadToFile(m_WorldName);
-                });
-            }
-            iterators.push_back(it);
-            ++it;
-        } else {
-            ++it;
-        }
-    } 
-    m_UnloadPool.wait_for_tasks();
-    for (const auto& it: iterators)
-        m_ChunkMap.erase(it);
-    
-    // Generate new chunks
-    for (int iz = -radius; iz < radius + 1; iz++) {
-        for (int iy = -radius; iy < radius + 1; iy++) {
-            for (int ix = -radius; ix < radius + 1; ix++) {
-                
-                Vec3 vec = Vec3(chunkX + ix, chunkY + iy, chunkZ + iz);
-                Chunk* chunk = nullptr;
-
-                auto find = m_ChunkMap.find(vec); 
-                auto end = m_ChunkMap.end();  
-
-                if (find == end && chunksCreated < bufferPerFrame) {
-                    if (chunkY + iy < 3 && chunkY + iy >= 0) {
-                        chunksCreated++;
-                        auto result = m_ChunkMap.try_emplace(vec, chunkX + ix, chunkY + iy, chunkZ + iz);
-                        chunk = &(result.first->second);        
-
-                        chunk->isBeingMeshed = true;
-                        m_MeshPool.push_task([chunk, chunkY, iy, this] {
-                            std::ifstream rf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", m_WorldName, chunk->m_Pos.x, chunk->m_Pos.y, chunk->m_Pos.z), std::ios::in | std::ios::binary);
-                            if (!rf) {
-                                if (chunkY + iy < 2) {
-                                    chunk->TerrainGen(STONE);
-                                } else {
-                                    chunk->TerrainGen(m_Noise, gen, distrib);
-                                }
-                                chunk->UnloadToFile(m_WorldName);
-                            }else {
-                                rf.read((char*)&chunk->m_Voxels[0], CS_P3 * sizeof(BlockInt));
-                                rf.close();
-                            }
-                            chunk->CreateMesh();
-                            chunk->isInBufferQueue = true;
-                            m_ChunkBufferQueue.enqueue(chunk);
-                            chunk->isBeingMeshed = false;
-                        });
-                    } 
+    for (int x = -radius; x < radius; x++){
+        for (int y = 0; y < 3; y++){
+            for (int z = -radius; z < radius; z++) {
+                Vec3<int> chunkPos(x,y,z);
+                auto result = m_ChunkMap.try_emplace(chunkPos, chunkPos);
+                Chunk* chunk = &(result.first->second);  
+                if (y == 2) { 
+                    m_TerrainGenPool.push_task([chunk, this] {
+                        std::ifstream rf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", m_WorldName, chunk->m_Pos.x, chunk->m_Pos.y, chunk->m_Pos.z), std::ios::in | std::ios::binary);
+                        if (rf) {
+                            rf.read((char*)&chunk->m_Voxels[0], CS_P3 * sizeof(BlockInt));
+                        } else {
+                            chunk->TerrainGen(m_Noise, gen, distrib);
+                            chunk->UnloadToFile(m_WorldName);
+                        }
+                        rf.close();
+                    });
+                } else {
+                    std::ifstream rf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", m_WorldName, chunk->m_Pos.x, chunk->m_Pos.y, chunk->m_Pos.z), std::ios::in | std::ios::binary);
+                    if (rf) {
+                        rf.read((char*)&chunk->m_Voxels[0], CS_P3 * sizeof(BlockInt));
+                    } else {
+                        chunk->TerrainGen(STONE);
+                        chunk->UnloadToFile(m_WorldName);
+                    }
+                    rf.close();
                 }
             }
         }
     }
+    m_TerrainGenPool.wait_for_tasks();
     
-    // Buffer chunks that
-    for (int i = 0; i < bufferPerFrame; i++){
-        Chunk* chunk = nullptr;
-        bool success = m_ChunkBufferQueue.try_dequeue(chunk);
-        if (success) {
-            chunk->isInBufferQueue = false;
-            chunk->BufferData();
-            m_ChunkDrawVector.push_back(chunk);
+    for (auto& [key, chunk]: m_ChunkMap) {
+        Chunk* aboveChunk = GetChunk(chunk.m_Pos + Vec3<int>(0,1,0));
+        
+        if (aboveChunk != nullptr) {
+            for (int x = 1; x < CS_P_MINUS_ONE; x++){
+                for (int z = 1; z < CS_P_MINUS_ONE; z++){
+                    chunk.SetBlock(aboveChunk->GetBlock(x, 1, z), x, CS_P_MINUS_ONE, z);
+                }
+            }
+        }
+
+        Chunk* belowChunk = GetChunk(chunk.m_Pos - Vec3<int>(0,1,0));
+        
+        if (belowChunk != nullptr) {
+            for (int x = 1; x < CS_P_MINUS_ONE; x++){
+                for (int z = 1; z < CS_P_MINUS_ONE; z++){
+                    chunk.SetBlock(belowChunk->GetBlock(x, CS, z), x, 0, z);
+                }
+            }
+        }
+
+        Chunk* leftChunk = GetChunk(chunk.m_Pos - Vec3<int>(1, 0, 0));
+
+        if (leftChunk != nullptr) {
+            for (int y = 1; y < CS_P_MINUS_ONE; y++){
+                for(int z = 1; z < CS_P_MINUS_ONE; z++) {
+                    chunk.SetBlock(leftChunk->GetBlock(CS, y, z), 0, y, z);
+                }
+            }
+        }
+
+        Chunk* rightChunk = GetChunk(chunk.m_Pos + Vec3<int>(1, 0, 0));
+
+        if (rightChunk != nullptr) {
+            for (int y = 1; y < CS_P_MINUS_ONE; y++){
+                for(int z = 1; z < CS_P_MINUS_ONE; z++) {
+                    chunk.SetBlock(rightChunk->GetBlock(1, y, z), CS_P_MINUS_ONE, y, z);
+                }
+            }
+        }
+
+        Chunk* behindChunk = GetChunk(chunk.m_Pos + Vec3<int>(0, 0, 1));
+
+        if (behindChunk != nullptr) {
+            for (int x = 1; x < CS_P_MINUS_ONE; x++){
+                for(int y = 1; y < CS_P_MINUS_ONE; y++) {
+                    chunk.SetBlock(behindChunk->GetBlock(x, y, 1), x, y, CS_P_MINUS_ONE);
+                }
+            }
+        }
+
+        Chunk* frontChunk = GetChunk(chunk.m_Pos - Vec3<int>(0, 0, 1));
+
+        if (frontChunk != nullptr) {
+            for (int x = 1; x < CS_P_MINUS_ONE; x++){
+                for(int y = 1; y < CS_P_MINUS_ONE; y++) {
+                    chunk.SetBlock(frontChunk->GetBlock(x, y, CS), x, y, 0);
+                }
+            }
         }
     }
+
+    for (int x = -radius; x < radius; x++){
+        for (int y = 0; y < 3; y++){
+            for (int z = -radius; z < radius; z++) {
+                Chunk* chunk = GetChunk(x,y,z);
+                m_MeshPool.push_task([chunk]{
+                    chunk->CreateMesh();
+                });
+            }
+        }
+    }
+
+    m_MeshPool.wait_for_tasks();
+    
+    for (auto& [key, chunk]: m_ChunkMap) {
+        chunk.BufferData();
+        m_ChunkDrawVector.push_back(&chunk);
+    }
+}
+
+engine::Chunk* engine::World::CreateChunk(Vec3<int> pos) {
+    auto result = m_ChunkMap.try_emplace(pos, pos);
+    return  &(result.first->second);   
 }
 
 void engine::World::DrawBlocks(Shader& chunkShader) {

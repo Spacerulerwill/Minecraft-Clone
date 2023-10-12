@@ -9,7 +9,6 @@
 #include <system_error>
 #include <filesystem>
 #include <fstream>
-#include <yaml-cpp/yaml.h>
 #include <iostream>
 #include <string>
 #include <algorithm>

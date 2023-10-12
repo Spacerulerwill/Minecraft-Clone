@@ -36,7 +36,9 @@ namespace engine {
         void DrawWater(Shader& shader);
         void DrawCustomModelBlocks(Shader& shader);
         Chunk* CreateChunk(Vec3<int> pos);
-        void CreateChunks(int chunkX, int chunkY, int chunkZ, int radius, int bufferPerFrame);
+
+        void CreateSpawnChunks(int radius);
+
         Chunk* GetChunk(int chunkX, int chunkY, int chunkZ);
         Chunk* GetChunk(Vec3<int> pos);
         const char* m_WorldName = nullptr;
@@ -46,8 +48,7 @@ namespace engine {
         Vec3<int> playerChunkPos;
 
         BS::thread_pool m_MeshPool;
-        BS::thread_pool m_UnloadPool;
-        moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
+        BS::thread_pool m_TerrainGenPool;
         std::unordered_map<Vec3<int>, Chunk> m_ChunkMap;
         siv::PerlinNoise m_Noise = siv::PerlinNoise(0);
         

@@ -98,7 +98,7 @@ void engine::Application::Run(const char* worldName)
 	We also enable culling faces as an optimisation using the default winding order.
 	*/
     glEnable(GL_MULTISAMPLE);  
-    glEnable(GL_BLEND);
+    glDisable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -188,7 +188,9 @@ void engine::Application::Run(const char* worldName)
 
     m_Camera = new Camera(playerSave.position, playerSave.pitch, playerSave.yaw);
     m_World = new World(worldName);
-    const int radius = 5;
+    const int radius = 10;
+
+    m_World->CreateSpawnChunks(radius);
 
     // Main game loop
     while (!glfwWindowShouldClose(p_Window)) { 
@@ -218,9 +220,6 @@ void engine::Application::Run(const char* worldName)
             atlases[currentAtlasIndex]->Bind();
             lastTime = currentTime;
         }
-
-        // Create chunks every frame
-        m_World->CreateChunks(chunkX, chunkY, chunkZ, radius, 12);
 
         // Raycast outwards to find a block to highlight
         Vec3<int> raycastBlockPos = Vec3<int>(0);
@@ -277,11 +276,13 @@ void engine::Application::Run(const char* worldName)
         skybox.Draw(perspective, translationRemoved(view));
         glDepthFunc(GL_LESS);
 
+        glEnable(GL_BLEND);
         waterShader.Bind();
         waterShader.setMat4("projection", perspective);
         waterShader.setMat4("view", view);
         waterShader.SetInt("tex_array", 0);
         m_World->DrawWater(waterShader);
+        glDisable(GL_BLEND);
         
         /* 
         Unbind our framebuffer, binding the default framebuffer and render the result texture to a quad
@@ -377,6 +378,58 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
                     chunk->SetBlock(AIR, m_BlockSelectRaycastResult.blockPos);
                     chunk->CreateMesh();
                     chunk->BufferData();
+
+                    // if block is on a chunk edge, renegerate them too
+                    if (m_BlockSelectRaycastResult.blockPos.x == 1) {
+                        Chunk* leftChunk = m_World->GetChunk(chunk->m_Pos - Vec3<int>(1, 0, 0));
+                        if (leftChunk != nullptr) {
+                            leftChunk->SetBlock(AIR, CS_P_MINUS_ONE, m_BlockSelectRaycastResult.blockPos.y, m_BlockSelectRaycastResult.blockPos.z);
+                            leftChunk->CreateMesh();
+                            leftChunk->BufferData();
+                        }
+                    }
+                    else if (m_BlockSelectRaycastResult.blockPos.x == CS) {
+                        Chunk* rightChunk = m_World->GetChunk(chunk->m_Pos + Vec3<int>(1, 0, 0));
+                        if (rightChunk != nullptr) {
+                            rightChunk->SetBlock(AIR, 0, m_BlockSelectRaycastResult.blockPos.y, m_BlockSelectRaycastResult.blockPos.z);
+                            rightChunk->CreateMesh();
+                            rightChunk->BufferData();
+                        }
+                    }
+
+                    if (m_BlockSelectRaycastResult.blockPos.z == 1) {
+                        Chunk* forwardChunk = m_World->GetChunk(chunk->m_Pos - Vec3<int>(0, 0, 1));
+                        if (forwardChunk != nullptr) {
+                            forwardChunk->SetBlock(AIR, m_BlockSelectRaycastResult.blockPos.x, m_BlockSelectRaycastResult.blockPos.y, CS_P_MINUS_ONE);
+                            forwardChunk->CreateMesh();
+                            forwardChunk->BufferData();
+                        }
+                    }
+                    else if(m_BlockSelectRaycastResult.blockPos.z == CS) {
+                        Chunk* behindChunk = m_World->GetChunk(chunk->m_Pos + Vec3<int>(0, 0, 1));
+                        if (behindChunk != nullptr) {
+                            behindChunk->SetBlock(AIR, m_BlockSelectRaycastResult.blockPos.x, m_BlockSelectRaycastResult.blockPos.y, 0);
+                            behindChunk->CreateMesh();
+                            behindChunk->BufferData();
+                        }
+                    }
+
+                    if (m_BlockSelectRaycastResult.blockPos.y == 1) {
+                        Chunk* belowChunk = m_World->GetChunk(chunk->m_Pos - Vec3<int>(0,1,0));
+                        if (belowChunk != nullptr) {
+                            belowChunk->SetBlock(AIR, m_BlockSelectRaycastResult.blockPos.x, CS_P_MINUS_ONE, m_BlockSelectRaycastResult.blockPos.z);
+                            belowChunk->CreateMesh();
+                            belowChunk->BufferData();
+                        }
+                    } 
+                    else if(m_BlockSelectRaycastResult.blockPos.y == CS) {
+                        Chunk* aboveChunk = m_World->GetChunk(chunk->m_Pos + Vec3<int>(0,1,0));
+                        if (aboveChunk != nullptr) {
+                            aboveChunk->SetBlock(AIR, m_BlockSelectRaycastResult.blockPos.x, 1, m_BlockSelectRaycastResult.blockPos.z);
+                            aboveChunk->CreateMesh();
+                            aboveChunk->BufferData();
+                        }
+                    }
                 }
             }
             break;
@@ -422,11 +475,13 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
                             chunk = m_World->GetChunk(chunk->m_Pos.x, chunk->m_Pos.y, chunk->m_Pos.z - 1);
                         }
 
-                        BlockInt blockAtPlacePosition = chunk->GetBlock(blockPlacePosition);
-                        if (blockAtPlacePosition == AIR) {
-                            chunk->SetBlock(m_SelectedBlock, blockPlacePosition);
-                            chunk->CreateMesh();
-                            chunk->BufferData();
+                        if (chunk != nullptr) {
+                            BlockInt blockAtPlacePosition = chunk->GetBlock(blockPlacePosition);
+                            if (blockAtPlacePosition == AIR) {
+                                chunk->SetBlock(m_SelectedBlock, blockPlacePosition);
+                                chunk->CreateMesh();
+                                chunk->BufferData();
+                            }
                         }
                     }
                 }
