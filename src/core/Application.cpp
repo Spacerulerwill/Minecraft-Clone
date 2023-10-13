@@ -20,10 +20,7 @@ License: MIT
 #include <algorithm>
 #include <filesystem>
 #include <memory>
-#include <chrono>
 #include <fstream>
-
-using namespace std::chrono;
 
 // Unique pointer to the singleton instance
 std::unique_ptr<engine::Application> engine::Application::s_Instance = nullptr;
@@ -40,7 +37,7 @@ constexpr GLsizei SCREEN_HEIGHT = 720;
 
 engine::Application::Application()
 {
-
+   
 }
 
 // Used to initailise the singleton - will have any effect once
@@ -51,68 +48,100 @@ void engine::Application::Init()
     }
 }
 
-void engine::Application::Run(const char* worldName)
+std::string engine::Application::MainMenu() {
+    std::string option;
+
+    while (option != "l" && option != "c") {
+        std::cout << 
+        "Select option:\n"
+        "C - Create world\n"
+        "L - Load world\n"
+        "D - Delete world\n"
+        "E - Exit\n";
+        std::cin >> option;
+        std::transform(option.begin(), option.end(), option.begin(), ::tolower);
+
+        if (option == "e") {
+            glfwSetWindowShouldClose(p_Window, GLFW_TRUE);
+            return "";
+        }
+    }
+    std::cin.ignore();
+
+    std::string worldName;
+    if (option == "l") {
+        // Get the names of all the worlds available
+        std::vector<std::string> worldOptions;
+        for(auto& p : std::filesystem::directory_iterator("worlds"))
+            if (p.is_directory())
+                worldOptions.push_back(p.path().filename());
+        std::cout << "Select world: \n";
+        for(std::string& worldOption : worldOptions) {
+            std::cout << "* " << worldOption << "\n";
+        }
+        std::getline(std::cin, worldName);
+    }
+
+    if (option == "c") {
+        while (true) {
+            std::cout << "Enter world name: ";
+            std::getline(std::cin, worldName);
+
+            if (worldName == ""){
+                std::cout << "World name cannot be empty!\n";
+                continue;
+            }
+
+            bool worldCreated = std::filesystem::create_directory(fmt::format("worlds/{}", worldName));
+
+            if (worldCreated) {
+                break;
+            } else {
+                std::cout << "World already exists! ";
+            }
+        }
+
+        std::filesystem::create_directory(fmt::format("worlds/{}/chunks", worldName));
+
+        // Get world seed by hashing the seed string the user provided
+        const size_t MAXIMUM_CHARS = 32;
+        static char buffer[MAXIMUM_CHARS + 1]; // An extra for the terminating nul character.
+        std::cout << "Enter seed: ";
+        std::cin.getline(buffer, MAXIMUM_CHARS, '\n');
+        const std::string seedString(buffer);
+        std::hash<std::string> hasher;
+        siv::PerlinNoise::seed_type seed = static_cast<siv::PerlinNoise::seed_type>(hasher(seedString));
+
+        // Create world data file with seed and last played
+        engine::WorldSave worldSave {
+            .seed = seed,
+        };
+    
+        engine::WriteStructToDisk(fmt::format("worlds/{}/world.dat", worldName), worldSave);
+
+        // Create player save data with their starting position and rotation
+        engine::PlayerSave playerSave {
+            .position = engine::Vec3<float>(0.0f),
+            .pitch = 0.0f,
+            .yaw = -90.0f
+        };
+        
+        // Write player save data to file
+        engine::WriteStructToDisk(fmt::format("worlds/{}/player.dat", worldName), playerSave);
+    }
+    return worldName;
+}
+
+void engine::Application::Run()
 {    
-    // Try and intialise GLFW
-    if (!glfwInit()) {
-        glfwTerminate();
-		throw std::runtime_error("Failed to intialise GLFW");
-	}
+    std::filesystem::create_directory("worlds");
 
-    // Create our window, and add its callbacks
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_SAMPLES, 4);
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-
-#ifdef __APPLE__
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-	p_Window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Voxel Engine", NULL, NULL);
-
-	if (p_Window == NULL)
-	{
-		glfwTerminate();
-		throw std::runtime_error("Failed to create GLFW Window");
-	}
-
-    glfwSetWindowSizeCallback(p_Window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(p_Window, mouse_move_callback);
-    glfwSetMouseButtonCallback(p_Window, mouse_button_callback);
-    glfwSetScrollCallback(p_Window, scroll_callback);
-    glfwSetKeyCallback(p_Window, key_callback);
-	glfwMakeContextCurrent(p_Window);
-    glfwSetInputMode(p_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwHideWindow(p_Window);
-
-    // Load OpenGL function pointers
-    if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
-	{
-		throw std::runtime_error("Failed to intialise GLAD");
-	}
-
-    /*
-	OpenGl setting configuration. We are enabling blend for alpha transparency blending and using the default blend function
-	We also enable culling faces as an optimisation using the default winding order.
-	*/
-    glEnable(GL_MULTISAMPLE);  
-    glDisable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-
-    // Load our block data - this must happen before any other part of the game starts
+    InitOpenGL();
     InitBlocks();
 
     // Load texture atlases into an array so we can cycle through them
     glActiveTexture(GL_TEXTURE0);
-    
     std::unique_ptr<Texture<GL_TEXTURE_2D_ARRAY>> atlases[MAX_ANIMATION_FRAMES];
-
     for (int i = 0; i < MAX_ANIMATION_FRAMES; i++) {
         atlases[i] = std::make_unique<Texture<GL_TEXTURE_2D_ARRAY>>(fmt::format("res/textures/atlases/atlas{}.png", i).c_str(), TEXTURE_SIZE);
     }
@@ -141,7 +170,7 @@ void engine::Application::Run(const char* worldName)
     VAO.AddBuffer(VBO, bufferLayout);
 
     // Orthographic projection matrix maps normalised device coordinates to pixel screen space coordinates
-	Mat4 ortho = orthographic(0.0f, SCREEN_HEIGHT, 0.0f, SCREEN_WIDTH, -1.0f, 100.0f);
+    Mat4 ortho = orthographic(0.0f, SCREEN_HEIGHT, 0.0f, SCREEN_WIDTH, -1.0f, 100.0f);
     
     // Load crosshair texture
     glActiveTexture(GL_TEXTURE1);
@@ -182,7 +211,155 @@ void engine::Application::Run(const char* worldName)
     double lastTime = 0.0f;
     int currentAtlasIndex = 0;
     int totalFrameDuration = 0;
-    
+
+    while (!glfwWindowShouldClose(p_Window)) {
+        std::string worldName = MainMenu();
+
+        if (worldName == "") {
+            break;
+        }
+
+        LoadWorld(worldName.c_str());
+        glfwShowWindow(p_Window);
+        m_PlayingGame = true;
+        
+        // Main game loop
+        while (m_PlayingGame) { 
+            // Calculate delta time
+            float currentFrame = static_cast<float>(glfwGetTime());
+            m_DeltaTime = currentFrame - m_LastFrame;
+            m_LastFrame = currentFrame;
+
+            ProcessInput();
+
+            // Calculate player chunk position
+            int chunkX = m_Camera->GetPosition().x / CS;
+            if (m_Camera->GetPosition().x < 0) chunkX -= 1;
+
+            int chunkY = m_Camera->GetPosition().y / CS;
+            if (m_Camera->GetPosition().y < 0) chunkY -= 1;
+
+            int chunkZ = m_Camera->GetPosition().z / CS;
+            if (m_Camera->GetPosition().z < 0) chunkZ -= 1;
+
+            // Cycle through texture atlases 10 times a second
+            double currentTime = glfwGetTime();
+            if (currentTime - lastTime > 0.1) {
+                currentAtlasIndex = (currentAtlasIndex + 1) % MAX_ANIMATION_FRAMES;
+                glActiveTexture(GL_TEXTURE0);
+                atlases[currentAtlasIndex]->Bind();
+                lastTime = currentTime;
+            }
+
+            // Raycast outwards to find a block to highlight
+            Vec3<int> raycastBlockPos = Vec3<int>(0);
+            m_BlockSelectRaycastResult = VoxelRaycast(m_World, m_Camera->GetPosition(), m_Camera->GetDirection(), 15.0f);
+            Chunk* chunk = m_BlockSelectRaycastResult.chunk;
+
+            if (chunk != nullptr) {
+                raycastBlockPos = Vec3<int>(
+                    chunk->m_Pos.x * CS + m_BlockSelectRaycastResult.blockPos.x - 1, 
+                    chunk->m_Pos.y * CS + m_BlockSelectRaycastResult.blockPos.y - 1,
+                    chunk->m_Pos.z * CS + m_BlockSelectRaycastResult.blockPos.z - 1
+                );
+            } else {
+                raycastBlockPos = Vec3<int>(0,0,0);
+            }
+
+            // Bind our framebuffer and render to it
+            p_Framebuffer->Bind();
+
+            if (m_Wireframe)
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            else
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+            glEnable(GL_DEPTH_TEST);
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            
+            Mat4<float> perspective = m_Camera->GetPerspectiveMatrix();
+            Mat4<float> view = m_Camera->GetViewMatrix();
+
+            chunkShader.Bind();
+            chunkShader.setMat4("projection", perspective);
+            chunkShader.setMat4("view", view);
+            chunkShader.SetInt("tex_array", 0);
+            chunkShader.SetInt("grass_mask", 2);
+            chunkShader.SetInt("drawBlockHighlight", m_BlockSelectRaycastResult.blockHit != AIR);
+            if (m_BlockSelectRaycastResult.blockHit != AIR  && chunk != nullptr)
+                chunkShader.setIVec3("blockPos", raycastBlockPos);
+            m_World->DrawBlocks(chunkShader);
+
+            glDisable(GL_CULL_FACE);
+            customModelShader.Bind();
+            customModelShader.setMat4("projection", perspective);
+            customModelShader.setMat4("view", view);
+            customModelShader.SetInt("tex_array", 0);
+            chunkShader.SetInt("drawBlockHighlight", m_BlockSelectRaycastResult.blockHit != AIR);
+            if (m_BlockSelectRaycastResult.blockHit != AIR  && chunk != nullptr)
+                chunkShader.setIVec3("blockPos", raycastBlockPos);
+            m_World->DrawCustomModelBlocks(customModelShader);
+            glEnable(GL_CULL_FACE);
+
+            glDepthFunc(GL_LEQUAL);
+            skybox.Draw(perspective, translationRemoved(view));
+            glDepthFunc(GL_LESS);
+
+            glEnable(GL_BLEND);
+            waterShader.Bind();
+            waterShader.setMat4("projection", perspective);
+            waterShader.setMat4("view", view);
+            waterShader.SetInt("tex_array", 0);
+            m_World->DrawWater(waterShader);
+            glDisable(GL_BLEND);
+            
+            /* 
+            Unbind our framebuffer, binding the default framebuffer and render the result texture to a quad
+            */
+            p_Framebuffer->Unbind();
+
+            if(m_Wireframe)
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+            glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            framebufferShader.Bind();
+            VAO.Bind();
+            glDisable(GL_DEPTH_TEST);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+
+            // Render UI last
+            crosshairShader.Bind();
+            crosshairVAO.Bind();
+            crosshairShader.SetInt("screenTexture", 0);
+            crosshairShader.SetInt("crosshair", 1);
+            crosshairShader.setMat4<float>("projection", ortho);
+
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+
+            glfwPollEvents();
+            glfwSwapBuffers(p_Window);
+        }
+
+        // save player
+        PlayerSave playerSave;
+        playerSave.position = m_Camera->GetPosition();
+        playerSave.pitch = m_Camera->GetPitch();
+        playerSave.yaw = m_Camera->GetYaw();
+        WriteStructToDisk(fmt::format("worlds/{}/player.dat", m_World->m_WorldName), playerSave);
+
+        delete m_World;
+        delete m_Camera;
+    }
+
+    glfwDestroyWindow(p_Window);
+    delete p_Framebuffer;
+    spdlog::shutdown();
+}
+
+void engine::Application::LoadWorld(const char* worldName) {
     PlayerSave playerSave;
     ReadStructFromDisk(fmt::format("worlds/{}/player.dat", worldName), playerSave);
 
@@ -190,146 +367,64 @@ void engine::Application::Run(const char* worldName)
     m_World = new World(worldName);
     const int radius = 10;
 
-    LOG_TRACE("Loading world...");
+    LOG_INFO("Loading world...");
     m_World->CreateSpawnChunks(radius);
-    glfwShowWindow(p_Window);
-    
-    // Main game loop
-    while (!glfwWindowShouldClose(p_Window)) { 
-        auto start = high_resolution_clock::now();
-        // Calculate delta time
-        float currentFrame = static_cast<float>(glfwGetTime());
-        m_DeltaTime = currentFrame - m_LastFrame;
-        m_LastFrame = currentFrame;
-
-        ProcessInput();
-
-        // Calculate player chunk position
-        int chunkX = m_Camera->GetPosition().x / CS;
-        if (m_Camera->GetPosition().x < 0) chunkX -= 1;
-
-        int chunkY = m_Camera->GetPosition().y / CS;
-        if (m_Camera->GetPosition().y < 0) chunkY -= 1;
-
-        int chunkZ = m_Camera->GetPosition().z / CS;
-        if (m_Camera->GetPosition().z < 0) chunkZ -= 1;
-
-        // Cycle through texture atlases 10 times a second
-        double currentTime = glfwGetTime();
-        if (currentTime - lastTime > 0.1) {
-            currentAtlasIndex = (currentAtlasIndex + 1) % MAX_ANIMATION_FRAMES;
-            glActiveTexture(GL_TEXTURE0);
-            atlases[currentAtlasIndex]->Bind();
-            lastTime = currentTime;
-        }
-
-        // Raycast outwards to find a block to highlight
-        Vec3<int> raycastBlockPos = Vec3<int>(0);
-        m_BlockSelectRaycastResult = VoxelRaycast(m_World, m_Camera->GetPosition(), m_Camera->GetDirection(), 15.0f);
-        Chunk* chunk = m_BlockSelectRaycastResult.chunk;
-
-        if (chunk != nullptr) {
-            raycastBlockPos = Vec3<int>(
-                chunk->m_Pos.x * CS + m_BlockSelectRaycastResult.blockPos.x - 1, 
-                chunk->m_Pos.y * CS + m_BlockSelectRaycastResult.blockPos.y - 1,
-                chunk->m_Pos.z * CS + m_BlockSelectRaycastResult.blockPos.z - 1
-            );
-        } else {
-            raycastBlockPos = Vec3<int>(0,0,0);
-        }
-
-        // Bind our framebuffer and render to it
-        p_Framebuffer->Bind();
-
-        if (m_Wireframe)
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        else
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        glEnable(GL_DEPTH_TEST);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        Mat4<float> perspective = m_Camera->GetPerspectiveMatrix();
-        Mat4<float> view = m_Camera->GetViewMatrix();
-
-        chunkShader.Bind();
-        chunkShader.setMat4("projection", perspective);
-        chunkShader.setMat4("view", view);
-        chunkShader.SetInt("tex_array", 0);
-        chunkShader.SetInt("grass_mask", 2);
-        chunkShader.SetInt("drawBlockHighlight", m_BlockSelectRaycastResult.blockHit != AIR);
-        if (m_BlockSelectRaycastResult.blockHit != AIR  && chunk != nullptr)
-            chunkShader.setIVec3("blockPos", raycastBlockPos);
-        m_World->DrawBlocks(chunkShader);
-
-        glDisable(GL_CULL_FACE);
-        customModelShader.Bind();
-        customModelShader.setMat4("projection", perspective);
-        customModelShader.setMat4("view", view);
-        customModelShader.SetInt("tex_array", 0);
-        chunkShader.SetInt("drawBlockHighlight", m_BlockSelectRaycastResult.blockHit != AIR);
-        if (m_BlockSelectRaycastResult.blockHit != AIR  && chunk != nullptr)
-            chunkShader.setIVec3("blockPos", raycastBlockPos);
-        m_World->DrawCustomModelBlocks(customModelShader);
-        glEnable(GL_CULL_FACE);
-
-        glDepthFunc(GL_LEQUAL);
-        skybox.Draw(perspective, translationRemoved(view));
-        glDepthFunc(GL_LESS);
-
-        glEnable(GL_BLEND);
-        waterShader.Bind();
-        waterShader.setMat4("projection", perspective);
-        waterShader.setMat4("view", view);
-        waterShader.SetInt("tex_array", 0);
-        m_World->DrawWater(waterShader);
-        glDisable(GL_BLEND);
-        
-        /* 
-        Unbind our framebuffer, binding the default framebuffer and render the result texture to a quad
-        */
-        p_Framebuffer->Unbind();
-
-        if(m_Wireframe)
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        framebufferShader.Bind();
-        VAO.Bind();
-        glDisable(GL_DEPTH_TEST);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-
-        // Render UI last
-		crosshairShader.Bind();
-		crosshairVAO.Bind();
-		crosshairShader.SetInt("screenTexture", 0);
-		crosshairShader.SetInt("crosshair", 1);
-		crosshairShader.setMat4<float>("projection", ortho);
-
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-
-        auto end = high_resolution_clock::now();
-        totalFrameDuration =  duration_cast<microseconds>(end - start).count();
-
-        glfwPollEvents();
-        glfwSwapBuffers(p_Window);
-    }
-    delete m_World;
-
-    // save player
-    playerSave.position = m_Camera->GetPosition();
-    playerSave.pitch = m_Camera->GetPitch();
-    playerSave.yaw = m_Camera->GetYaw();
-    WriteStructToDisk(fmt::format("worlds/{}/player.dat", worldName), playerSave);
-
-    delete m_Camera;
-    delete p_Framebuffer;
-    glfwDestroyWindow(p_Window);
-    spdlog::shutdown();
 }
+
+void engine::Application::InitOpenGL() {
+    // Try and intialise GLFW
+    if (!glfwInit()) {
+        glfwTerminate();
+		throw std::runtime_error("Failed to intialise GLFW");
+	}
+
+    // Create our window, and add its callbacks
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
+#ifdef __APPLE__
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+
+	p_Window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Voxel Engine", NULL, NULL);
+
+	if (p_Window == NULL)
+	{
+		glfwTerminate();
+		throw std::runtime_error("Failed to create GLFW Window");
+	}
+
+    glfwSetWindowSizeCallback(p_Window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(p_Window, mouse_move_callback);
+    glfwSetMouseButtonCallback(p_Window, mouse_button_callback);
+    glfwSetScrollCallback(p_Window, scroll_callback);
+    glfwSetKeyCallback(p_Window, key_callback);
+	glfwMakeContextCurrent(p_Window);
+
+    // Set input mode to cursor disabled so use can't move mouse out of window
+    glfwSetInputMode(p_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    // Load OpenGL function pointers
+    if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
+	{
+		throw std::runtime_error("Failed to intialise GLAD");
+	}
+
+    /*
+	OpenGl setting configuration. We are enabling blend for alpha transparency blending and using the default blend function
+	We also enable culling faces as an optimisation using the default winding order.
+	*/
+    glEnable(GL_MULTISAMPLE);  
+    glDisable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+}
+
 void engine::Application::GLFWFramebufferResizeCallback(GLFWwindow* window, int width, int height)
 {
 	// On resize, we adjust glViewport and regenerate our framebuffer at the new resolution
@@ -341,8 +436,10 @@ void engine::Application::GLFWFramebufferResizeCallback(GLFWwindow* window, int 
 
 void engine::Application::ProcessInput()
 {
-    if (glfwGetKey(p_Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(p_Window, true);
+    if (glfwGetKey(p_Window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        m_PlayingGame = false;
+        glfwHideWindow(p_Window);
+    }
     if (glfwGetKey(p_Window, GLFW_KEY_W) == GLFW_PRESS)
         m_Camera->ProcessKeyboard(FORWARD, m_DeltaTime);
     if (glfwGetKey(p_Window, GLFW_KEY_S) == GLFW_PRESS)

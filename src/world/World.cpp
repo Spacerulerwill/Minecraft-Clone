@@ -126,6 +126,7 @@ void engine::World::CreateSpawnChunks(int radius) {
     
     for (auto& [key, chunk]: m_ChunkMap) {
         chunk.BufferData();
+        chunk.dirty = false;
         m_ChunkDrawVector.push_back(&chunk);
     }
 }

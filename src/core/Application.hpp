@@ -14,6 +14,7 @@ License: MIT
 #include <core/Camera.hpp>
 #include <opengl/Framebuffer.hpp>
 #include <world/World.hpp>
+#include <opengl/Texture.hpp>
 #include <memory>
 
 namespace engine {
@@ -30,14 +31,18 @@ namespace engine {
         BlockInt m_SelectedBlock = GRASS;
         bool m_Wireframe = false;
 
+        bool m_PlayingGame = false;
+
         float m_DeltaTime = 0.0f;
         float m_LastFrame = 0.0f;
 
         void ProcessInput();
+        std::string MainMenu();
+        void InitOpenGL();
+        void LoadWorld(const char* worldName);
 	public:
-    
 		static void Init();
-		void Run(const char* worldName);
+		void Run();
 		static std::unique_ptr<Application>& GetInstance();
         void GLFWMouseMoveCallback(GLFWwindow* window, double xposIn, double yposIn);
 		void GLFWScrollCallback(GLFWwindow* window, double xoffset, double yoffset);

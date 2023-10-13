@@ -7,8 +7,8 @@ License: MIT
 #define TEXTURE_H
 
 #include <glad/gl.h>
-#include <stb_image.h>
 #include <util/Log.hpp>
+#include <stb_image.h>
 
 namespace engine {
     template<GLenum type>

@@ -9,9 +9,9 @@ LICENSE: MIT
 #include <glad/gl.h>
 #include <opengl/BufferObject.hpp>
 #include <opengl/VertexArray.hpp>
-#include <opengl/Texture.hpp>
 #include <core/Shader.hpp>
 #include <math/Mat4.hpp>
+#include <opengl/Texture.hpp>
 
 namespace engine {
 	class Skybox {
