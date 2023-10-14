@@ -11,7 +11,7 @@ License: MIT
 #include <math/Vec3.hpp>
 #include <math/Vec4.hpp>
 #include <math/VoxelRaycast.hpp>
-#include <core/Camera.hpp>
+#include <world/Player.hpp>
 #include <opengl/Framebuffer.hpp>
 #include <world/World.hpp>
 #include <opengl/Texture.hpp>
@@ -24,25 +24,22 @@ namespace engine {
 		static std::unique_ptr<Application> s_Instance;
 
         GLFWwindow* p_Window = nullptr;
-        Camera* m_Camera = nullptr;
         Framebuffer* p_Framebuffer = nullptr;
         World* m_World = nullptr;
-        VoxelRaycastResult m_BlockSelectRaycastResult {};
         BlockInt m_SelectedBlock = GRASS;
         bool m_Wireframe = false;
-
         bool m_PlayingGame = false;
 
         float m_DeltaTime = 0.0f;
         float m_LastFrame = 0.0f;
 
-        void ProcessInput();
         std::string MainMenu();
         void InitOpenGL();
-        void LoadWorld(const char* worldName);
+        void ProcessInput(Camera& camera);
 	public:
 		static void Init();
 		void Run();
+        void Cleanup();
 		static std::unique_ptr<Application>& GetInstance();
         void GLFWMouseMoveCallback(GLFWwindow* window, double xposIn, double yposIn);
 		void GLFWScrollCallback(GLFWwindow* window, double xoffset, double yoffset);

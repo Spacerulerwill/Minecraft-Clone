@@ -13,7 +13,30 @@ License: MIT
 namespace engine {
     template<GLenum type>
     class Texture {
+        private:
+            GLuint m_ID = 0;
         public:
+            Texture(): m_ID(0) {}
+
+            Texture(const Texture &) = delete;
+
+            Texture& operator=(const Texture&) = delete;
+            
+            Texture(Texture &&other) : m_ID(other.m_Id)
+            {
+                other.m_ID = 0;
+            }
+
+            Texture& operator=(Texture&& other)
+            {
+                if(this != &other)
+                {
+                    glDeleteTextures(1, &m_ID);
+                    std::swap(m_ID, other.m_ID);
+                }
+                return *this;
+            }
+
             Texture(const char* path) requires (type == GL_TEXTURE_2D) { 
                 glGenTextures(1, &m_ID);
                 glBindTexture(GL_TEXTURE_2D, m_ID);
@@ -175,10 +198,7 @@ namespace engine {
 
             void Unbind() const {
                 glBindTexture(type, 0);
-            }  
-   
-        private:
-            GLuint m_ID;      
+            }        
     };
 };
 

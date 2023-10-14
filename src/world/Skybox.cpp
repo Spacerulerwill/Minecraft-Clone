@@ -60,7 +60,10 @@ const char * engine::Skybox::m_SkyboxFaces[6] = {
 };
 
 engine::Skybox::Skybox()
-{
+{   
+    glActiveTexture(GL_TEXTURE0);
+    m_Cubemap = Texture<GL_TEXTURE_CUBE_MAP>(m_SkyboxFaces);
+    
     // Setup Buffers
     VertexBufferLayout bufLayout;
     bufLayout.AddAttribute<float>(3);
@@ -71,6 +74,7 @@ engine::Skybox::Skybox()
 void engine::Skybox::Draw(const Mat4<float>& projection, const Mat4<float>& view) {
     m_Shader.Bind();
     m_VAO.Bind();
+    m_Shader.SetInt("skybox", 0);
     m_Shader.setMat4("projection", projection);
     m_Shader.setMat4("view", view);
     glDrawArrays(GL_TRIANGLES, 0, 36);

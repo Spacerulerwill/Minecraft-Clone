@@ -25,6 +25,8 @@ namespace engine {
 
 		Vec2(T x, T y) : x(x), y(y) {}
 
+        template <typename Type2> Vec2(const Vec2<Type2> &other): x(other.x), y(other.y) {}
+
 	    float length() const {
             return sqrt(x * x + y * y);
         };

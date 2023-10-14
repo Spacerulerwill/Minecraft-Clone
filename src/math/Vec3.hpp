@@ -26,6 +26,8 @@ namespace engine {
 		Vec3(T v) : x(v), y(v), z(v) {}
 
 		Vec3(T x, T y, T z) : x(x), y(y), z(z) {}
+        
+        template <typename Type2> Vec3(const Vec3<Type2> &other): x(other.x), y(other.y), z(other.z) {}
 
 		float length() const {
             return sqrt(x * x + y * y + z * z);
@@ -147,33 +149,6 @@ namespace std {
 	template<engine::Arithmetic T> struct hash<engine::Vec3<T>> {
 		std::size_t operator()(engine::Vec3<T> const& vec) const noexcept {		
 			return (((int)vec.x * 73856093) ^ ((int)vec.y * 19349663) ^ ((int)vec.z * 83492791)) % 3; // or use boost::hash_combine (see Discussion) https://en.cppreference.com/w/Talk:cpp/utility/hash
-		}
-	};
-}
-
-namespace YAML
-{    
-    template <engine::Arithmetic T>
-	struct convert<engine::Vec3<T>>
-	{
-		static Node encode(const engine::Vec3<T>& rhs)
-		{
-			Node node;
-			node.push_back(rhs.x);
-			node.push_back(rhs.y);
-			node.push_back(rhs.z);
-			return node;
-		}
-        
-		static bool decode(const Node& node, engine::Vec3<T>& rhs)
-		{
-			if (!node.IsSequence() || node.size() != 3)
-				return false;
-
-			rhs.x = node[0].as<T>();
-			rhs.y = node[1].as<T>();
-			rhs.z = node[2].as<T>();
-			return true;
 		}
 	};
 }

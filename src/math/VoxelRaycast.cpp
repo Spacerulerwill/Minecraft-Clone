@@ -5,6 +5,7 @@ License: MIT
 
 #include <util/Log.hpp>
 #include <math/VoxelRaycast.hpp>
+#include <world/World.hpp>
 #include <math.h>
 #include <assert.h>
 

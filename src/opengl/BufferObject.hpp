@@ -14,6 +14,9 @@ LICENSE: MIT
 namespace engine {
     template <GLenum buffer>
     class BufferObject {
+        private:
+            GLuint m_ID = 0;
+            GLsizeiptr m_Count = 0;
         public:
             BufferObject() requires BUFFER_REQUIREMENT {
                 glGenBuffers(1, &m_ID);
@@ -26,6 +29,26 @@ namespace engine {
 
             ~BufferObject() {
                 glDeleteBuffers(1, &m_ID);
+            }
+
+            BufferObject(const BufferObject &) = delete;
+
+            BufferObject& operator=(const BufferObject&) = delete;
+
+            BufferObject(BufferObject &&other) : m_ID(other.m_ID), m_Count(other.m_Count)
+            {
+                other.m_ID = 0;
+            }
+
+            BufferObject& operator=(BufferObject&& other)
+            {
+                if(this != &other)
+                {
+                    glDeleteBuffers(1, &m_ID);
+                    std::swap(m_ID, other.m_ID);
+                    m_Count = std::move(other.m_Count);
+                }
+                return *this;
             }
 
             void BufferData(const GLvoid* data, GLsizeiptr size, GLenum usage) const {
@@ -49,9 +72,6 @@ namespace engine {
             GLsizeiptr GetCount() const {
                 return m_Count;
             }
-        private:
-            GLuint m_ID ;
-            GLsizeiptr m_Count;
     };
 }
 

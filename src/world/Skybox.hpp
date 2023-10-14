@@ -22,7 +22,8 @@ namespace engine {
         BufferObject<GL_ARRAY_BUFFER> m_VBO;
         VertexArray m_VAO;
         Shader m_Shader = Shader("res/shaders/skybox.shader");
-        Texture<GL_TEXTURE_CUBE_MAP> m_Cubemap = Texture<GL_TEXTURE_CUBE_MAP>(m_SkyboxFaces);
+        Texture<GL_TEXTURE_CUBE_MAP> m_Cubemap;
+
 	public:
         Skybox();
 		void Draw(const Mat4<float>& projection, const Mat4<float>& view);

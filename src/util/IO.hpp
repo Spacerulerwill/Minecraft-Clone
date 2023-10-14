@@ -8,25 +8,42 @@ LICENSE: MIT
 
 #include <string>
 #include <fstream>
+#include <filesystem>
 
 namespace engine {
+    // Writes the given struct data to the given file name.
     template<typename T>
-    void WriteStructToDisk(const std::string& file_name, T& data) // Writes the given OBJECT data to the given file name.
+    bool WriteStructToDisk(const std::string& file_name, T& data)
     {
         std::ofstream out;
         out.open(file_name,std::ios::binary);
+        if (out.fail())
+            return false;
         out.write(reinterpret_cast<char*>(&data), sizeof(T));
         out.close();
+        return true;
     };
 
+    // Reads from a file into a given struct
     template<typename T>
-    void ReadStructFromDisk(const std::string& file_name, T& data)
+    bool ReadStructFromDisk(const std::string& file_name, T& data)
     {
         std::ifstream in;
         in.open(file_name,std::ios::binary);
+        if (in.fail())
+            return false;
         in.read(reinterpret_cast<char*>(&data), sizeof(T));
         in.close();
+        return true;
     };
+
+    // Count number of folders in directory
+    inline size_t NumberOfFoldersInDirectory(std::filesystem::path path)
+    {
+        using std::filesystem::directory_iterator;
+        using fp = bool (*)( const std::filesystem::path&);
+        return std::count_if(directory_iterator(path), directory_iterator{}, (fp)std::filesystem::is_directory);
+    }
 }
 
 #endif

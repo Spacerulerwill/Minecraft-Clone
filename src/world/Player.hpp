@@ -1,30 +1,33 @@
 /*
 Copyright (C) 2023 William Redding - All Rights Reserved
-License: MIT
+LICENSE: MIT
 */
 
-#ifndef VOXELRAYCAST_HPP
-#define VOXELRAYCAST_HPP
+#ifndef PLAYER_H
+#define PLAYER_H
 
-#include <world/Block.hpp>
+#include <core/Camera.hpp>
 #include <math/Vec3.hpp>
-#include <world/Chunk.hpp>
+#include <math/VoxelRaycast.hpp>
 
 namespace engine {
     class World;
 
-    struct VoxelRaycastResult {
-        Chunk* chunk;
-        Vec3<int> blockPos;
-        Vec3<int> normal;
-		BlockInt blockHit;
-	};
-
-    VoxelRaycastResult VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, int distance);
+    class Player {
+    private:
+        Camera m_Camera;
+        VoxelRaycastResult m_VoxelRaycastResult {};
+    public:
+        Player();
+        Player(Vec3<float> position, float pitch, float yaw);
+        void BlockRaycast(World* world);
+        const VoxelRaycastResult& GetBlockRaycastResult() const;
+        Camera& GetCamera();
+        Vec3<int> GetChunkPosition() const;
+    };
 }
 
-#endif // !VOXELRAYCAST_HPP
-
+#endif // !PLAYER_H
 /*
 MIT License
 

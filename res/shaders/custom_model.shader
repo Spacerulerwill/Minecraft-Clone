@@ -54,8 +54,6 @@ in vec3 FragPos;
 
 uniform sampler2DArray tex_array;
 uniform vec3 foliageColor = vec3(0.0,1.0,0.0);
-uniform ivec3 blockPos;
-uniform bool drawBlockHighlight;
 
 const float errorMargin = 0.01;
 
@@ -67,11 +65,5 @@ void main() {
     if (isFoliage > 0.5)
         texColor.rgb *= foliageColor;
 
-    if (drawBlockHighlight && 
-	FragPos.x >= blockPos.x - errorMargin && FragPos.x <= blockPos.x + 1.0 + errorMargin && 
-	FragPos.y >= blockPos.y - errorMargin && FragPos.y <= blockPos.y + 1.0 + errorMargin && 
-	FragPos.z >= blockPos.z - errorMargin && FragPos.z <= blockPos.z + 1.0 + errorMargin) {
-		texColor.b += 0.5;
-    }
 	FragColor = texColor;
 }

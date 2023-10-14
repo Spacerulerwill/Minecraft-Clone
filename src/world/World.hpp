@@ -8,14 +8,11 @@ LICENSE: MIT
 
 #include <unordered_map>
 #include <BS_thread_pool.hpp>
-#include <concurrentqueue.h>
 #include <PerlinNoise.hpp>
-#include <core/Shader.hpp>
 #include <world/Chunk.hpp>
-#include <math/Vec2.hpp>
-#include <algorithm>
-#include <memory>
+#include <world/Skybox.hpp>
 #include <vector>
+#include <world/Player.hpp>
 
 namespace engine {
 
@@ -32,19 +29,21 @@ namespace engine {
     class World {
     public:
         World(const char* worldName);
-        void DrawBlocks(Shader& shader);
-        void DrawWater(Shader& shader);
-        void DrawCustomModelBlocks(Shader& shader);
         Chunk* CreateChunk(Vec3<int> pos);
-
-        void CreateSpawnChunks(int radius);
-
-        Chunk* GetChunk(int chunkX, int chunkY, int chunkZ);
         Chunk* GetChunk(Vec3<int> pos);
-        const char* m_WorldName = nullptr;
-        std::vector<Chunk*> m_ChunkDrawVector;
+        void AddChunkToDrawVector(Chunk* chunk);
+        Player& GetPlayer();
+        const char* GetName();
+        void CreateSpawnChunks(int radius);
+        void Draw(Shader& chunkShader, Shader& waterShader, Shader& customModelShader);
         ~World();
     private:
+        Player m_Player;
+        Skybox m_Skybox;
+
+        const char* m_WorldName = nullptr;
+        std::vector<Chunk*> m_ChunkDrawVector;
+
         Vec3<int> playerChunkPos;
 
         BS::thread_pool m_MeshPool;
@@ -55,6 +54,8 @@ namespace engine {
         std::random_device rd;
         std::mt19937 gen = std::mt19937(rd());
         std::uniform_int_distribution<> distrib = std::uniform_int_distribution<>(1, 100);
+
+
     };
 }
 

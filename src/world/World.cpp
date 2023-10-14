@@ -8,11 +8,33 @@ LICENSE: MIT
 #include <util/Log.hpp>
 #include <util/IO.hpp>
 #include <fmt/format.h>
+#include <util/Exceptions.hpp>
+#include <world/Player.hpp>
+#include <util/Log.hpp>
 
 engine::World::World(const char* worldName) : m_WorldName(worldName) {
-    WorldSave save;
-    ReadStructFromDisk(fmt::format("worlds/{}/world.dat", worldName), save);
-    m_Noise.reseed(save.seed);
+    bool success;
+
+    WorldSave worldSave;
+    success = ReadStructFromDisk(fmt::format("worlds/{}/world.dat", worldName), worldSave);
+    if (!success)
+        throw WorldCorruptException(fmt::format("Failed to read world data. File worlds/{}/world.dat is corrupted or missing!", worldName));
+
+    PlayerSave playerSave;
+    success = ReadStructFromDisk(fmt::format("worlds/{}/player.dat", worldName), playerSave);
+    if (!success)
+        throw WorldCorruptException(fmt::format("Failed to read world data. File worlds/{}/player.data is corrupted or missing!", worldName));
+    m_Player = Player(playerSave.position, playerSave.pitch, playerSave.yaw);
+
+    m_Noise.reseed(worldSave.seed);
+}
+
+engine::Player& engine::World::GetPlayer() {
+    return m_Player;
+}
+
+const char* engine::World::GetName() {
+    return m_WorldName;
 }
 
 void engine::World::CreateSpawnChunks(int radius) {
@@ -114,7 +136,7 @@ void engine::World::CreateSpawnChunks(int radius) {
     for (int x = -radius; x < radius; x++){
         for (int y = 0; y < 3; y++){
             for (int z = -radius; z < radius; z++) {
-                Chunk* chunk = GetChunk(x,y,z);
+                Chunk* chunk = GetChunk(Vec3<int>(x,y,z));
                 m_MeshPool.push_task([chunk]{
                     chunk->CreateMesh();
                 });
@@ -131,35 +153,48 @@ void engine::World::CreateSpawnChunks(int radius) {
     }
 }
 
-engine::Chunk* engine::World::CreateChunk(Vec3<int> pos) {
-    auto result = m_ChunkMap.try_emplace(pos, pos);
-    return  &(result.first->second);   
-}
+void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& customModelShader) {
+    Mat4<float> perspective = m_Player.GetCamera().GetPerspectiveMatrix();
+    Mat4<float> view = m_Player.GetCamera().GetViewMatrix();
+    const VoxelRaycastResult& raycastResult = m_Player.GetBlockRaycastResult();
 
-void engine::World::DrawBlocks(Shader& chunkShader) {
+    chunkShader.Bind();
+    chunkShader.setMat4("projection", perspective);
+    chunkShader.setMat4("view", view);
+    chunkShader.SetInt("tex_array", 0);
+    chunkShader.SetInt("grass_mask", 2);
     for (Chunk* chunk : m_ChunkDrawVector){
         chunk->Draw(chunkShader);
     }
-}
-void engine::World::DrawWater(Shader& waterShader) {
-     for (Chunk* chunk : m_ChunkDrawVector){
-        chunk->DrawWater(waterShader);
-    }
-}
-void engine::World::DrawCustomModelBlocks(Shader& customModelShader) {
-     for (Chunk* chunk : m_ChunkDrawVector){
+
+    glDisable(GL_CULL_FACE);
+    customModelShader.Bind();
+    customModelShader.setMat4("projection", perspective);
+    customModelShader.setMat4("view", view);
+    customModelShader.SetInt("tex_array", 0);
+    for (Chunk* chunk : m_ChunkDrawVector){
         chunk->DrawCustomModelBlocks(customModelShader);
     }
+    glEnable(GL_CULL_FACE);
+
+    glDepthFunc(GL_LEQUAL);
+    m_Skybox.Draw(perspective, translationRemoved(view));
+    glDepthFunc(GL_LESS);
+
+    glEnable(GL_BLEND);
+    waterShader.Bind();
+    waterShader.setMat4("projection", perspective);
+    waterShader.setMat4("view", view);
+    waterShader.SetInt("tex_array", 0);
+    for (Chunk* chunk : m_ChunkDrawVector){
+        chunk->DrawWater(waterShader);
+    }
+    glDisable(GL_BLEND);
 }
 
-engine::Chunk* engine::World::GetChunk(int chunkX, int chunkY, int chunkZ) {
-    auto find = m_ChunkMap.find(Vec3(chunkX, chunkY, chunkZ));
-
-    if (find == m_ChunkMap.end()) {
-        return nullptr;
-    } else {
-        return &(find->second);
-    }
+engine::Chunk* engine::World::CreateChunk(Vec3<int> pos) {
+    auto result = m_ChunkMap.try_emplace(pos, pos);
+    return  &(result.first->second);   
 }
 
 engine::Chunk* engine::World::GetChunk(Vec3<int> pos) {
@@ -172,14 +207,25 @@ engine::Chunk* engine::World::GetChunk(Vec3<int> pos) {
     }
 }
 
-engine::World::~World() {
+void engine::World::AddChunkToDrawVector(Chunk* chunk) {
+    m_ChunkDrawVector.push_back(chunk);
+}
 
+engine::World::~World() {
     // Unload all remaining chunks
     for (auto& [key, chunk]: m_ChunkMap) {
         if (chunk.dirty) {
             chunk.UnloadToFile(m_WorldName);
         }
     }
+
+    // Save player position and view direction
+    PlayerSave playerSave {
+        .position = m_Player.GetCamera().GetPosition(),
+        .pitch = m_Player.GetCamera().GetPitch(),
+        .yaw = m_Player.GetCamera().GetYaw()
+    };
+    WriteStructToDisk(fmt::format("worlds/{}/player.dat", m_WorldName), playerSave);
 }
 /*
 MIT License

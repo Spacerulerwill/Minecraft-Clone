@@ -27,6 +27,8 @@ namespace engine {
 
 		Vec4(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) {}
 
+        template <typename Type2> Vec4(const Vec4<Type2> &other): x(other.x), y(other.y), z(other.z), w(other.w) {}
+
 		float length() const {
             return sqrt(x * x + y * y + z * z + w * w);
         }

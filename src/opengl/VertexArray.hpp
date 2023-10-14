@@ -11,18 +11,37 @@ License: MIT
 
 namespace engine {
 	class VertexArray {
-
+	private:
+		GLuint m_ID = 0;
 	public:
 		VertexArray();
+        
 		~VertexArray();
 
-		GLuint getID() { return m_ID; }
+        VertexArray(const VertexArray &) = delete;
+
+        VertexArray& operator=(const VertexArray&) = delete;
+
+        VertexArray(VertexArray &&other) : m_ID(other.m_ID)
+        {
+            other.m_ID = 0;
+        }
+
+        VertexArray& operator=(VertexArray&& other)
+        {
+            if(this != &other)
+            {
+                glDeleteVertexArrays(1, &m_ID);
+                std::swap(m_ID, other.m_ID);
+            }
+            return *this;
+        }
+
+		GLuint GetID() { return m_ID; }
 
 		void AddBuffer(const BufferObject<GL_ARRAY_BUFFER>& vb, const VertexBufferLayout& layout);
 		void Bind() const;
 		void Unbind() const;
-	private:
-		GLuint m_ID;
 	};
 }
 

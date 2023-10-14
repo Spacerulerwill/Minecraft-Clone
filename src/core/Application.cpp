@@ -13,7 +13,6 @@ License: MIT
 #include <opengl/VertexArray.hpp>
 #include <opengl/VertexBufferLayout.hpp>
 #include <world/Block.hpp>
-#include <world/Skybox.hpp>
 #include <world/Chunk.hpp>
 #include <world/World.hpp>
 #include <math/Math.hpp>
@@ -21,6 +20,7 @@ License: MIT
 #include <filesystem>
 #include <memory>
 #include <fstream>
+#include <util/Exceptions.hpp>
 
 // Unique pointer to the singleton instance
 std::unique_ptr<engine::Application> engine::Application::s_Instance = nullptr;
@@ -51,19 +51,37 @@ void engine::Application::Init()
 std::string engine::Application::MainMenu() {
     std::string option;
 
-    while (option != "l" && option != "c") {
-        std::cout << 
-        "Select option:\n"
-        "C - Create world\n"
-        "L - Load world\n"
-        "D - Delete world\n"
-        "E - Exit\n";
+    while ((option != "l" && option != "c") || (option == "l" && NumberOfFoldersInDirectory("worlds") == 0)) {
+        std::cout << "Select option:\n";
+        std::cout << "C - Create world\n";
+        if (NumberOfFoldersInDirectory("worlds") != 0) {
+            std::cout << "L - Load world\n";
+            std::cout << "D - Delete world\n";
+        }
+        std::cout << "E - Exit\n";
         std::cin >> option;
         std::transform(option.begin(), option.end(), option.begin(), ::tolower);
 
         if (option == "e") {
             glfwSetWindowShouldClose(p_Window, GLFW_TRUE);
             return "";
+        }
+
+        if (option == "d") {
+            if (NumberOfFoldersInDirectory("worlds") == 0) {
+                continue;
+            }
+            std::string worldTodelete;
+            std::cin.ignore();
+            std::cout << "Enter world name: ";
+            std::getline(std::cin, worldTodelete);
+            uintmax_t numFilesDeleted = std::filesystem::remove_all(fmt::format("worlds/{}", worldTodelete));
+            if (numFilesDeleted == 0) {
+                LOG_ERROR(fmt::format("No world named {} found!", worldTodelete));
+            } else {
+                LOG_ERROR(fmt::format("Deleted world {}", worldTodelete));
+            }
+            continue;
         }
     }
     std::cin.ignore();
@@ -79,8 +97,10 @@ std::string engine::Application::MainMenu() {
         for(std::string& worldOption : worldOptions) {
             std::cout << "* " << worldOption << "\n";
         }
-        std::getline(std::cin, worldName);
-    }
+        do {
+            std::getline(std::cin, worldName);
+        } while (!std::filesystem::is_directory(fmt::format("worlds/{}", worldName)));
+    } 
 
     if (option == "c") {
         while (true) {
@@ -88,7 +108,7 @@ std::string engine::Application::MainMenu() {
             std::getline(std::cin, worldName);
 
             if (worldName == ""){
-                std::cout << "World name cannot be empty!\n";
+                LOG_ERROR("World name cannot be empty!");
                 continue;
             }
 
@@ -97,7 +117,7 @@ std::string engine::Application::MainMenu() {
             if (worldCreated) {
                 break;
             } else {
-                std::cout << "World already exists! ";
+                LOG_ERROR("World already exists!");
             }
         }
 
@@ -145,9 +165,6 @@ void engine::Application::Run()
     for (int i = 0; i < MAX_ANIMATION_FRAMES; i++) {
         atlases[i] = std::make_unique<Texture<GL_TEXTURE_2D_ARRAY>>(fmt::format("res/textures/atlases/atlas{}.png", i).c_str(), TEXTURE_SIZE);
     }
-
-    // Create skybox 
-    Skybox skybox;
 
     // Create framebuffer object and quad
     p_Framebuffer = new Framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -202,11 +219,11 @@ void engine::Application::Run()
     Texture<GL_TEXTURE_2D> grassMaskTexture("res/textures/block/mask/grass_side_mask.png");
 
     // Load shaders
-    Shader chunkShader("res/shaders/chunk.shader");
-    Shader waterShader("res/shaders/water.shader");
-    Shader crosshairShader("res/shaders/crosshair.shader");
-    Shader customModelShader("res/shaders/custom_model.shader");
     Shader framebufferShader("res/shaders/framebuffer.shader");
+    Shader crosshairShader("res/shaders/crosshair.shader");
+    Shader chunkShader = Shader("res/shaders/chunk.shader");
+    Shader waterShader = Shader("res/shaders/water.shader");
+    Shader customModelShader = Shader("res/shaders/custom_model.shader");
 
     double lastTime = 0.0f;
     int currentAtlasIndex = 0;
@@ -219,7 +236,17 @@ void engine::Application::Run()
             break;
         }
 
-        LoadWorld(worldName.c_str());
+        try {
+            m_World = new World(worldName.c_str());
+        } catch (WorldCorruptException& e) {
+            LOG_ERROR(e.what());
+            continue;
+        }
+
+        m_World->CreateSpawnChunks(5);
+        Player& player = m_World->GetPlayer();
+        Camera& camera = player.GetCamera();
+
         glfwShowWindow(p_Window);
         m_PlayingGame = true;
         
@@ -230,17 +257,10 @@ void engine::Application::Run()
             m_DeltaTime = currentFrame - m_LastFrame;
             m_LastFrame = currentFrame;
 
-            ProcessInput();
+            ProcessInput(camera);
 
             // Calculate player chunk position
-            int chunkX = m_Camera->GetPosition().x / CS;
-            if (m_Camera->GetPosition().x < 0) chunkX -= 1;
-
-            int chunkY = m_Camera->GetPosition().y / CS;
-            if (m_Camera->GetPosition().y < 0) chunkY -= 1;
-
-            int chunkZ = m_Camera->GetPosition().z / CS;
-            if (m_Camera->GetPosition().z < 0) chunkZ -= 1;
+            Vec3<int> chunkPos = player.GetChunkPosition();
 
             // Cycle through texture atlases 10 times a second
             double currentTime = glfwGetTime();
@@ -251,20 +271,7 @@ void engine::Application::Run()
                 lastTime = currentTime;
             }
 
-            // Raycast outwards to find a block to highlight
-            Vec3<int> raycastBlockPos = Vec3<int>(0);
-            m_BlockSelectRaycastResult = VoxelRaycast(m_World, m_Camera->GetPosition(), m_Camera->GetDirection(), 15.0f);
-            Chunk* chunk = m_BlockSelectRaycastResult.chunk;
-
-            if (chunk != nullptr) {
-                raycastBlockPos = Vec3<int>(
-                    chunk->m_Pos.x * CS + m_BlockSelectRaycastResult.blockPos.x - 1, 
-                    chunk->m_Pos.y * CS + m_BlockSelectRaycastResult.blockPos.y - 1,
-                    chunk->m_Pos.z * CS + m_BlockSelectRaycastResult.blockPos.z - 1
-                );
-            } else {
-                raycastBlockPos = Vec3<int>(0,0,0);
-            }
+            player.BlockRaycast(m_World);
 
             // Bind our framebuffer and render to it
             p_Framebuffer->Bind();
@@ -278,41 +285,7 @@ void engine::Application::Run()
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             
-            Mat4<float> perspective = m_Camera->GetPerspectiveMatrix();
-            Mat4<float> view = m_Camera->GetViewMatrix();
-
-            chunkShader.Bind();
-            chunkShader.setMat4("projection", perspective);
-            chunkShader.setMat4("view", view);
-            chunkShader.SetInt("tex_array", 0);
-            chunkShader.SetInt("grass_mask", 2);
-            chunkShader.SetInt("drawBlockHighlight", m_BlockSelectRaycastResult.blockHit != AIR);
-            if (m_BlockSelectRaycastResult.blockHit != AIR  && chunk != nullptr)
-                chunkShader.setIVec3("blockPos", raycastBlockPos);
-            m_World->DrawBlocks(chunkShader);
-
-            glDisable(GL_CULL_FACE);
-            customModelShader.Bind();
-            customModelShader.setMat4("projection", perspective);
-            customModelShader.setMat4("view", view);
-            customModelShader.SetInt("tex_array", 0);
-            chunkShader.SetInt("drawBlockHighlight", m_BlockSelectRaycastResult.blockHit != AIR);
-            if (m_BlockSelectRaycastResult.blockHit != AIR  && chunk != nullptr)
-                chunkShader.setIVec3("blockPos", raycastBlockPos);
-            m_World->DrawCustomModelBlocks(customModelShader);
-            glEnable(GL_CULL_FACE);
-
-            glDepthFunc(GL_LEQUAL);
-            skybox.Draw(perspective, translationRemoved(view));
-            glDepthFunc(GL_LESS);
-
-            glEnable(GL_BLEND);
-            waterShader.Bind();
-            waterShader.setMat4("projection", perspective);
-            waterShader.setMat4("view", view);
-            waterShader.SetInt("tex_array", 0);
-            m_World->DrawWater(waterShader);
-            glDisable(GL_BLEND);
+            m_World->Draw(chunkShader, waterShader, customModelShader);
             
             /* 
             Unbind our framebuffer, binding the default framebuffer and render the result texture to a quad
@@ -342,33 +315,11 @@ void engine::Application::Run()
             glfwPollEvents();
             glfwSwapBuffers(p_Window);
         }
-
-        // save player
-        PlayerSave playerSave;
-        playerSave.position = m_Camera->GetPosition();
-        playerSave.pitch = m_Camera->GetPitch();
-        playerSave.yaw = m_Camera->GetYaw();
-        WriteStructToDisk(fmt::format("worlds/{}/player.dat", m_World->m_WorldName), playerSave);
-
         delete m_World;
-        delete m_Camera;
     }
-
     glfwDestroyWindow(p_Window);
     delete p_Framebuffer;
     spdlog::shutdown();
-}
-
-void engine::Application::LoadWorld(const char* worldName) {
-    PlayerSave playerSave;
-    ReadStructFromDisk(fmt::format("worlds/{}/player.dat", worldName), playerSave);
-
-    m_Camera = new Camera(playerSave.position, playerSave.pitch, playerSave.yaw);
-    m_World = new World(worldName);
-    const int radius = 10;
-
-    LOG_INFO("Loading world...");
-    m_World->CreateSpawnChunks(radius);
 }
 
 void engine::Application::InitOpenGL() {
@@ -388,7 +339,7 @@ void engine::Application::InitOpenGL() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-	p_Window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Voxel Engine", NULL, NULL);
+	p_Window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Voxel Engine", nullptr, nullptr);
 
 	if (p_Window == NULL)
 	{
@@ -434,24 +385,24 @@ void engine::Application::GLFWFramebufferResizeCallback(GLFWwindow* window, int 
     p_Framebuffer = new Framebuffer(width, height);
 }
 
-void engine::Application::ProcessInput()
+void engine::Application::ProcessInput(Camera& camera)
 {
     if (glfwGetKey(p_Window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         m_PlayingGame = false;
         glfwHideWindow(p_Window);
     }
     if (glfwGetKey(p_Window, GLFW_KEY_W) == GLFW_PRESS)
-        m_Camera->ProcessKeyboard(FORWARD, m_DeltaTime);
+        camera.ProcessKeyboard(FORWARD, m_DeltaTime);
     if (glfwGetKey(p_Window, GLFW_KEY_S) == GLFW_PRESS)
-        m_Camera->ProcessKeyboard(BACKWARD, m_DeltaTime);
+        camera.ProcessKeyboard(BACKWARD, m_DeltaTime);
     if (glfwGetKey(p_Window, GLFW_KEY_A) == GLFW_PRESS)
-        m_Camera->ProcessKeyboard(LEFT, m_DeltaTime);
+        camera.ProcessKeyboard(LEFT, m_DeltaTime);
     if (glfwGetKey(p_Window, GLFW_KEY_D) == GLFW_PRESS)
-        m_Camera->ProcessKeyboard(RIGHT, m_DeltaTime);
+        camera.ProcessKeyboard(RIGHT, m_DeltaTime);
     if (glfwGetKey(p_Window, GLFW_KEY_LEFT_SHIFT))
-        m_Camera->SetMovementSpeed(100.0f);
+        camera.SetMovementSpeed(100.0f);
     else
-        m_Camera->SetMovementSpeed(2.5f);
+        camera.SetMovementSpeed(2.5f);
 }
 
 void engine::Application::GLFWMouseMoveCallback(GLFWwindow* window, double xposIn, double yposIn)
@@ -459,12 +410,12 @@ void engine::Application::GLFWMouseMoveCallback(GLFWwindow* window, double xposI
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
-    m_Camera->ProcessMouseMovement(xpos, ypos);
+    m_World->GetPlayer().GetCamera().ProcessMouseMovement(xpos, ypos);
 }
 
 void engine::Application::GLFWScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    m_Camera->ProcessMouseScroll(static_cast<float>(yoffset));
+    m_World->GetPlayer().GetCamera().ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
 void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
@@ -472,59 +423,60 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT: {
             if (action == GLFW_PRESS) {
-                Chunk* chunk = m_BlockSelectRaycastResult.chunk;
+                const VoxelRaycastResult& raycastResult = m_World->GetPlayer().GetBlockRaycastResult();
+                Chunk* chunk = raycastResult.chunk;
                 if (chunk != nullptr) {
-                    chunk->SetBlock(AIR, m_BlockSelectRaycastResult.blockPos);
+                    chunk->SetBlock(AIR, raycastResult.blockPos);
                     chunk->CreateMesh();
                     chunk->BufferData();
 
                     // if block is on a chunk edge, renegerate them too
-                    if (m_BlockSelectRaycastResult.blockPos.x == 1) {
+                    if (raycastResult.blockPos.x == 1) {
                         Chunk* leftChunk = m_World->GetChunk(chunk->m_Pos - Vec3<int>(1, 0, 0));
                         if (leftChunk != nullptr) {
-                            leftChunk->SetBlock(AIR, CS_P_MINUS_ONE, m_BlockSelectRaycastResult.blockPos.y, m_BlockSelectRaycastResult.blockPos.z);
+                            leftChunk->SetBlock(AIR, CS_P_MINUS_ONE, raycastResult.blockPos.y, raycastResult.blockPos.z);
                             leftChunk->CreateMesh();
                             leftChunk->BufferData();
                         }
                     }
-                    else if (m_BlockSelectRaycastResult.blockPos.x == CS) {
+                    else if (raycastResult.blockPos.x == CS) {
                         Chunk* rightChunk = m_World->GetChunk(chunk->m_Pos + Vec3<int>(1, 0, 0));
                         if (rightChunk != nullptr) {
-                            rightChunk->SetBlock(AIR, 0, m_BlockSelectRaycastResult.blockPos.y, m_BlockSelectRaycastResult.blockPos.z);
+                            rightChunk->SetBlock(AIR, 0, raycastResult.blockPos.y, raycastResult.blockPos.z);
                             rightChunk->CreateMesh();
                             rightChunk->BufferData();
                         }
                     }
 
-                    if (m_BlockSelectRaycastResult.blockPos.z == 1) {
+                    if (raycastResult.blockPos.z == 1) {
                         Chunk* forwardChunk = m_World->GetChunk(chunk->m_Pos - Vec3<int>(0, 0, 1));
                         if (forwardChunk != nullptr) {
-                            forwardChunk->SetBlock(AIR, m_BlockSelectRaycastResult.blockPos.x, m_BlockSelectRaycastResult.blockPos.y, CS_P_MINUS_ONE);
+                            forwardChunk->SetBlock(AIR, raycastResult.blockPos.x, raycastResult.blockPos.y, CS_P_MINUS_ONE);
                             forwardChunk->CreateMesh();
                             forwardChunk->BufferData();
                         }
                     }
-                    else if(m_BlockSelectRaycastResult.blockPos.z == CS) {
+                    else if(raycastResult.blockPos.z == CS) {
                         Chunk* behindChunk = m_World->GetChunk(chunk->m_Pos + Vec3<int>(0, 0, 1));
                         if (behindChunk != nullptr) {
-                            behindChunk->SetBlock(AIR, m_BlockSelectRaycastResult.blockPos.x, m_BlockSelectRaycastResult.blockPos.y, 0);
+                            behindChunk->SetBlock(AIR, raycastResult.blockPos.x, raycastResult.blockPos.y, 0);
                             behindChunk->CreateMesh();
                             behindChunk->BufferData();
                         }
                     }
 
-                    if (m_BlockSelectRaycastResult.blockPos.y == 1) {
+                    if (raycastResult.blockPos.y == 1) {
                         Chunk* belowChunk = m_World->GetChunk(chunk->m_Pos - Vec3<int>(0,1,0));
                         if (belowChunk != nullptr) {
-                            belowChunk->SetBlock(AIR, m_BlockSelectRaycastResult.blockPos.x, CS_P_MINUS_ONE, m_BlockSelectRaycastResult.blockPos.z);
+                            belowChunk->SetBlock(AIR, raycastResult.blockPos.x, CS_P_MINUS_ONE, raycastResult.blockPos.z);
                             belowChunk->CreateMesh();
                             belowChunk->BufferData();
                         }
                     } 
-                    else if(m_BlockSelectRaycastResult.blockPos.y == CS) {
+                    else if(raycastResult.blockPos.y == CS) {
                         Chunk* aboveChunk = m_World->GetChunk(chunk->m_Pos + Vec3<int>(0,1,0));
                         if (aboveChunk != nullptr) {
-                            aboveChunk->SetBlock(AIR, m_BlockSelectRaycastResult.blockPos.x, 1, m_BlockSelectRaycastResult.blockPos.z);
+                            aboveChunk->SetBlock(AIR, raycastResult.blockPos.x, 1, raycastResult.blockPos.z);
                             aboveChunk->CreateMesh();
                             aboveChunk->BufferData();
                         }
@@ -535,43 +487,54 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
         }
         case GLFW_MOUSE_BUTTON_RIGHT: {
             if (action == GLFW_PRESS) {
-                Chunk* chunk = m_BlockSelectRaycastResult.chunk;
-                if (chunk != nullptr && m_BlockSelectRaycastResult.blockHit != AIR) {
-                    BlockInt blockToPlaceOn = chunk->GetBlock(m_BlockSelectRaycastResult.blockPos);
+                const VoxelRaycastResult& raycastResult = m_World->GetPlayer().GetBlockRaycastResult();
+                Chunk* chunk = raycastResult.chunk;
+                if (chunk != nullptr && raycastResult.blockHit != AIR) {
+                    BlockInt blockToPlaceOn = chunk->GetBlock(raycastResult.blockPos);
                     if (blockToPlaceOn != AIR) {
-                        Vec3<int> blockPlacePosition = m_BlockSelectRaycastResult.blockPos + m_BlockSelectRaycastResult.normal;
+                        Vec3<int> blockPlacePosition = raycastResult.blockPos + raycastResult.normal;
 
                         // if making a new vertical chunk we can exit early
                         if (blockPlacePosition.y == CS_P_MINUS_ONE) {
                             blockPlacePosition.y = 1;
                             Chunk* newChunk = m_World->CreateChunk((chunk->m_Pos + Vec3<int>(0,1,0)));
                             newChunk->SetBlock(m_SelectedBlock, blockPlacePosition);
-                            newChunk->UnloadToFile(m_World->m_WorldName);
+                            newChunk->UnloadToFile(m_World->GetName());
                             newChunk->CreateMesh();
                             newChunk->BufferData();
-                            m_World->m_ChunkDrawVector.push_back(newChunk);
+                            m_World->AddChunkToDrawVector(newChunk);
                             return;
                         }
 
-                        // chunk edge cases 
+                        // chunk edge cases - if we place and the block will end up in another chunk
                         if (blockPlacePosition.x == CS_P_MINUS_ONE) {
                             blockPlacePosition.x = 1;
-                            chunk = m_World->GetChunk(chunk->m_Pos.x + 1, chunk->m_Pos.y, chunk->m_Pos.z);
+                            chunk = m_World->GetChunk(chunk->m_Pos + Vec3<int>(1,0,0));
                         }
 
-                        if (blockPlacePosition.x == 0) {
+                        else if (blockPlacePosition.x == 0) {
                             blockPlacePosition.x = CS;
-                            chunk = m_World->GetChunk(chunk->m_Pos.x - 1, chunk->m_Pos.y, chunk->m_Pos.z);
+                            chunk = m_World->GetChunk(chunk->m_Pos - Vec3<int>(1,0,0));
+                        }
+
+                        if (blockPlacePosition.y == CS_P_MINUS_ONE) {
+                            blockPlacePosition.y = 1;
+                            chunk = m_World->GetChunk(chunk->m_Pos + Vec3<int>(0,1,0));
+                        }
+
+                        if (blockPlacePosition.y == 0) {
+                            blockPlacePosition.y = CS;
+                            chunk = m_World->GetChunk(chunk->m_Pos - Vec3<int>(0,1,0));
                         }
 
                         if (blockPlacePosition.z == CS_P_MINUS_ONE) {
                             blockPlacePosition.z = 1;
-                            chunk = m_World->GetChunk(chunk->m_Pos.x, chunk->m_Pos.y, chunk->m_Pos.z + 1);
+                            chunk = m_World->GetChunk(chunk->m_Pos + Vec3<int>(0,0,1));
                         }
 
-                        if (blockPlacePosition.z == 0) {
+                        else if (blockPlacePosition.z == 0) {
                             blockPlacePosition.z = CS;
-                            chunk = m_World->GetChunk(chunk->m_Pos.x, chunk->m_Pos.y, chunk->m_Pos.z - 1);
+                            chunk = m_World->GetChunk(chunk->m_Pos - Vec3<int>(0,0,1));
                         }
 
                         if (chunk != nullptr) {
@@ -588,8 +551,9 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
             break;
         }
         case GLFW_MOUSE_BUTTON_MIDDLE: {
-            if (m_BlockSelectRaycastResult.blockHit != AIR) {
-                m_SelectedBlock = m_BlockSelectRaycastResult.blockHit;
+            const VoxelRaycastResult& raycastResult = m_World->GetPlayer().GetBlockRaycastResult();
+            if (raycastResult.blockHit != AIR) {
+                m_SelectedBlock = raycastResult.blockHit;
             }
             break;
         }
