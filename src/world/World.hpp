@@ -7,15 +7,17 @@ LICENSE: MIT
 #define WORLD_H
 
 #include <unordered_map>
+#include <concurrentqueue.h>
 #include <BS_thread_pool.hpp>
 #include <PerlinNoise.hpp>
 #include <world/Chunk.hpp>
 #include <world/Skybox.hpp>
 #include <vector>
+#include <mutex>
 #include <world/Player.hpp>
+#include <util/MutexHolder.hpp>
 
 namespace engine {
-
     struct WorldSave {
         siv::PerlinNoise::seed_type seed;
     };
@@ -24,6 +26,12 @@ namespace engine {
         Vec3<float> position;
         float pitch;
         float yaw;
+    };
+
+    struct ChunkGroup {
+        mutex_holder mHolder;
+        std::vector<Chunk*> group;
+        Vec3<int> orientation;
     };
 
     class World {
@@ -35,6 +43,8 @@ namespace engine {
         Player& GetPlayer();
         const char* GetName();
         void CreateSpawnChunks(int radius);
+        void GenerateNewChunks(int64_t remainingFrameTime, int radius, Vec3<int> prevChunkPos, Vec3<int> newChunkPos);
+        void MeshNewChunks(int radius, Vec3<int> chunkPos, const int bufferPerFrames);
         void Draw(Shader& chunkShader, Shader& waterShader, Shader& customModelShader);
         ~World();
     private:
@@ -42,12 +52,17 @@ namespace engine {
         Skybox m_Skybox;
 
         const char* m_WorldName = nullptr;
-        std::vector<Chunk*> m_ChunkDrawVector;
-
         Vec3<int> playerChunkPos;
 
-        BS::thread_pool m_MeshPool;
+        std::vector<Chunk*> m_ChunkDrawVector;
+        std::queue<ChunkGroup*> m_ChunkGroups;
         BS::thread_pool m_TerrainGenPool;
+        BS::thread_pool m_MergePool;
+        BS::thread_pool m_MeshPool;
+        BS::thread_pool m_UnloadPool;
+        moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
+
+        std::mutex m_MapMutex;
         std::unordered_map<Vec3<int>, Chunk> m_ChunkMap;
         siv::PerlinNoise m_Noise = siv::PerlinNoise(0);
         
@@ -55,7 +70,8 @@ namespace engine {
         std::mt19937 gen = std::mt19937(rd());
         std::uniform_int_distribution<> distrib = std::uniform_int_distribution<>(1, 100);
 
-
+        void SetNeighborsEdgeData(Chunk* chunk, const Vec3<int>& stripOrientation);
+        void EraseChunk(Vec3<int>pos);
     };
 }
 

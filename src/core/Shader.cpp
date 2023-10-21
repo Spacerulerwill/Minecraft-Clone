@@ -21,10 +21,6 @@ engine::ShaderSources engine::Shader::ParseShader(const std::string& filepath) {
         LOG_ERROR(fmt::format("Shader file at location {} not found", filepath));
     }
 
-    enum ShaderType {
-        NONE = -1, VERTEX = 0, FRAGMENT = 1
-    };
-
     std::string line;
     std::stringstream ss[2];
     ShaderType type = ShaderType::NONE;

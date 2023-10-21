@@ -22,6 +22,7 @@ LICENSE: MIT
 #include <atomic>
 #include <mutex>
 #include <fstream>
+#include <util/MutexHolder.hpp>
 
 namespace engine {
 
@@ -67,12 +68,14 @@ namespace engine {
 		size_t m_CustomModelVertexCount = 0;
 
 		Mat4<float> m_Model = scale(Vec3<float>(BLOCK_SCALE));
-        std::mutex mtx;
 	public:
+        std::mutex mtx;
+
+        std::atomic<bool> needsRemeshing = false;
+        std::atomic<bool> canBeDrawn = false;
         std::atomic<bool> isBeingMeshed = false;
         std::atomic<bool> isInBufferQueue = false;
 
-        bool dirty = false;
     	BlockInt* m_Voxels = new BlockInt[CS_P3];
         Vec3<int> m_Pos = Vec3<int>(0);
         
@@ -102,12 +105,10 @@ namespace engine {
 
 		inline void SetBlock(BlockInt block, int x, int y, int z) {
 			m_Voxels[voxelIndex(x,y,z)] = block;
-            dirty = true;
 		}
 
         inline void SetBlock(BlockInt block, Vec3<int> pos) {
 			m_Voxels[voxelIndex(pos.x,pos.y,pos.z)] = block;
-            dirty = true;
 		}
 
     };

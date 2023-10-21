@@ -20,6 +20,7 @@ License: MIT
 #include <filesystem>
 #include <memory>
 #include <fstream>
+#include <chrono>
 #include <util/Exceptions.hpp>
 
 // Unique pointer to the singleton instance
@@ -185,7 +186,7 @@ void engine::Application::Run()
     bufferLayout.AddAttribute<float>(2); // 2 Texture Coordinates
     VertexArray VAO;
     VAO.AddBuffer(VBO, bufferLayout);
-
+    
     // Orthographic projection matrix maps normalised device coordinates to pixel screen space coordinates
     Mat4 ortho = orthographic(0.0f, SCREEN_HEIGHT, 0.0f, SCREEN_WIDTH, -1.0f, 100.0f);
     
@@ -229,6 +230,9 @@ void engine::Application::Run()
     int currentAtlasIndex = 0;
     int totalFrameDuration = 0;
 
+    const int radius = 5;
+    const int bufferPerFrame = 10;
+
     while (!glfwWindowShouldClose(p_Window)) {
         std::string worldName = MainMenu();
 
@@ -243,9 +247,12 @@ void engine::Application::Run()
             continue;
         }
 
-        m_World->CreateSpawnChunks(5);
+        m_World->CreateSpawnChunks(radius);
         Player& player = m_World->GetPlayer();
         Camera& camera = player.GetCamera();
+
+        Vec3<int> prevChunkPos = player.GetChunkPosition();
+        Vec3<int> chunkPos = player.GetChunkPosition();
 
         glfwShowWindow(p_Window);
         m_PlayingGame = true;
@@ -259,8 +266,15 @@ void engine::Application::Run()
 
             ProcessInput(camera);
 
-            // Calculate player chunk position
-            Vec3<int> chunkPos = player.GetChunkPosition();
+            prevChunkPos = chunkPos;
+            chunkPos = player.GetChunkPosition();
+
+            // Calculate new chunks to be made
+            if (chunkPos != prevChunkPos) {
+                m_World->GenerateNewChunks(0, radius, prevChunkPos, chunkPos);
+            }
+
+            m_World->MeshNewChunks(radius, chunkPos, bufferPerFrame);
 
             // Cycle through texture atlases 10 times a second
             double currentTime = glfwGetTime();
@@ -372,8 +386,8 @@ void engine::Application::InitOpenGL() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    //glEnable(GL_CULL_FACE);
+    //glCullFace(GL_BACK);
 }
 
 void engine::Application::GLFWFramebufferResizeCallback(GLFWwindow* window, int width, int height)

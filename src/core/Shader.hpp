@@ -22,6 +22,10 @@ namespace engine {
         std::string Fragment;
     };
 
+    enum ShaderType {
+        NONE = -1, VERTEX = 0, FRAGMENT = 1
+    };
+
     class Shader {
     private:
         GLuint u_ID;
