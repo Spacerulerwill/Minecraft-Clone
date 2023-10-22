@@ -41,9 +41,9 @@ const char* engine::World::GetName() {
 
 void engine::World::CreateSpawnChunks(int radius) {
 
-    for (int x = -radius; x < radius; x++){
+    for (int x = -radius; x <= radius; x++){
         for (int y = 0; y < 3; y++){
-            for (int z = -radius; z < radius; z++) {
+            for (int z = -radius; z <= radius; z++) {
                 Vec3<int> chunkPos(x,y,z);
                 auto result = m_ChunkMap.try_emplace(chunkPos, chunkPos);
                 Chunk* chunk = &(result.first->second);  
@@ -74,12 +74,15 @@ void engine::World::CreateSpawnChunks(int radius) {
     m_TerrainGenPool.wait_for_tasks();
     
     for (auto& [key, chunk]: m_ChunkMap) {
-        SetNeighborsEdgeData(&chunk, Vec3<int>(0,0,0));
+        m_MergePool.push_task([&chunk,this]{
+            SetNeighborsEdgeData(&chunk, Vec3<int>(0,0,0));
+        });
     }
+    m_MergePool.wait_for_tasks();
 
-    for (int x = -radius; x < radius; x++){
+    for (int x = -radius; x <= radius; x++){
         for (int y = 0; y < 3; y++){
-            for (int z = -radius; z < radius; z++) {
+            for (int z = -radius; z <= radius; z++) {
                 Chunk* chunk = GetChunk(Vec3<int>(x,y,z));
                 m_MeshPool.push_task([chunk]{
                     chunk->CreateMesh();
@@ -104,14 +107,17 @@ void engine::World::MeshNewChunks(int radius, Vec3<int> chunkPos, int bufferPerF
             nextGroup->mHolder.mutex.lock();
             int groupSize = nextGroup->group.size();
             nextGroup->mHolder.mutex.unlock();
-            if (groupSize == 3 * radius * 2) {
+            if (groupSize == 3 * ((radius * 2) + 1)) {
                 nextGroup->mHolder.mutex.lock();
+                
+                m_MapMutex.lock();
                 for (auto& chunk : nextGroup->group) {
                     m_MergePool.push_task([chunk, nextGroup, this]{
                         SetNeighborsEdgeData(chunk, nextGroup->orientation);
                     });
                 }
                 m_MergePool.wait_for_tasks();
+                m_MapMutex.unlock();
 
                 // Create meshing tasks for new chunks
                 for (auto& [key, chunk]: m_ChunkMap) {
@@ -144,10 +150,9 @@ void engine::World::MeshNewChunks(int radius, Vec3<int> chunkPos, int bufferPerF
 
 void engine::World::GenerateNewChunks(int64_t remainingFrameTime, int radius, Vec3<int> prevChunkPos, Vec3<int> newChunkPos) {
     m_ChunkDrawVector.erase(std::remove_if(m_ChunkDrawVector.begin(), m_ChunkDrawVector.end(), [newChunkPos, radius](Chunk* chunk) { 
-        return chunk->m_Pos.x < newChunkPos.x-radius ||
+        return 
+        chunk->m_Pos.x < newChunkPos.x-radius ||
         chunk->m_Pos.x > newChunkPos.x+radius ||
-        chunk->m_Pos.y < newChunkPos.y-radius ||
-        chunk->m_Pos.y > newChunkPos.y+radius ||
         chunk->m_Pos.z < newChunkPos.z-radius ||
         chunk->m_Pos.z > newChunkPos.z+radius ;
     }), m_ChunkDrawVector.end());
@@ -159,12 +164,14 @@ void engine::World::GenerateNewChunks(int64_t remainingFrameTime, int radius, Ve
         chunkGroup->orientation = diff;
         m_ChunkGroups.push(chunkGroup);
 
-        for (int x = newChunkPos.x - radius; x < newChunkPos.x + radius; x++){
+        for (int x = newChunkPos.x - radius; x <= newChunkPos.x + radius; x++){
             for (int y = 0; y < 3; y++){
                 // Create new chunks
                 Vec3<int> chunkPos(x,y,newChunkPos.z + (radius * diff.z));
+                m_MapMutex.lock();
                 auto result = m_ChunkMap.try_emplace(chunkPos, chunkPos);
-                Chunk* chunk = &(result.first->second);     
+                Chunk* chunk = &(result.first->second);
+                m_MapMutex.unlock();
                 if (y == 2) { 
                     m_TerrainGenPool.push_task([chunk, chunkGroup, this]{
                         chunk->TerrainGen(m_Noise, gen, distrib);
@@ -178,23 +185,26 @@ void engine::World::GenerateNewChunks(int64_t remainingFrameTime, int radius, Ve
                         chunkGroup->group.push_back(chunk);
                     });
                 }
-                //Delete old ones
-                EraseChunk(Vec3<int>(x, y, newChunkPos.z + (radius * diff.z)+diff.z));
             }
+            m_MapMutex.lock();
+            for (int y = 0; y < 3; y++){
+                EraseChunk(Vec3<int>(x, y, (prevChunkPos.z + (radius * -diff.z))));
+            }
+            m_MapMutex.unlock();
         }
     }
 
-    else if (abs(diff.x) == 1) {
+    if (abs(diff.x) == 1) {
         ChunkGroup* chunkGroup = new ChunkGroup;
         chunkGroup->orientation = diff;
         m_ChunkGroups.push(chunkGroup);
 
-        for (int z = newChunkPos.z - radius; z < newChunkPos.z + radius; z++){
+        for (int z = newChunkPos.z - radius; z <= newChunkPos.z + radius; z++){
             for (int y = 0; y < 3; y++){
                 // Create new chunks
-                Vec3<int> chunkPos(newChunkPos.x + (radius * diff.x) - diff.x,y,z);
+                Vec3<int> chunkPos(newChunkPos.x + (radius * diff.x),y,z);
                 auto result = m_ChunkMap.try_emplace(chunkPos, chunkPos);
-                Chunk* chunk = &(result.first->second);     
+                Chunk* chunk = &(result.first->second);
                 if (y == 2) { 
                     m_TerrainGenPool.push_task([chunk, chunkGroup, this]{
                         chunk->TerrainGen(m_Noise, gen, distrib);
@@ -208,9 +218,13 @@ void engine::World::GenerateNewChunks(int64_t remainingFrameTime, int radius, Ve
                         chunkGroup->group.push_back(chunk);
                     });
                 }
-                //Delete old ones
-                EraseChunk(Vec3<int>(newChunkPos.x + (radius * diff.x),y,z));
             }
+
+            m_MapMutex.lock();
+            for (int y = 0; y < 3; y++) {
+                EraseChunk(Vec3<int>((prevChunkPos.x + (radius * -diff.x)), y, z));
+            }
+            m_MapMutex.unlock();
         }
     }
 }
@@ -290,7 +304,6 @@ engine::World::~World() {
 }
 
 void engine::World::SetNeighborsEdgeData(Chunk* chunk, const Vec3<int>& chunkStripOrientation) {
-
     Chunk* aboveChunk = GetChunk(chunk->m_Pos + Vec3<int>(0,1,0));
     if (aboveChunk != nullptr) {
         for (int x = 1; x < CS_P_MINUS_ONE; x++){

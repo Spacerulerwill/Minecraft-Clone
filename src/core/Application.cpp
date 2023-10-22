@@ -142,7 +142,7 @@ std::string engine::Application::MainMenu() {
 
         // Create player save data with their starting position and rotation
         engine::PlayerSave playerSave {
-            .position = engine::Vec3<float>(0.0f),
+            .position = engine::Vec3<float>(0.0f, 1000.0f, 0.0f),
             .pitch = 0.0f,
             .yaw = -90.0f
         };
@@ -285,7 +285,7 @@ void engine::Application::Run()
                 lastTime = currentTime;
             }
 
-            player.BlockRaycast(m_World);
+            //player.BlockRaycast(m_World);
 
             // Bind our framebuffer and render to it
             p_Framebuffer->Bind();
@@ -386,8 +386,8 @@ void engine::Application::InitOpenGL() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    //glEnable(GL_CULL_FACE);
-    //glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 }
 
 void engine::Application::GLFWFramebufferResizeCallback(GLFWwindow* window, int width, int height)
