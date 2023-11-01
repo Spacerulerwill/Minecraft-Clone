@@ -19,17 +19,19 @@ void engine::Chunk::AddVertexBufferAttributes() {
     m_CustomModelVAO.AddBuffer(m_CustomModelVBO, bufLayout);
 }
 
-engine::Chunk::Chunk(int x, int y, int z): m_Pos(x, y, z)
-{
-    m_Model *= translate(Vec3<float>(static_cast<float>(x * CS), static_cast<float>(y * CS), static_cast<float>(z * CS)));
-    AddVertexBufferAttributes();
-}
 
 engine::Chunk::Chunk(Vec3<int> chunkPos): m_Pos(chunkPos.x, chunkPos.y, chunkPos.z)
 {
     m_Model *= translate(Vec3<float>(static_cast<float>(chunkPos.x * CS), static_cast<float>(chunkPos.y * CS), static_cast<float>(chunkPos.z * CS)));
     AddVertexBufferAttributes();
 }
+
+engine::Chunk::Chunk(int x, int y, int z): m_Pos(x, y, z)
+{
+    m_Model *= translate(Vec3<float>(static_cast<float>(x * CS), static_cast<float>(y * CS), static_cast<float>(z * CS)));
+    AddVertexBufferAttributes();
+}
+
 
 engine::Chunk::~Chunk()
 {
@@ -38,7 +40,6 @@ engine::Chunk::~Chunk()
 
 void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin,std::mt19937& gen, std::uniform_int_distribution<>& distrib)
 {
-    std::lock_guard<std::mutex> _(mtx);
     const unsigned int water_level = 32;
   
     for (int x = 1; x < CS_P_MINUS_ONE; x++) {
@@ -106,7 +107,6 @@ void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin,std::mt19937& gen,
 
 void engine::Chunk::TerrainGen(BlockInt block)
 {
-    std::lock_guard<std::mutex> _(mtx);
 	for (int x = 1; x < CS_P_MINUS_ONE; x++) {
 		for (int y = 1; y < CS_P_MINUS_ONE; y++) {
 			for (int z = 1; z < CS_P_MINUS_ONE; z++) {
@@ -119,7 +119,6 @@ void engine::Chunk::TerrainGen(BlockInt block)
 
 void engine::Chunk::CreateMesh()
 {
-    std::lock_guard<std::mutex> _(mtx);
     m_Vertices.clear();
     m_Vertices.reserve(CS_P3 * 3);
     m_VertexCount = 0;
@@ -140,12 +139,10 @@ void engine::Chunk::CreateMesh()
     m_WaterVertexCount = m_WaterVertices.size();
     m_CustomModelVertexCount = m_CustomModelVertices.size();
 
-    needsRemeshing = false;
 }
 
 void engine::Chunk::BufferData()
 {
-    std::lock_guard<std::mutex> _(mtx);
     if (m_VertexCount > 0){
         m_VBO.BufferData(m_Vertices.data(), m_VertexCount * sizeof(CubeChunkVertex), GL_STATIC_DRAW);
         std::vector<CubeChunkVertex>().swap(m_Vertices);
@@ -164,7 +161,6 @@ void engine::Chunk::BufferData()
 
 void engine::Chunk::Draw(Shader& shader)
 {
-    std::lock_guard<std::mutex> _(mtx);
 	if (m_VertexCount > 0) {
 		m_VAO.Bind();
 		shader.setMat4("model", m_Model);
@@ -174,7 +170,6 @@ void engine::Chunk::Draw(Shader& shader)
 
 void engine::Chunk::DrawWater(Shader& shader)
 {
-    std::lock_guard<std::mutex> _(mtx);
 	if (m_WaterVertexCount > 0) {
 		m_WaterVAO.Bind();
 		shader.setMat4("model", m_Model);
@@ -184,7 +179,6 @@ void engine::Chunk::DrawWater(Shader& shader)
 
 void engine::Chunk::DrawCustomModelBlocks(Shader& shader)
 {
-    std::lock_guard<std::mutex> _(mtx);
 	if (m_CustomModelVertexCount > 0) {
 		m_CustomModelVAO.Bind();
 		shader.setMat4("model", m_Model);

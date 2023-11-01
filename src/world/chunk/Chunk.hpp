@@ -19,9 +19,6 @@ LICENSE: MIT
 #include <world/chunk/ChunkMesher.hpp>
 #include <PerlinNoise.hpp>
 #include <util/Constants.hpp>
-#include <atomic>
-#include <mutex>
-#include <fstream>
 
 namespace engine {
 
@@ -69,14 +66,11 @@ namespace engine {
 		Mat4<float> m_Model = scale(Vec3<float>(BLOCK_SCALE));
 
         void AddVertexBufferAttributes();
+        
 	public:
-        std::mutex mtx;
-
-        std::atomic<bool> needsRemeshing = false;
-        std::atomic<bool> canBeDrawn = false;
+        Vec3<int> m_Pos = Vec3<int>(0);
 
     	BlockInt* m_Voxels = new BlockInt[CS_P3] {};
-        Vec3<int> m_Pos = Vec3<int>(0);
         
 		Chunk(int chunkX, int chunkY, int chunkZ);
         Chunk(Vec3<int> chunkPos);
@@ -106,7 +100,6 @@ namespace engine {
         inline void SetBlock(BlockInt block, Vec3<int> pos) {
 			m_Voxels[voxelIndex(pos.x,pos.y,pos.z)] = block;
 		}
-
     };
 }
 

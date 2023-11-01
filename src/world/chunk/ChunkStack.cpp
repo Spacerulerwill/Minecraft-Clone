@@ -5,6 +5,9 @@ LICENSE: MIT
 
 #include <world/chunk/ChunkStack.hpp>
 
+engine::Chunk* engine::ChunkStack::EmplaceChunk(Vec3<int> pos) {
+    return &(m_Chunks.emplace_back(pos));
+}
 /*
 MIT License
 

@@ -40,12 +40,8 @@ namespace engine {
     class World {
     public:
         World(const char* worldName);
-        Chunk* CreateChunk(Vec3<int> pos);
-        Chunk* GetChunk(Vec3<int> pos);
-        void AddChunkToDrawVector(Chunk* chunk);
         Player& GetPlayer();
         const char* GetName();
-        void CreateSpawnChunks(int radius);
         void Draw(Shader& chunkShader, Shader& waterShader, Shader& customModelShader);
         ~World();
     private:
@@ -55,24 +51,12 @@ namespace engine {
         const char* m_WorldName = nullptr;
         Vec3<int> playerChunkPos;
 
-        std::vector<Chunk*> m_ChunkDrawVector;
-        std::queue<ChunkGroup*> m_ChunkGroups;
-        BS::thread_pool m_TerrainGenPool;
-        BS::thread_pool m_MergePool;
-        BS::thread_pool m_MeshPool;
-        BS::thread_pool m_UnloadPool;
-        moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
-        ChunkGroup* m_CurrentChunkGroup = nullptr;
-
-        std::mutex m_MapMutex;
-        std::unordered_map<Vec3<int>, Chunk> m_ChunkMap;
         siv::PerlinNoise m_Noise = siv::PerlinNoise(0);
         
         std::random_device rd;
         std::mt19937 gen = std::mt19937(rd());
         std::uniform_int_distribution<> distrib = std::uniform_int_distribution<>(1, 100);
 
-        void SetNeighborsEdgeData(Chunk* chunk, ChunkGroup* chunkGroup);
     };
 }
 

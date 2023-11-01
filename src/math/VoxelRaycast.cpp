@@ -11,6 +11,8 @@ License: MIT
 
 namespace engine {
     VoxelRaycastResult GenerateVoxelRaycastResult(World* world, Vec3<int> normal, Vec3<int> globalBlockPos) {
+
+        /*
         Vec3<int> chunkPos;
 
         chunkPos.y = globalBlockPos.y / CS;
@@ -59,7 +61,10 @@ namespace engine {
                 blockHit
             };
         }
+        */
+        return VoxelRaycastResult{};
     }
+
 
     float fract0(float x) {
         return x - floorf(x);
@@ -68,9 +73,10 @@ namespace engine {
     float fract1(float x) {
         return 1 - x + floorf(x);
     }
-}
 
-engine::VoxelRaycastResult engine::VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, int distance) {
+
+VoxelRaycastResult VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, int distance) {
+    /*
     assert(!(direction.x == 0 && direction.y == 0 && direction.z == 0));
 
     float tMaxX, tMaxY, tMaxZ, tDeltaX, tDeltaY, tDeltaZ;
@@ -149,6 +155,8 @@ engine::VoxelRaycastResult engine::VoxelRaycast(World* world, const Vec3<float>&
                 return res;
             }
         }
+        */
+        return VoxelRaycastResult {};
     }
 }
 

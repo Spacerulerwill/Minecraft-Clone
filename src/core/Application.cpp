@@ -247,7 +247,6 @@ void engine::Application::Run()
             continue;
         }
 
-        m_World->CreateSpawnChunks(radius);
         Player& player = m_World->GetPlayer();
         Camera& camera = player.GetCamera();
 
@@ -433,6 +432,7 @@ void engine::Application::GLFWScrollCallback(GLFWwindow* window, double xoffset,
 
 void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
+    /*
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT: {
             if (action == GLFW_PRESS) {
@@ -570,6 +570,7 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
             break;
         }
     }
+    */
 }
        
 void engine::Application::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)

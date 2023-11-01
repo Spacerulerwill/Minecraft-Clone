@@ -7,6 +7,8 @@ LICENSE: MIT
 #define CHUNKSTACK_HPP
 
 #include <world/chunk/Chunk.hpp>
+#include <math/Vec3.hpp>
+#include <vector>
 
 /*
 A ChunkStack represents a vertical column of chunks
@@ -15,6 +17,9 @@ namespace engine {
     class ChunkStack {
     private:
         std::vector<Chunk> m_Chunks;
+    public:
+        Chunk* EmplaceChunk(Vec3<int> pos);
+
     };
 }
 
