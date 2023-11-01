@@ -35,14 +35,18 @@ add_executable(${PROJECT_NAME}
     src/world/Block.hpp
     src/world/Skybox.cpp
     src/world/Skybox.hpp
-    src/world/Chunk.cpp
-    src/world/Chunk.hpp
+    src/world/chunk/Chunk.cpp
+    src/world/chunk/Chunk.hpp
+    src/world/chunk/ChunkMesher.cpp
+    src/world/chunk/ChunkMesher.hpp
+    src/world/chunk/ChunkStack.cpp
+    src/world/chunk/ChunkStack.hpp
+    src/world/chunk/ChunkRegion.cpp
+    src/world/chunk/ChunkRegion.hpp
     src/world/World.cpp
     src/world/World.hpp
     src/world/Player.cpp
     src/world/Player.hpp
-    src/world/ChunkMesher.cpp
-    src/world/ChunkMesher.hpp
     src/util/Log.cpp
     src/util/Log.hpp
     src/util/Concepts.hpp

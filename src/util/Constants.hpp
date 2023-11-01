@@ -6,8 +6,8 @@ LICENSE: MIT
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-// Chunk size exponents (used when calculating array index to find block at x,y,z)
 namespace engine {
+    // Chunk size exponents (used for bit shifts when calculating array index to find block at x,y,z)
     constexpr int CHUNK_SIZE_EXP = 6;
     constexpr int CHUNK_SIZE_EXP_X2 = CHUNK_SIZE_EXP * 2;
 
@@ -21,6 +21,13 @@ namespace engine {
     // Chunk size without paddings
     constexpr int CS = CS_P - 2;
     constexpr int CS_MINUS_ONE = CS - 1;
+
+    // Chunk region exponents (used for bitshifts once again)
+    constexpr int CHUNK_REGION_SIZE_EXP = 4;
+    
+    // Chunk region sizes
+    constexpr int CHUNK_REGION_SIZE = 1 << CHUNK_REGION_SIZE_EXP;
+    constexpr int CHUNK_REGION_SIZE_SQUARED = CHUNK_REGION_SIZE * CHUNK_REGION_SIZE;
 };
 
 #endif // !CONSTANTS_H

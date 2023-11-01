@@ -13,7 +13,7 @@ License: MIT
 #include <opengl/VertexArray.hpp>
 #include <opengl/VertexBufferLayout.hpp>
 #include <world/Block.hpp>
-#include <world/Chunk.hpp>
+#include <world/chunk/Chunk.hpp>
 #include <world/World.hpp>
 #include <math/Math.hpp>
 #include <algorithm>
@@ -231,7 +231,7 @@ void engine::Application::Run()
     int totalFrameDuration = 0;
 
     const int radius = 5;
-    const int bufferPerFrame = 10;
+    const int bufferPerFrame = 1;
 
     while (!glfwWindowShouldClose(p_Window)) {
         std::string worldName = MainMenu();
@@ -259,6 +259,7 @@ void engine::Application::Run()
         
         // Main game loop
         while (m_PlayingGame) { 
+            auto start = std::chrono::high_resolution_clock::now();
             // Calculate delta time
             float currentFrame = static_cast<float>(glfwGetTime());
             m_DeltaTime = currentFrame - m_LastFrame;
@@ -269,13 +270,6 @@ void engine::Application::Run()
             prevChunkPos = chunkPos;
             chunkPos = player.GetChunkPosition();
 
-            // Calculate new chunks to be made
-            if (chunkPos != prevChunkPos) {
-                m_World->GenerateNewChunks(0, radius, prevChunkPos, chunkPos);
-            }
-
-            m_World->MeshNewChunks(radius, chunkPos, bufferPerFrame);
-
             // Cycle through texture atlases 10 times a second
             double currentTime = glfwGetTime();
             if (currentTime - lastTime > 0.1) {
@@ -285,7 +279,7 @@ void engine::Application::Run()
                 lastTime = currentTime;
             }
 
-            //player.BlockRaycast(m_World);
+            player.BlockRaycast(m_World);
 
             // Bind our framebuffer and render to it
             p_Framebuffer->Bind();
@@ -325,6 +319,11 @@ void engine::Application::Run()
             crosshairShader.setMat4<float>("projection", ortho);
 
             glDrawArrays(GL_TRIANGLES, 0, 6);
+
+            // Calculate new chunks to be made
+            if (chunkPos != prevChunkPos) {
+
+            }
 
             glfwPollEvents();
             glfwSwapBuffers(p_Window);
@@ -386,8 +385,8 @@ void engine::Application::InitOpenGL() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    //glEnable(GL_CULL_FACE);
+    //glCullFace(GL_BACK);
 }
 
 void engine::Application::GLFWFramebufferResizeCallback(GLFWwindow* window, int width, int height)
@@ -414,7 +413,7 @@ void engine::Application::ProcessInput(Camera& camera)
     if (glfwGetKey(p_Window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, m_DeltaTime);
     if (glfwGetKey(p_Window, GLFW_KEY_LEFT_SHIFT))
-        camera.SetMovementSpeed(100.0f);
+        camera.SetMovementSpeed(300.0f);
     else
         camera.SetMovementSpeed(2.5f);
 }
@@ -513,7 +512,6 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
                             blockPlacePosition.y = 1;
                             Chunk* newChunk = m_World->CreateChunk((chunk->m_Pos + Vec3<int>(0,1,0)));
                             newChunk->SetBlock(m_SelectedBlock, blockPlacePosition);
-                            newChunk->UnloadToFile(m_World->GetName());
                             newChunk->CreateMesh();
                             newChunk->BufferData();
                             m_World->AddChunkToDrawVector(newChunk);

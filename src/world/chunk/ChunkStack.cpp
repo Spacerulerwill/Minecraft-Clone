@@ -1,29 +1,9 @@
 /*
 Copyright (C) 2023 William Redding - All Rights Reserved
-License: MIT
+LICENSE: MIT
 */
 
-#ifndef VOXELRAYCAST_HPP
-#define VOXELRAYCAST_HPP
-
-#include <world/Block.hpp>
-#include <math/Vec3.hpp>
-#include <world/chunk/Chunk.hpp>
-
-namespace engine {
-    class World;
-
-    struct VoxelRaycastResult {
-        Chunk* chunk;
-        Vec3<int> blockPos;
-        Vec3<int> normal;
-		BlockInt blockHit;
-	};
-
-    VoxelRaycastResult VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, int distance);
-}
-
-#endif // !VOXELRAYCAST_HPP
+#include <world/chunk/ChunkStack.hpp>
 
 /*
 MIT License

@@ -54,7 +54,6 @@ void engine::World::CreateSpawnChunks(int radius) {
                             rf.read((char*)&chunk->m_Voxels[0], CS_P3 * sizeof(BlockInt));
                         } else {
                             chunk->TerrainGen(m_Noise, gen, distrib);
-                            chunk->UnloadToFile(m_WorldName);
                         }
                         rf.close();
                     });
@@ -64,7 +63,6 @@ void engine::World::CreateSpawnChunks(int radius) {
                         rf.read((char*)&chunk->m_Voxels[0], CS_P3 * sizeof(BlockInt));
                     } else {
                         chunk->TerrainGen(STONE);
-                        chunk->UnloadToFile(m_WorldName);
                     }
                     rf.close();
                 }
@@ -75,7 +73,7 @@ void engine::World::CreateSpawnChunks(int radius) {
     
     for (auto& [key, chunk]: m_ChunkMap) {
         m_MergePool.push_task([&chunk,this]{
-            SetNeighborsEdgeData(&chunk, Vec3<int>(0,0,0));
+            SetNeighborsEdgeData(&chunk, nullptr);
         });
     }
     m_MergePool.wait_for_tasks();
@@ -99,135 +97,6 @@ void engine::World::CreateSpawnChunks(int radius) {
     }
 }
 
-void engine::World::MeshNewChunks(int radius, Vec3<int> chunkPos, int bufferPerFrame) {
-    // Merge chunk sides tog    ether in our chunk group
-    if (m_ChunkGroups.size() > 0) {
-        ChunkGroup* nextGroup = m_ChunkGroups.front();
-        if (nextGroup != nullptr) {
-            nextGroup->mHolder.mutex.lock();
-            int groupSize = nextGroup->group.size();
-            nextGroup->mHolder.mutex.unlock();
-            if (groupSize == 3 * ((radius * 2) + 1)) {
-                nextGroup->mHolder.mutex.lock();
-                
-                m_MapMutex.lock();
-                for (auto& chunk : nextGroup->group) {
-                    m_MergePool.push_task([chunk, nextGroup, this]{
-                        SetNeighborsEdgeData(chunk, nextGroup->orientation);
-                    });
-                }
-                m_MergePool.wait_for_tasks();
-                m_MapMutex.unlock();
-
-                // Create meshing tasks for new chunks
-                for (auto& [key, chunk]: m_ChunkMap) {
-                    if (chunk.needsRemeshing) {
-                        m_MeshPool.push_task([&chunk, this]{
-                            chunk.CreateMesh();
-                            m_ChunkBufferQueue.enqueue(&chunk);
-                        });
-                    }
-                }
-
-                m_ChunkGroups.pop();
-                nextGroup->mHolder.mutex.unlock();
-                delete nextGroup;
-            }
-        }
-    }
-
-    // try and buffer chunks
-    Chunk* chunksToBuffer[bufferPerFrame];
-    int dequeued = m_ChunkBufferQueue.try_dequeue_bulk(chunksToBuffer, bufferPerFrame);
-    for (int i = 0; i < dequeued; i++){
-        Chunk* chunk = chunksToBuffer[i];
-        chunk->BufferData();
-        if (!chunk->canBeDrawn) {
-            m_ChunkDrawVector.push_back(chunk);
-        }
-    }
-}
-
-void engine::World::GenerateNewChunks(int64_t remainingFrameTime, int radius, Vec3<int> prevChunkPos, Vec3<int> newChunkPos) {
-    m_ChunkDrawVector.erase(std::remove_if(m_ChunkDrawVector.begin(), m_ChunkDrawVector.end(), [newChunkPos, radius](Chunk* chunk) { 
-        return 
-        chunk->m_Pos.x < newChunkPos.x-radius ||
-        chunk->m_Pos.x > newChunkPos.x+radius ||
-        chunk->m_Pos.z < newChunkPos.z-radius ||
-        chunk->m_Pos.z > newChunkPos.z+radius ;
-    }), m_ChunkDrawVector.end());
-
-    Vec3<int> diff = newChunkPos - prevChunkPos;
-
-    if (abs(diff.z) == 1) {
-        ChunkGroup* chunkGroup = new ChunkGroup;
-        chunkGroup->orientation = diff;
-        m_ChunkGroups.push(chunkGroup);
-
-        for (int x = newChunkPos.x - radius; x <= newChunkPos.x + radius; x++){
-            for (int y = 0; y < 3; y++){
-                // Create new chunks
-                Vec3<int> chunkPos(x,y,newChunkPos.z + (radius * diff.z));
-                m_MapMutex.lock();
-                auto result = m_ChunkMap.try_emplace(chunkPos, chunkPos);
-                Chunk* chunk = &(result.first->second);
-                m_MapMutex.unlock();
-                if (y == 2) { 
-                    m_TerrainGenPool.push_task([chunk, chunkGroup, this]{
-                        chunk->TerrainGen(m_Noise, gen, distrib);
-                        std::lock_guard<std::mutex> guard(chunkGroup->mHolder.mutex);
-                        chunkGroup->group.push_back(chunk);
-                    });
-                } else {
-                    m_TerrainGenPool.push_task([chunk, chunkGroup, this]{
-                        chunk->TerrainGen(STONE);
-                        std::lock_guard<std::mutex> guard(chunkGroup->mHolder.mutex);
-                        chunkGroup->group.push_back(chunk);
-                    });
-                }
-            }
-            m_MapMutex.lock();
-            for (int y = 0; y < 3; y++){
-                EraseChunk(Vec3<int>(x, y, (prevChunkPos.z + (radius * -diff.z))));
-            }
-            m_MapMutex.unlock();
-        }
-    }
-
-    if (abs(diff.x) == 1) {
-        ChunkGroup* chunkGroup = new ChunkGroup;
-        chunkGroup->orientation = diff;
-        m_ChunkGroups.push(chunkGroup);
-
-        for (int z = newChunkPos.z - radius; z <= newChunkPos.z + radius; z++){
-            for (int y = 0; y < 3; y++){
-                // Create new chunks
-                Vec3<int> chunkPos(newChunkPos.x + (radius * diff.x),y,z);
-                auto result = m_ChunkMap.try_emplace(chunkPos, chunkPos);
-                Chunk* chunk = &(result.first->second);
-                if (y == 2) { 
-                    m_TerrainGenPool.push_task([chunk, chunkGroup, this]{
-                        chunk->TerrainGen(m_Noise, gen, distrib);
-                        std::lock_guard<std::mutex> guard(chunkGroup->mHolder.mutex);
-                        chunkGroup->group.push_back(chunk);
-                    });
-                } else {
-                    m_TerrainGenPool.push_task([chunk, chunkGroup, this]{
-                        chunk->TerrainGen(STONE);
-                        std::lock_guard<std::mutex> guard(chunkGroup->mHolder.mutex);
-                        chunkGroup->group.push_back(chunk);
-                    });
-                }
-            }
-
-            m_MapMutex.lock();
-            for (int y = 0; y < 3; y++) {
-                EraseChunk(Vec3<int>((prevChunkPos.x + (radius * -diff.x)), y, z));
-            }
-            m_MapMutex.unlock();
-        }
-    }
-}
 
 void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& customModelShader) {
     Mat4<float> perspective = m_Player.GetCamera().GetPerspectiveMatrix();
@@ -284,13 +153,8 @@ engine::Chunk* engine::World::GetChunk(Vec3<int> pos) {
     }
 }
 
-void engine::World::EraseChunk(Vec3<int> pos) {
-    m_ChunkMap.erase(pos);
-} 
-
 void engine::World::AddChunkToDrawVector(Chunk* chunk) {
     m_ChunkDrawVector.push_back(chunk);
-    chunk->canBeDrawn = true;
 }
 
 engine::World::~World() {
@@ -303,7 +167,15 @@ engine::World::~World() {
     WriteStructToDisk(fmt::format("worlds/{}/player.dat", m_WorldName), playerSave);
 }
 
-void engine::World::SetNeighborsEdgeData(Chunk* chunk, const Vec3<int>& chunkStripOrientation) {
+void engine::World::SetNeighborsEdgeData(Chunk* chunk, ChunkGroup* chunkGroup) {
+    Vec3<int> chunkStripOrientation;
+    if (chunkGroup != nullptr) {
+        chunkStripOrientation = chunkGroup->orientation;
+    }
+    else {
+        chunkStripOrientation = Vec3<int>(0,0,0);
+    }
+
     Chunk* aboveChunk = GetChunk(chunk->m_Pos + Vec3<int>(0,1,0));
     if (aboveChunk != nullptr) {
         for (int x = 1; x < CS_P_MINUS_ONE; x++){
@@ -329,6 +201,9 @@ void engine::World::SetNeighborsEdgeData(Chunk* chunk, const Vec3<int>& chunkStr
         for (int y = 1; y < CS_P_MINUS_ONE; y++){
             for(int z = 1; z < CS_P_MINUS_ONE; z++) {
                 leftChunk->SetBlock(chunk->GetBlock(1, y, z), CS_P_MINUS_ONE, y, z);
+                if (chunkStripOrientation.x == 1) {
+                    chunk->SetBlock(leftChunk->GetBlock(CS, y, z), 0, y, z);
+                }
             }
         }
         leftChunk->needsRemeshing = true;
@@ -339,6 +214,9 @@ void engine::World::SetNeighborsEdgeData(Chunk* chunk, const Vec3<int>& chunkStr
         for (int y = 1; y < CS_P_MINUS_ONE; y++){
             for(int z = 1; z < CS_P_MINUS_ONE; z++) {
                 rightChunk->SetBlock(chunk->GetBlock(CS, y, z), 0, y, z);
+                if (chunkStripOrientation.x == -1) {
+                    chunk->SetBlock(rightChunk->GetBlock(1, y, z), CS_P_MINUS_ONE, y, z);
+                }
             }
         }
         rightChunk->needsRemeshing = true;
@@ -352,6 +230,7 @@ void engine::World::SetNeighborsEdgeData(Chunk* chunk, const Vec3<int>& chunkStr
                 if (chunkStripOrientation.z == -1) {
                     chunk->SetBlock(behindChunk->GetBlock(x, y, 1), x, y, CS_P_MINUS_ONE);
                 }
+        
             }
         }
         behindChunk->needsRemeshing = true;

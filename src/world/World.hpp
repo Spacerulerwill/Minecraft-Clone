@@ -10,12 +10,13 @@ LICENSE: MIT
 #include <concurrentqueue.h>
 #include <BS_thread_pool.hpp>
 #include <PerlinNoise.hpp>
-#include <world/Chunk.hpp>
+#include <world/chunk/Chunk.hpp>
+#include <world/chunk/ChunkRegion.hpp>
 #include <world/Skybox.hpp>
 #include <vector>
 #include <mutex>
 #include <world/Player.hpp>
-#include <util/MutexHolder.hpp>
+#include <chrono>
 
 namespace engine {
     struct WorldSave {
@@ -29,9 +30,11 @@ namespace engine {
     };
 
     struct ChunkGroup {
-        mutex_holder mHolder;
+        std::mutex mtx;
         std::vector<Chunk*> group;
         Vec3<int> orientation;
+        std::atomic<bool> addedMergeTasks;
+        std::atomic<bool> addedMeshTasks;
     };
 
     class World {
@@ -43,8 +46,6 @@ namespace engine {
         Player& GetPlayer();
         const char* GetName();
         void CreateSpawnChunks(int radius);
-        void GenerateNewChunks(int64_t remainingFrameTime, int radius, Vec3<int> prevChunkPos, Vec3<int> newChunkPos);
-        void MeshNewChunks(int radius, Vec3<int> chunkPos, const int bufferPerFrames);
         void Draw(Shader& chunkShader, Shader& waterShader, Shader& customModelShader);
         ~World();
     private:
@@ -61,6 +62,7 @@ namespace engine {
         BS::thread_pool m_MeshPool;
         BS::thread_pool m_UnloadPool;
         moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
+        ChunkGroup* m_CurrentChunkGroup = nullptr;
 
         std::mutex m_MapMutex;
         std::unordered_map<Vec3<int>, Chunk> m_ChunkMap;
@@ -70,8 +72,7 @@ namespace engine {
         std::mt19937 gen = std::mt19937(rd());
         std::uniform_int_distribution<> distrib = std::uniform_int_distribution<>(1, 100);
 
-        void SetNeighborsEdgeData(Chunk* chunk, const Vec3<int>& stripOrientation);
-        void EraseChunk(Vec3<int>pos);
+        void SetNeighborsEdgeData(Chunk* chunk, ChunkGroup* chunkGroup);
     };
 }
 

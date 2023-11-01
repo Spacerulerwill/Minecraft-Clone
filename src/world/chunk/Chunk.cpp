@@ -3,7 +3,7 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 LICENSE: MIT
 */
 
-#include <world/Chunk.hpp>
+#include <world/chunk/Chunk.hpp>
 #include <opengl/VertexBufferLayout.hpp>
 #include <cstring>
 #include <fstream>
@@ -11,11 +11,7 @@ LICENSE: MIT
 #include <math/Math.hpp>
 #include <GLFW/glfw3.h>
 
-engine::Chunk::Chunk(int x, int y, int z): m_Pos(x, y, z)
-{
-    memset(m_Voxels, AIR, CS_P3);
-    m_Model *= translate(Vec3<float>(static_cast<float>(x * CS), static_cast<float>(y * CS), static_cast<float>(z * CS)));
-
+void engine::Chunk::AddVertexBufferAttributes() {
     VertexBufferLayout bufLayout;
 	bufLayout.AddAttribute<unsigned int>(2);
     m_VAO.AddBuffer(m_VBO, bufLayout);
@@ -23,16 +19,16 @@ engine::Chunk::Chunk(int x, int y, int z): m_Pos(x, y, z)
     m_CustomModelVAO.AddBuffer(m_CustomModelVBO, bufLayout);
 }
 
+engine::Chunk::Chunk(int x, int y, int z): m_Pos(x, y, z)
+{
+    m_Model *= translate(Vec3<float>(static_cast<float>(x * CS), static_cast<float>(y * CS), static_cast<float>(z * CS)));
+    AddVertexBufferAttributes();
+}
+
 engine::Chunk::Chunk(Vec3<int> chunkPos): m_Pos(chunkPos.x, chunkPos.y, chunkPos.z)
 {
-    memset(m_Voxels, AIR, CS_P3);
     m_Model *= translate(Vec3<float>(static_cast<float>(chunkPos.x * CS), static_cast<float>(chunkPos.y * CS), static_cast<float>(chunkPos.z * CS)));
-
-    VertexBufferLayout bufLayout;
-	bufLayout.AddAttribute<unsigned int>(2);
-    m_VAO.AddBuffer(m_VBO, bufLayout);
-    m_WaterVAO.AddBuffer(m_WaterVBO, bufLayout);
-    m_CustomModelVAO.AddBuffer(m_CustomModelVBO, bufLayout);
+    AddVertexBufferAttributes();
 }
 
 engine::Chunk::~Chunk()
@@ -43,68 +39,68 @@ engine::Chunk::~Chunk()
 void engine::Chunk::TerrainGen(const siv::PerlinNoise& perlin,std::mt19937& gen, std::uniform_int_distribution<>& distrib)
 {
     std::lock_guard<std::mutex> _(mtx);
-  const unsigned int water_level = 32;
+    const unsigned int water_level = 32;
   
-  for (int x = 1; x < CS_P_MINUS_ONE; x++) {
-      for (int z = 1; z < CS_P_MINUS_ONE; z++){
-          float heightMultiplayer = perlin.octave2D_01((m_Pos.x * CS + x) * 0.0125 , (m_Pos.z * CS + z) * 0.0125, 4, 0.5);
-          int height = 1 + (heightMultiplayer * CS_MINUS_ONE);
+    for (int x = 1; x < CS_P_MINUS_ONE; x++) {
+        for (int z = 1; z < CS_P_MINUS_ONE; z++){
+            float heightMultiplayer = perlin.octave2D_01((m_Pos.x * CS + x) * 0.0125 , (m_Pos.z * CS + z) * 0.0125, 4, 0.5);
+            int height = 1 + (heightMultiplayer * CS_MINUS_ONE);
 
-          int dirt_height = height - 1;
-          int dirt_to_place = dirt_height < 3 ? dirt_height : 3;
-          for (int y = height - dirt_to_place; y < height; y++){
-            SetBlock(DIRT, x, y, z);
-          }
-          for (int y = 1; y <= dirt_height - dirt_to_place; y++){
-            SetBlock(STONE, x, y, z);
-          }
-          
-          if (height < water_level - 1) {
+            int dirt_height = height - 1;
+            int dirt_to_place = dirt_height < 3 ? dirt_height : 3;
+            for (int y = height - dirt_to_place; y < height; y++){
+                SetBlock(DIRT, x, y, z);
+            }
+            for (int y = 1; y <= dirt_height - dirt_to_place; y++){
+                SetBlock(STONE, x, y, z);
+            }
             
-            float oceanFloorNoise = perlin.octave2D_01((m_Pos.x * CS + x) * 0.125 , (m_Pos.z * CS + z) * 0.125, 8, 0.1);
+            if (height < water_level - 1) {
+                
+                float oceanFloorNoise = perlin.octave2D_01((m_Pos.x * CS + x) * 0.125 , (m_Pos.z * CS + z) * 0.125, 8, 0.1);
 
-            if (oceanFloorNoise < 0.33) {
-                SetBlock(CLAY, x, height, z);
-            }
-            else if (oceanFloorNoise < 0.66) {
-                SetBlock(SAND, x, height, z);
-            }
-            else if (oceanFloorNoise < 1.0) {
-                SetBlock(GRAVEL, x, height, z);
-            }
-            for (int y = height + 1; y < water_level; y++){
-              SetBlock(WATER,x,y,z);
-            }
-          } else {
-            SetBlock(GRASS, x, height, z);
-
-            int randInt = distrib(gen);
-            if (height < CS_P_MINUS_ONE - 1) {
-                if (randInt < 20) {
-                    SetBlock(TALL_GRASS, x, height+1, z);
+                if (oceanFloorNoise < 0.33) {
+                    SetBlock(CLAY, x, height, z);
                 }
-                else if (randInt < 28) {
-					SetBlock(ROSE, x, height + 1, z);
-
-                } 
-                else if (randInt < 30) {
-                    SetBlock(PINK_TULIP, x, height+1, z);
+                else if (oceanFloorNoise < 0.66) {
+                    SetBlock(SAND, x, height, z);
                 }
-            }
-            if (height < CS_P_MINUS_ONE - 4) {
-                if (randInt == 69) {
-                    for (int y = 0; y < 3; y++) {
-                        SetBlock(OAK_LOG, x, height + y + 1, z);
+                else if (oceanFloorNoise < 1.0) {
+                    SetBlock(GRAVEL, x, height, z);
+                }
+                for (int y = height + 1; y < water_level; y++){
+                SetBlock(WATER,x,y,z);
+                }
+            } else {
+                SetBlock(GRASS, x, height, z);
+
+                int randInt = distrib(gen);
+                if (height < CS_P_MINUS_ONE - 1) {
+                    if (randInt < 20) {
+                        SetBlock(TALL_GRASS, x, height+1, z);
                     }
-                    SetBlock(OAK_LEAVES, x, height + 4, z);
-                    SetBlock(OAK_LEAVES, x - 1, height + 3, z);
-                    SetBlock(OAK_LEAVES, x + 1, height + 3, z );
-                    SetBlock(OAK_LEAVES, x, height + 3, z - 1);
-                    SetBlock(OAK_LEAVES, x, height + 3, z + 1);
+                    else if (randInt < 28) {
+                        SetBlock(ROSE, x, height + 1, z);
+
+                    } 
+                    else if (randInt < 30) {
+                        SetBlock(PINK_TULIP, x, height+1, z);
+                    }
+                }
+                if (height < CS_P_MINUS_ONE - 4) {
+                    if (randInt == 69) {
+                        for (int y = 0; y < 3; y++) {
+                            SetBlock(OAK_LOG, x, height + y + 1, z);
+                        }
+                        SetBlock(OAK_LEAVES, x, height + 4, z);
+                        SetBlock(OAK_LEAVES, x - 1, height + 3, z);
+                        SetBlock(OAK_LEAVES, x + 1, height + 3, z );
+                        SetBlock(OAK_LEAVES, x, height + 3, z - 1);
+                        SetBlock(OAK_LEAVES, x, height + 3, z + 1);
+                    }
                 }
             }
-          }
-      }
+        }
     }
 }
 
@@ -145,20 +141,6 @@ void engine::Chunk::CreateMesh()
     m_CustomModelVertexCount = m_CustomModelVertices.size();
 
     needsRemeshing = false;
-}
-
-void engine::Chunk::UnloadToFile(const char* worldName)
-{
-    std::lock_guard<std::mutex> _(mtx);
-    std::ofstream wf(fmt::format("worlds/{}/chunks/{}.{}.{}.chunk", worldName, m_Pos.x, m_Pos.y, m_Pos.z), std::ios::out | std::ios::binary);
-    if (!wf) {
-        LOG_ERROR(fmt::format("Failed to unload chunk {}. File creation error!", std::string(m_Pos)));
-    }
-    wf.write((char *)&m_Voxels[0], CS_P3 * sizeof(BlockInt));
-    wf.close();
-    if (!wf.good()) {
-        LOG_ERROR(fmt::format("Failed to unload chunk {}. File writing error!", std::string(m_Pos)));
-    }
 }
 
 void engine::Chunk::BufferData()

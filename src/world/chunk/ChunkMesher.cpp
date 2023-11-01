@@ -4,8 +4,8 @@ LICENSE: MIT
 */
 
 #include <util/Log.hpp>
-#include <world/ChunkMesher.hpp>
-#include <world/Chunk.hpp>
+#include <world/chunk/ChunkMesher.hpp>
+#include <world/chunk/Chunk.hpp>
 #include <world/Block.hpp>
 
 namespace engine {

@@ -1,29 +1,24 @@
 /*
 Copyright (C) 2023 William Redding - All Rights Reserved
-License: MIT
+LICENSE: MIT
 */
 
-#ifndef VOXELRAYCAST_HPP
-#define VOXELRAYCAST_HPP
+#ifndef CHUNKSTACK_HPP
+#define CHUNKSTACK_HPP
 
-#include <world/Block.hpp>
-#include <math/Vec3.hpp>
 #include <world/chunk/Chunk.hpp>
 
+/*
+A ChunkStack represents a vertical column of chunks
+*/
 namespace engine {
-    class World;
-
-    struct VoxelRaycastResult {
-        Chunk* chunk;
-        Vec3<int> blockPos;
-        Vec3<int> normal;
-		BlockInt blockHit;
-	};
-
-    VoxelRaycastResult VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, int distance);
+    class ChunkStack {
+    private:
+        std::vector<Chunk> m_Chunks;
+    };
 }
 
-#endif // !VOXELRAYCAST_HPP
+#endif // !CHUNKSTACK_HPP
 
 /*
 MIT License

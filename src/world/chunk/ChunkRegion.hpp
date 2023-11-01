@@ -1,22 +1,24 @@
 /*
 Copyright (C) 2023 William Redding - All Rights Reserved
-License: MIT
+LICENSE: MIT
 */
 
-#ifndef MUTEXHOLDER_H
-#define MUTEXHOLDER_H
+#ifndef CHUNKREGION_HPP
+#define CHUNKREGION_HPP
 
-#include <mutex>
+#include <util/Constants.hpp>
+#include <world/chunk/ChunkStack.hpp>
 
 namespace engine {
-      struct mutex_holder {
-        std::mutex mutex;
-        mutex_holder():mutex(){}
-        mutex_holder(mutex_holder const & other):mutex(){}
+    class ChunkRegion {
+    private:
+        ChunkStack* m_ChunkStacks = new ChunkStack[CHUNK_REGION_SIZE_SQUARED];
+    public:
+        ~ChunkRegion();
     };
 }
 
-#endif // !MUTEXHOLDER_H
+#endif // !CHUNKREGION_HPP
 
 /*
 MIT License

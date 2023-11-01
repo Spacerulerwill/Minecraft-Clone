@@ -16,13 +16,12 @@ LICENSE: MIT
 #include <math/Vec4.hpp>
 #include <math/Vec3.hpp>
 #include <world/Block.hpp>
-#include <world/ChunkMesher.hpp>
+#include <world/chunk/ChunkMesher.hpp>
 #include <PerlinNoise.hpp>
 #include <util/Constants.hpp>
 #include <atomic>
 #include <mutex>
 #include <fstream>
-#include <util/MutexHolder.hpp>
 
 namespace engine {
 
@@ -68,15 +67,15 @@ namespace engine {
 		size_t m_CustomModelVertexCount = 0;
 
 		Mat4<float> m_Model = scale(Vec3<float>(BLOCK_SCALE));
+
+        void AddVertexBufferAttributes();
 	public:
         std::mutex mtx;
 
         std::atomic<bool> needsRemeshing = false;
         std::atomic<bool> canBeDrawn = false;
-        std::atomic<bool> isBeingMeshed = false;
-        std::atomic<bool> isInBufferQueue = false;
 
-    	BlockInt* m_Voxels = new BlockInt[CS_P3];
+    	BlockInt* m_Voxels = new BlockInt[CS_P3] {};
         Vec3<int> m_Pos = Vec3<int>(0);
         
 		Chunk(int chunkX, int chunkY, int chunkZ);
@@ -86,9 +85,6 @@ namespace engine {
 		void TerrainGen(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
 		void TerrainGen(BlockInt block);
 		void CreateMesh();
-
-        void ReadFileToBlockArray(std::ifstream& stream);
-        void UnloadToFile(const char* worldName);
 
 		void BufferData();
 		void Draw(Shader& shader);
