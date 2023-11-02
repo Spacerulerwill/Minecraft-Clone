@@ -12,9 +12,9 @@ LICENSE: MIT
 namespace engine {
     class ChunkRegion {
     private:
-        ChunkStack* m_ChunkStacks = new ChunkStack[CHUNK_REGION_SIZE_SQUARED];
+        std::vector<ChunkStack> m_ChunkStacks;
     public:
-        ~ChunkRegion();
+        ChunkRegion();
     };
 }
 

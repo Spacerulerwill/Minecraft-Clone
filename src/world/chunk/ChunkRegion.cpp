@@ -4,9 +4,15 @@ LICENSE: MIT
 */
 
 #include <world/chunk/ChunkRegion.hpp>
+#include <util/Log.hpp>
 
-engine::ChunkRegion::~ChunkRegion(){
-    delete[] m_ChunkStacks;
+engine::ChunkRegion::ChunkRegion() {
+    m_ChunkStacks.reserve(CHUNK_REGION_SIZE_SQUARED);
+    for (int x = 0; x < CHUNK_REGION_SIZE; x++) {
+        for (int z = 0; z < CHUNK_REGION_SIZE; z++) {
+            m_ChunkStacks.emplace_back(x, z);
+        }
+    }
 }
 
 /*

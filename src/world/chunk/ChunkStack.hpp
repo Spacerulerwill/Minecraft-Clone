@@ -6,6 +6,7 @@ LICENSE: MIT
 #ifndef CHUNKSTACK_HPP
 #define CHUNKSTACK_HPP
 
+#include <util/Log.hpp>
 #include <world/chunk/Chunk.hpp>
 #include <math/Vec3.hpp>
 #include <vector>
@@ -18,8 +19,7 @@ namespace engine {
     private:
         std::vector<Chunk> m_Chunks;
     public:
-        Chunk* EmplaceChunk(Vec3<int> pos);
-
+        ChunkStack(int x, int z);
     };
 }
 

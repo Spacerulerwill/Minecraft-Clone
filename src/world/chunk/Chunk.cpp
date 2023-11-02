@@ -19,6 +19,9 @@ void engine::Chunk::AddVertexBufferAttributes() {
     m_CustomModelVAO.AddBuffer(m_CustomModelVBO, bufLayout);
 }
 
+engine::Chunk::Chunk(): m_Pos(0,0,0){
+    AddVertexBufferAttributes();
+}
 
 engine::Chunk::Chunk(Vec3<int> chunkPos): m_Pos(chunkPos.x, chunkPos.y, chunkPos.z)
 {
@@ -32,6 +35,44 @@ engine::Chunk::Chunk(int x, int y, int z): m_Pos(x, y, z)
     AddVertexBufferAttributes();
 }
 
+engine::Chunk::Chunk(Chunk&& other): m_Pos(std::move(other.m_Pos)), m_Model(std::move(other.m_Model)),
+    m_VBO(std::move(other.m_VBO)), m_VAO(std::move(other.m_VAO)), m_Vertices(std::move(other.m_Vertices)), m_VertexCount(std::move(other.m_VertexCount)),
+    m_WaterVBO(std::move(other.m_WaterVBO)), m_WaterVAO(std::move(other.m_WaterVAO)), m_WaterVertices(std::move(other.m_WaterVertices)), m_WaterVertexCount(std::move(other.m_WaterVertexCount)),
+    m_CustomModelVBO(std::move(other.m_CustomModelVBO)), m_CustomModelVAO(std::move(other.m_CustomModelVAO)), m_CustomModelVertices(std::move(other.m_CustomModelVertices)), m_CustomModelVertexCount(std::move(other.m_CustomModelVertexCount))
+{  
+    delete[] m_Voxels;
+    m_Voxels = std::move(other.m_Voxels);
+    other.m_Voxels = nullptr;
+}
+
+
+engine::Chunk& engine::Chunk::operator=(Chunk&& other) {
+    if(this != &other)
+    {
+        m_Pos = std::move(other.m_Pos);
+        delete[] m_Voxels;
+        m_Voxels = std::move(other.m_Voxels);
+        m_Model = std::move(other.m_Model);
+
+        m_VBO = std::move(other.m_VBO);
+        m_VAO = std::move(other.m_VAO);
+        m_Vertices = std::move(other.m_Vertices);
+        m_VertexCount = std::move(other.m_VertexCount);
+
+        m_WaterVBO = std::move(other.m_WaterVBO);
+        m_WaterVAO = std::move(other.m_WaterVAO);
+        m_WaterVertices = std::move(other.m_WaterVertices);
+        m_WaterVertexCount = std::move(other.m_WaterVertexCount);
+
+        m_CustomModelVBO = std::move(other.m_CustomModelVBO);
+        m_CustomModelVAO = std::move(other.m_CustomModelVAO);
+        m_CustomModelVertices = std::move(other.m_CustomModelVertices);
+        m_CustomModelVertexCount = std::move(other.m_CustomModelVertexCount);
+
+        other.m_Voxels = nullptr;
+    }
+    return *this;
+}
 
 engine::Chunk::~Chunk()
 {

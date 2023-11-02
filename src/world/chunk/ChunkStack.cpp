@@ -5,9 +5,12 @@ LICENSE: MIT
 
 #include <world/chunk/ChunkStack.hpp>
 
-engine::Chunk* engine::ChunkStack::EmplaceChunk(Vec3<int> pos) {
-    return &(m_Chunks.emplace_back(pos));
+engine::ChunkStack::ChunkStack(int x, int z) {
+    for (int y = 0; y < 4; y++) {
+        m_Chunks.emplace_back(Vec3<int>(x, y, z));
+    }
 }
+
 /*
 MIT License
 

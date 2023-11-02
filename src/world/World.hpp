@@ -47,6 +47,7 @@ namespace engine {
     private:
         Player m_Player;
         Skybox m_Skybox;
+        ChunkRegion m_ChunkRegion;
 
         const char* m_WorldName = nullptr;
         Vec3<int> playerChunkPos;

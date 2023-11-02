@@ -69,12 +69,14 @@ namespace engine {
         
 	public:
         Vec3<int> m_Pos = Vec3<int>(0);
-
     	BlockInt* m_Voxels = new BlockInt[CS_P3] {};
         
+        Chunk();
 		Chunk(int chunkX, int chunkY, int chunkZ);
         Chunk(Vec3<int> chunkPos);
 		~Chunk();
+        Chunk(Chunk&& other); // move constructor
+        Chunk& operator=(Chunk&& other); // move assignment
         
 		void TerrainGen(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
 		void TerrainGen(BlockInt block);
