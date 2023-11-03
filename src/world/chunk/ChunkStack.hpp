@@ -8,7 +8,11 @@ LICENSE: MIT
 
 #include <util/Log.hpp>
 #include <world/chunk/Chunk.hpp>
+#include <world/Block.hpp>
 #include <math/Vec3.hpp>
+#include <math/Vec2.hpp>
+#include <PerlinNoise.hpp>
+#include <random>
 #include <vector>
 
 /*
@@ -18,8 +22,17 @@ namespace engine {
     class ChunkStack {
     private:
         std::vector<Chunk> m_Chunks;
+        Vec2<int> m_Pos;
     public:
-        ChunkStack(int x, int z);
+        ChunkStack(Vec2<int> pos);
+        Vec2<int> GetPos() const;
+        void DrawOpaque(Shader& opaqueShader);
+        void DrawWater(Shader& waterShader);
+        void DrawCustomModel(Shader& customModelShader);
+        void SetBlock(BlockInt block, int x, int y, int z);
+        void GenerateTerrain(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
+        void MeshAndBufferChunks();
+        BlockInt GetBlock(int x, int y, int z) const; 
     };
 }
 

@@ -6,15 +6,24 @@ LICENSE: MIT
 #ifndef CHUNKREGION_HPP
 #define CHUNKREGION_HPP
 
+#include <vector>
 #include <util/Constants.hpp>
+#include <world/chunk/Chunk.hpp>
 #include <world/chunk/ChunkStack.hpp>
+#include <core/Shader.hpp>
+#include <PerlinNoise.hpp>
 
 namespace engine {
+
     class ChunkRegion {
     private:
         std::vector<ChunkStack> m_ChunkStacks;
     public:
         ChunkRegion();
+        void GenerateChunks(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
+        void DrawOpaque(Shader& opaqueShader);
+        void DrawWater(Shader& waterShader);
+        void DrawCustomModel(Shader& customModelShader);
     };
 }
 

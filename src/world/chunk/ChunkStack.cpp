@@ -4,12 +4,66 @@ LICENSE: MIT
 */
 
 #include <world/chunk/ChunkStack.hpp>
+#include <util/Constants.hpp>
 
-engine::ChunkStack::ChunkStack(int x, int z) {
-    for (int y = 0; y < 4; y++) {
-        m_Chunks.emplace_back(Vec3<int>(x, y, z));
+
+engine::ChunkStack::ChunkStack(Vec2<int> pos): m_Pos(pos) {
+    for (int y = 0; y < DEFAULT_CHUNK_STACK_HEIGHT; y++) {
+        m_Chunks.emplace_back(Vec3<int>(pos.x, y, pos.y));
     }
 }
+
+engine::Vec2<int> engine::ChunkStack::GetPos() const {
+    return m_Pos;
+}
+
+void engine::ChunkStack::DrawOpaque(Shader& opaqueShader) {
+    for (Chunk& chunk : m_Chunks) {
+        chunk.DrawOpaque(opaqueShader);
+    }
+}
+
+void engine::ChunkStack::DrawWater(Shader& waterShader) {
+    for (Chunk& chunk : m_Chunks) {
+        chunk.DrawWater(waterShader);
+    }
+}
+
+void engine::ChunkStack::DrawCustomModel(Shader& customModelShader) {
+    for (Chunk& chunk : m_Chunks) {
+        chunk.DrawCustomModelBlocks(customModelShader);
+    }
+}
+
+void engine::ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib) {
+    for (int x = 1; x < CS_P_MINUS_ONE; x++) {
+        for (int z = 1; z < CS_P_MINUS_ONE; z++) {
+            float heightMultiplayer = perlin.octave2D_01((m_Pos.x * CS + x) * 0.001 , (m_Pos.y * CS + z) * 0.001, 4, 0.5);
+            int height = 1 + (heightMultiplayer * MAX_WORLD_GEN_HEIGHT_MINUS_ONE);
+
+            for (int y = 0; y < height; y++){
+                SetBlock(STONE, x,y,z);
+            }
+        }
+    }
+}
+
+void engine::ChunkStack::MeshAndBufferChunks() {
+    for (Chunk& chunk: m_Chunks) {
+        chunk.CreateMesh();
+        chunk.BufferData();
+    }
+}
+
+void engine::ChunkStack::SetBlock(BlockInt block, int x, int y, int z) {
+    m_Chunks[y / CS].SetBlock(block, x, y % CS, z);
+}
+
+engine::BlockInt engine::ChunkStack::GetBlock(int x, int y, int z) const {
+    return m_Chunks[y / CS].GetBlock(x, y % CS, z);
+}
+
+
 
 /*
 MIT License

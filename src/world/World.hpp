@@ -14,9 +14,9 @@ LICENSE: MIT
 #include <world/chunk/ChunkRegion.hpp>
 #include <world/Skybox.hpp>
 #include <vector>
-#include <mutex>
 #include <world/Player.hpp>
 #include <chrono>
+#include <random>
 
 namespace engine {
     struct WorldSave {
@@ -27,14 +27,6 @@ namespace engine {
         Vec3<float> position;
         float pitch;
         float yaw;
-    };
-
-    struct ChunkGroup {
-        std::mutex mtx;
-        std::vector<Chunk*> group;
-        Vec3<int> orientation;
-        std::atomic<bool> addedMergeTasks;
-        std::atomic<bool> addedMeshTasks;
     };
 
     class World {
@@ -53,11 +45,9 @@ namespace engine {
         Vec3<int> playerChunkPos;
 
         siv::PerlinNoise m_Noise = siv::PerlinNoise(0);
-        
         std::random_device rd;
         std::mt19937 gen = std::mt19937(rd());
         std::uniform_int_distribution<> distrib = std::uniform_int_distribution<>(1, 100);
-
     };
 }
 

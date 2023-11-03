@@ -10,8 +10,33 @@ engine::ChunkRegion::ChunkRegion() {
     m_ChunkStacks.reserve(CHUNK_REGION_SIZE_SQUARED);
     for (int x = 0; x < CHUNK_REGION_SIZE; x++) {
         for (int z = 0; z < CHUNK_REGION_SIZE; z++) {
-            m_ChunkStacks.emplace_back(x, z);
+            m_ChunkStacks.emplace_back(Vec2<int>(x,z));
         }
+    }
+}
+
+void engine::ChunkRegion::DrawOpaque(Shader& opaqueShader){
+    for (ChunkStack& chunkStack : m_ChunkStacks) {
+        chunkStack.DrawOpaque(opaqueShader);
+    }
+}
+
+void engine::ChunkRegion::DrawWater(Shader& waterShader) {
+    for (ChunkStack& chunkStack : m_ChunkStacks) {
+        chunkStack.DrawWater(waterShader);
+    }
+}
+
+void engine::ChunkRegion::DrawCustomModel(Shader& customModelShader) {
+    for (ChunkStack& chunkStack : m_ChunkStacks) {
+        chunkStack.DrawCustomModel(customModelShader);
+    }
+}
+
+void engine::ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib) {
+    for (ChunkStack& chunkStack : m_ChunkStacks) {
+       chunkStack.GenerateTerrain(perlin, gen, distrib);
+       chunkStack.MeshAndBufferChunks();
     }
 }
 

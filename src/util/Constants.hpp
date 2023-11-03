@@ -23,11 +23,16 @@ namespace engine {
     constexpr int CS_MINUS_ONE = CS - 1;
 
     // Chunk region exponents (used for bitshifts once again)
-    constexpr int CHUNK_REGION_SIZE_EXP = 4;
+    constexpr int CHUNK_REGION_SIZE_EXP = 3;
     
     // Chunk region sizes
     constexpr int CHUNK_REGION_SIZE = 1 << CHUNK_REGION_SIZE_EXP;
     constexpr int CHUNK_REGION_SIZE_SQUARED = CHUNK_REGION_SIZE * CHUNK_REGION_SIZE;
+
+    // Chunk stacks
+    constexpr int DEFAULT_CHUNK_STACK_HEIGHT = 8;
+    constexpr int MAX_WORLD_GEN_HEIGHT = DEFAULT_CHUNK_STACK_HEIGHT * CS;
+    constexpr int MAX_WORLD_GEN_HEIGHT_MINUS_ONE  = MAX_WORLD_GEN_HEIGHT - 1;
 };
 
 #endif // !CONSTANTS_H

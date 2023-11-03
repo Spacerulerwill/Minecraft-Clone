@@ -78,12 +78,10 @@ namespace engine {
         Chunk(Chunk&& other); // move constructor
         Chunk& operator=(Chunk&& other); // move assignment
         
-		void TerrainGen(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
-		void TerrainGen(BlockInt block);
 		void CreateMesh();
-
 		void BufferData();
-		void Draw(Shader& shader);
+        
+		void DrawOpaque(Shader& shader);
 		void DrawWater(Shader& shader);
         void DrawCustomModelBlocks(Shader& shader);
 

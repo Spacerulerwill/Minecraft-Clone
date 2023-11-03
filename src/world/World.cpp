@@ -29,6 +29,8 @@ engine::World::World(const char* worldName) : m_WorldName(worldName) {
     m_Player = Player(playerSave.position, playerSave.pitch, playerSave.yaw);
 
     m_Noise.reseed(worldSave.seed);
+
+    m_ChunkRegion.GenerateChunks(m_Noise, gen, distrib);
 }
 
 engine::Player& engine::World::GetPlayer() {
@@ -49,6 +51,7 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
     chunkShader.setMat4("view", view);
     chunkShader.SetInt("tex_array", 0);
     chunkShader.SetInt("grass_mask", 2);
+    m_ChunkRegion.DrawOpaque(chunkShader);
     
 
     //glDisable(GL_CULL_FACE);
@@ -56,7 +59,7 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
     customModelShader.setMat4("projection", perspective);
     customModelShader.setMat4("view", view);
     customModelShader.SetInt("tex_array", 0);
-   
+    m_ChunkRegion.DrawCustomModel(customModelShader);
     //glEnable(GL_CULL_FACE);
 
     glDepthFunc(GL_LEQUAL);
@@ -68,7 +71,7 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
     waterShader.setMat4("projection", perspective);
     waterShader.setMat4("view", view);
     waterShader.SetInt("tex_array", 0);
-    
+    m_ChunkRegion.DrawWater(waterShader);
     glDisable(GL_BLEND);
 }
 
