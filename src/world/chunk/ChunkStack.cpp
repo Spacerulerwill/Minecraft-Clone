@@ -56,11 +56,11 @@ void engine::ChunkStack::MeshAndBufferChunks() {
 }
 
 void engine::ChunkStack::SetBlock(BlockInt block, int x, int y, int z) {
-    m_Chunks[y / CS].SetBlock(block, x, y % CS, z);
+    m_Chunks[y / CS].SetBlock(block, x, 1 + y % CS, z);
 }
 
 engine::BlockInt engine::ChunkStack::GetBlock(int x, int y, int z) const {
-    return m_Chunks[y / CS].GetBlock(x, y % CS, z);
+    return m_Chunks[y / CS].GetBlock(x, 1 + y % CS, z);
 }
 
 
