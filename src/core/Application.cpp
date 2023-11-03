@@ -124,14 +124,19 @@ std::string engine::Application::MainMenu() {
 
         std::filesystem::create_directory(fmt::format("worlds/{}/chunks", worldName));
 
-        // Get world seed by hashing the seed string the user provided
+        // Get world seed by hashing the seed string the user provided, or generating a random one if its an empty seed
         const size_t MAXIMUM_CHARS = 32;
         static char buffer[MAXIMUM_CHARS + 1]; // An extra for the terminating nul character.
-        std::cout << "Enter seed: ";
+        std::cout << "Enter seed (Leave blank for random): ";
         std::cin.getline(buffer, MAXIMUM_CHARS, '\n');
         const std::string seedString(buffer);
-        std::hash<std::string> hasher;
-        siv::PerlinNoise::seed_type seed = static_cast<siv::PerlinNoise::seed_type>(hasher(seedString));
+        siv::PerlinNoise::seed_type seed;
+        if (seedString == "") {
+            seed = rand() % std::numeric_limits<siv::PerlinNoise::seed_type>().max();
+        } else {
+            std::hash<std::string> hasher;
+            siv::PerlinNoise::seed_type seed = static_cast<siv::PerlinNoise::seed_type>(hasher(seedString));
+        }
 
         // Create world data file with seed and last played
         engine::WorldSave worldSave {
@@ -155,6 +160,7 @@ std::string engine::Application::MainMenu() {
 
 void engine::Application::Run()
 {    
+    srand(time(NULL));
     std::filesystem::create_directory("worlds");
 
     InitOpenGL();
