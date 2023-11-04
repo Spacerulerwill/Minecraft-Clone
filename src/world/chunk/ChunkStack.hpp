@@ -16,7 +16,8 @@ LICENSE: MIT
 #include <vector>
 
 /*
-A ChunkStack represents a vertical column of chunks
+A ChunkStack represents a vertical column of chunks that can grow and shrink
+as the player builds
 */
 namespace engine {
     class ChunkStack {

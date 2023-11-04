@@ -33,19 +33,14 @@ namespace engine {
 
     /*
     Chunks are 62^3 and are stored in vertical columns for memory efficency when
-    setting blocks. Voxels are stored in a 64^3 array of integers, utilizing a layer
-    of padding on each side to remove the need for any bounds checking. Neighbor chunks
-    edge data are copied into the padding layers to allow for cross chunk meshing.
+    setting blocks. Voxels are stored in a 64^3 flat array of BlockInt's (see world/Block.hpp).
+    There is padding aroud the chunks to store copies of the neighbour's outer chunk data to avoid
+    the need for any bounds checking when meshing.
 
     Each chunk has 3 vertex buffers:
     * A regular vertex buffer - 8 byte vertices
     * A water vertex buffer - 8 byte vertices
-    * A custom block model vertex buffer -24 byte vertices
-    
-    Due to data constraints, the vertex data for each cube block can be packed to 8 bytes.
-    See engine::CubeChunkVertex for for information on the packing layout.
-
-    Custom model blocks, cannot be packed to 8 bytes
+    * A custom block model vertex buffer - 8 byte vertices
     */
 	class Chunk {
 	private:        

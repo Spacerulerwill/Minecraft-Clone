@@ -15,6 +15,10 @@ LICENSE: MIT
 
 namespace engine {
 
+    /*
+    Chunk regions are 2D section of chunk stacks. Their size is
+    dictated by CHUNK_REGION_SIZE (See util/constants.hpp)
+    */
     class ChunkRegion {
     private:
         std::vector<ChunkStack> m_ChunkStacks;

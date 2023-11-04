@@ -19,7 +19,7 @@ namespace engine {
         Vec3<int> normal;
 		BlockInt blockHit;
 	};
-
+    
     VoxelRaycastResult VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, int distance);
 }
 

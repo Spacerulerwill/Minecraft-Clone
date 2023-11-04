@@ -42,8 +42,7 @@ namespace engine {
     Position coordinates are stored as integers representing 16ths.
     This means that custom model blocks can be no bigger than 1 cube voxel 
     and that the vertices can only be in multiples of 16th's, correspending
-    to the pixel tile size. 
-    The rest of the data is packed into a 4 byte unsigned integer. 
+    to the pixel tile size. The rest of the data is packed into a uint32_t.
     Total used 49/64 bits.
     */
     struct CustomModelChunkVertex {
@@ -77,7 +76,7 @@ namespace engine {
     void MeshCustomModelBlocks(std::vector<CustomModelChunkVertex>& vertices, const engine::BlockInt* voxels);
 
     /*
-    Pack all the vertex data into a ChunkVertex struct, to save space
+    Bitpack all the vertex data into a ChunkVertex struct
     */
     inline CubeChunkVertex GetCubeBlockVertex(uint32_t x, uint32_t y, uint32_t z, uint32_t norm, uint32_t texX, uint32_t texY, uint32_t type, uint32_t ambientOcclusion, bool isGrass, bool isFoliage) {
         return {
@@ -86,6 +85,9 @@ namespace engine {
         };
     }
 
+    /*
+    Bitpack all the vertex data into a CustomModelChunkVertex struct
+    */
     inline CustomModelChunkVertex GetCustomModelBlockVertex(uint32_t x, uint32_t y, uint32_t z, uint32_t texX, uint32_t texY, uint32_t type, bool isFoliage) {
         return {
             ((z) << 20)| ((y) << 10) | (x),
