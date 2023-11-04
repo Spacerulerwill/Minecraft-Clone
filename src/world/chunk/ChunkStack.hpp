@@ -30,6 +30,7 @@ namespace engine {
         void DrawWater(Shader& waterShader);
         void DrawCustomModel(Shader& customModelShader);
         void SetBlock(BlockInt block, int x, int y, int z);
+        void SetBlockVerticalColumn(BlockInt block, Vec3<int> start, int length);
         void GenerateTerrain(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
         void MeshAndBufferChunks();
         BlockInt GetBlock(int x, int y, int z) const; 

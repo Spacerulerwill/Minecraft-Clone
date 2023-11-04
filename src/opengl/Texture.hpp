@@ -17,9 +17,7 @@ namespace engine {
             GLuint m_ID = 0;
         public:
             Texture(): m_ID(0) {}
-
             Texture(const Texture &) = delete;
-
             Texture& operator=(const Texture&) = delete;
             
             Texture(Texture &&other) : m_ID(other.m_Id)

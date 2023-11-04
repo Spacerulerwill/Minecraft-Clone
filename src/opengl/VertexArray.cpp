@@ -17,6 +17,21 @@ engine::VertexArray::~VertexArray()
 	glDeleteVertexArrays(1, &m_ID);
 }
 
+engine::VertexArray::VertexArray(VertexArray &&other) : m_ID(other.m_ID)
+{
+    other.m_ID = 0;
+}
+
+engine::VertexArray& engine::VertexArray::operator=(VertexArray&& other)
+{
+    if(this != &other)
+    {
+        glDeleteVertexArrays(1, &m_ID);
+        std::swap(m_ID, other.m_ID);
+    }
+    return *this;
+}
+
 void engine::VertexArray::AddBuffer(const engine::BufferObject<GL_ARRAY_BUFFER>& vb, const engine::VertexBufferLayout& layout)
 {
     Bind();

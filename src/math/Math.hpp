@@ -54,11 +54,12 @@ namespace engine {
     }
 
     inline Mat4<float> rotate(const Vec3<float>& axis, float theta)
-    {
+    {  
+        
         return Mat4<float>(
-            cos(theta) + axis.x * axis.x * (1.0f - cos(theta)), axis.x * axis.y * (1.0f - cos(theta)) - axis.z * sin(theta), axis.x * axis.z * (1.0f - cos(theta)) + axis.y * sin(theta), 0.0f,
-            axis.y * axis.x * (1.0f - cos(theta)) + axis.z * sin(theta), cos(theta) + axis.y * axis.y * (1.0f - cos(theta)), axis.y * axis.z * (1.0f - cos(theta)) - axis.x * sin(theta), 0.0f,
-            axis.z * axis.x * (1.0f - cos(theta)) - axis.y * sin(theta), axis.z * axis.y * (1.0f - cos(theta)) + axis.x * sin(theta), cos(theta) + axis.z * axis.z * (1.0f - cos(theta)), 0.0f,
+            cos(theta) + axis.x * axis.x * (1 - cos(theta)), axis.x * axis.y * (1 - cos(theta)) - axis.z * sin(theta), axis.x * axis.z * (1 - cos(theta)) + axis.y * sin(theta), 0,
+            axis.y * axis.x * (1 - cos(theta)) + axis.z * sin(theta), cos(theta) + axis.y * axis.y * (1 - cos(theta)), axis.y * axis.z * (1 - cos(theta)) - axis.x * sin(theta), 0,
+            axis.z * axis.x * (1 - cos(theta)) - axis.y * sin(theta), axis.z * axis.y * (1 - cos(theta)) + axis.x * sin(theta), cos(theta) + axis.z * axis.z * (1 - cos(theta)), 0,
             0.0f, 0.0f, 0.0f, 1.0f
         );
     }

@@ -7,6 +7,7 @@ LICENSE: MIT
 #define CHUNK_H
 
 #include <cstdint>
+#include <cstring>
 #include <vector>
 #include <opengl/BufferObject.hpp>
 #include <opengl/VertexArray.hpp>
@@ -27,7 +28,7 @@ namespace engine {
 	constexpr float INV_BLOCK_SCALE = 1 / BLOCK_SCALE;
 
     inline int voxelIndex(int x, int y, int z) {
-        return z + (x << CHUNK_SIZE_EXP) + (y << CHUNK_SIZE_EXP_X2);
+        return y + (x << CHUNK_SIZE_EXP) + (z << CHUNK_SIZE_EXP_X2);
     }
 
     /*
@@ -63,16 +64,16 @@ namespace engine {
 		std::vector<CustomModelChunkVertex> m_CustomModelVertices;
 		size_t m_CustomModelVertexCount = 0;
 
-		Mat4<float> m_Model = scale(Vec3<float>(BLOCK_SCALE));
+		Mat4<float> m_Model = Mat4<float>(1.0f);
 
         void AddVertexBufferAttributes();
+        void SetupModelMatrix(Vec3<int> chunkPos);
         
 	public:
         Vec3<int> m_Pos = Vec3<int>(0);
     	BlockInt* m_Voxels = new BlockInt[CS_P3] {};
         
         Chunk();
-		Chunk(int chunkX, int chunkY, int chunkZ);
         Chunk(Vec3<int> chunkPos);
 		~Chunk();
         Chunk(Chunk&& other); // move constructor
@@ -96,6 +97,10 @@ namespace engine {
 		inline void SetBlock(BlockInt block, int x, int y, int z) {
 			m_Voxels[voxelIndex(x,y,z)] = block;
 		}
+
+        inline void SetBlockVerticalColumn(BlockInt block, Vec3<int> start, int length) {
+            memset(m_Voxels + voxelIndex(start.x, start.y, start.z), block, length * sizeof(BlockInt));
+        }
 
         inline void SetBlock(BlockInt block, Vec3<int> pos) {
 			m_Voxels[voxelIndex(pos.x,pos.y,pos.z)] = block;

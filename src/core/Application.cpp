@@ -420,7 +420,7 @@ void engine::Application::ProcessInput(Camera& camera)
     if (glfwGetKey(p_Window, GLFW_KEY_LEFT_SHIFT))
         camera.SetMovementSpeed(300.0f);
     else
-        camera.SetMovementSpeed(2.5f);
+        camera.SetMovementSpeed(10.0f);
 }
 
 void engine::Application::GLFWMouseMoveCallback(GLFWwindow* window, double xposIn, double yposIn)

@@ -64,6 +64,7 @@ namespace engine {
 		uint32_t data2;
     };
 
+
     /*
     GreedyTranslucent greedy meshes the non opaque cubic voxels in the mesh. If the voxel is water the vertices are added to their own
     water vertex vector otherwise they are added to the default vertex vector.

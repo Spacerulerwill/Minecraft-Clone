@@ -7,7 +7,7 @@ LICENSE: MIT
 #define BUFFEROBJECT_H
 
 #include <glad/gl.h>
-#include<util/Log.hpp>
+#include <util/Log.hpp>
 
 #define BUFFER_REQUIREMENT (buffer == GL_ARRAY_BUFFER || buffer == GL_ELEMENT_ARRAY_BUFFER) 
 

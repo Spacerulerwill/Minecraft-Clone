@@ -38,12 +38,19 @@ void engine::ChunkStack::DrawCustomModel(Shader& customModelShader) {
 void engine::ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib) {
     for (int x = 1; x < CS_P_MINUS_ONE; x++) {
         for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-            float heightMultiplayer = perlin.octave2D_01((m_Pos.x * CS + x) * 0.001 , (m_Pos.y * CS + z) * 0.001, 4, 0.5);
-            int height = 1 + (heightMultiplayer * MAX_WORLD_GEN_HEIGHT_MINUS_ONE);
+            float heightMultiplayer = perlin.octave2D_01((m_Pos.x * CS + x) * 0.0025 , (m_Pos.y * CS + z) * 0.0025, 4, 0.5);
+            int height = MIN_WORLD_GEN_HEIGHT + (heightMultiplayer * MAX_MINUS_MIN_WORLD_GEN_HEIGHT);
 
-            for (int y = 0; y < height; y++){
-                SetBlock(STONE, x,y,z);
-            }
+            SetBlockVerticalColumn(STONE, Vec3<int>(x,0,z), height-4);
+            SetBlockVerticalColumn(DIRT, Vec3<int>(x,height-4,z), 3);
+            SetBlock(GRASS, x, height-1, z);
+            /*
+            if (height < WATER_LEVEL) {
+                SetBlockVerticalColumn(WATER, Vec3<int>(x, height, z), WATER_LEVEL - height);
+            } 
+            */
+            
+            //SetBlock(BEDROCK, x, 0, z);
         }
     }
 }
@@ -53,6 +60,22 @@ void engine::ChunkStack::MeshAndBufferChunks() {
         chunk.CreateMesh();
         chunk.BufferData();
     }
+}
+
+void engine::ChunkStack::SetBlockVerticalColumn(BlockInt block, Vec3<int> start, int length) {
+    int startChunkY = start.y / CS;
+    int endChunkY = (start.y + length - 1) / CS;
+    
+    if (startChunkY == endChunkY) {
+        m_Chunks.at(startChunkY).SetBlockVerticalColumn(block, Vec3<int>(start.x, start.y - (startChunkY * CS) + 1, start.z), length);
+        return;
+    }
+
+    m_Chunks.at(startChunkY).SetBlockVerticalColumn(block, Vec3<int>(start.x, (start.y - (startChunkY * CS) + 1), start.z), CS - (start.y - (startChunkY * CS)));
+    for (int i = startChunkY + 1; i <= endChunkY -1; i++) {
+        m_Chunks.at(i).SetBlockVerticalColumn(block, Vec3<int>(start.x, 1, start.z), CS);
+    }
+    m_Chunks.at(endChunkY).SetBlockVerticalColumn(block, Vec3<int>(start.x, 1, start.z), length - ((endChunkY - startChunkY - 1)* CS)- (CS - (start.y - (startChunkY * CS))));
 }
 
 void engine::ChunkStack::SetBlock(BlockInt block, int x, int y, int z) {

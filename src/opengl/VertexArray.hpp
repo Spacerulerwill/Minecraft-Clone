@@ -22,20 +22,9 @@ namespace engine {
 
         VertexArray& operator=(const VertexArray&) = delete;
 
-        VertexArray(VertexArray &&other) : m_ID(other.m_ID)
-        {
-            other.m_ID = 0;
-        }
+        VertexArray(VertexArray &&other);
 
-        VertexArray& operator=(VertexArray&& other)
-        {
-            if(this != &other)
-            {
-                glDeleteVertexArrays(1, &m_ID);
-                std::swap(m_ID, other.m_ID);
-            }
-            return *this;
-        }
+        VertexArray& operator=(VertexArray&& other);
 
 		GLuint GetID() { return m_ID; }
 

@@ -19,19 +19,22 @@ void engine::Chunk::AddVertexBufferAttributes() {
     m_CustomModelVAO.AddBuffer(m_CustomModelVBO, bufLayout);
 }
 
+void engine::Chunk::SetupModelMatrix(Vec3<int> chunkPos) {
+    m_Model = m_Model * translate(Vec3<float>(-CS * 0.5f, 0.0f, -CS * 0.5f));
+    m_Model = m_Model* rotate(Vec3<float>(1,0,0), radians(-90));
+    m_Model = m_Model * translate(Vec3<float>(CS * 0.5f, 0.0f, CS * 0.5f));
+    m_Model = m_Model *  translate(Vec3<float>(static_cast<float>(chunkPos.x * CS), static_cast<float>(chunkPos.z * CS), static_cast<float>(chunkPos.y * CS)));
+}
+
 engine::Chunk::Chunk(): m_Pos(0,0,0){
+    SetupModelMatrix(m_Pos);
     AddVertexBufferAttributes();
 }
 
 engine::Chunk::Chunk(Vec3<int> chunkPos): m_Pos(chunkPos.x, chunkPos.y, chunkPos.z)
 {
-    m_Model *= translate(Vec3<float>(static_cast<float>(chunkPos.x * CS), static_cast<float>(chunkPos.y * CS), static_cast<float>(chunkPos.z * CS)));
-    AddVertexBufferAttributes();
-}
-
-engine::Chunk::Chunk(int x, int y, int z): m_Pos(x, y, z)
-{
-    m_Model *= translate(Vec3<float>(static_cast<float>(x * CS), static_cast<float>(y * CS), static_cast<float>(z * CS)));
+    
+    SetupModelMatrix(m_Pos);
     AddVertexBufferAttributes();
 }
 

@@ -6,7 +6,6 @@
 
 int main() {
     engine::Log::Init();
-
 	engine::Application::Init();
 	try {
 		engine::Application::GetInstance()->Run();
