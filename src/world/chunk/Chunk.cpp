@@ -52,7 +52,6 @@ engine::Chunk::Chunk(Chunk&& other): m_Pos(std::move(other.m_Pos)), m_Model(std:
     other.m_Voxels = nullptr;
 }
 
-
 void engine::Chunk::CreateMesh()
 {
     m_Vertices.clear();
@@ -92,6 +91,10 @@ void engine::Chunk::BufferData()
         m_CustomModelVBO.BufferData(m_CustomModelVertices.data(), m_CustomModelVertexCount * sizeof(CustomModelChunkVertex), GL_STATIC_DRAW);
         std::vector<CustomModelChunkVertex>().swap(m_CustomModelVertices);
     }
+}
+
+engine::Vec3<int> engine::Chunk::GetPos() const {
+    return m_Pos;
 }
 
 void engine::Chunk::DrawOpaque(Shader& shader)

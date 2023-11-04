@@ -49,6 +49,8 @@ namespace engine {
     */
 	class Chunk {
 	private:        
+        Vec3<int> m_Pos = Vec3<int>(0);
+
 		BufferObject<GL_ARRAY_BUFFER> m_VBO;
 		VertexArray m_VAO;
 		std::vector<CubeChunkVertex> m_Vertices;
@@ -70,7 +72,6 @@ namespace engine {
         void SetupModelMatrix(Vec3<int> chunkPos);
         
 	public:
-        Vec3<int> m_Pos = Vec3<int>(0);
     	BlockInt* m_Voxels = new BlockInt[CS_P3] {};
         
         Chunk();
@@ -81,6 +82,8 @@ namespace engine {
         
 		void CreateMesh();
 		void BufferData();
+
+        Vec3<int> GetPos() const;
         
 		void DrawOpaque(Shader& shader);
 		void DrawWater(Shader& shader);

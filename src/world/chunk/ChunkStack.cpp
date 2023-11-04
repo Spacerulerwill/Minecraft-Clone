@@ -44,13 +44,10 @@ void engine::ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin, std::mt
             SetBlockVerticalColumn(STONE, Vec3<int>(x,0,z), height-4);
             SetBlockVerticalColumn(DIRT, Vec3<int>(x,height-4,z), 3);
             SetBlock(GRASS, x, height-1, z);
-            /*
             if (height < WATER_LEVEL) {
                 SetBlockVerticalColumn(WATER, Vec3<int>(x, height, z), WATER_LEVEL - height);
-            } 
-            */
-            
-            //SetBlock(BEDROCK, x, 0, z);
+            }
+            SetBlock(BEDROCK, x, 0, z);
         }
     }
 }
@@ -85,8 +82,6 @@ void engine::ChunkStack::SetBlock(BlockInt block, int x, int y, int z) {
 engine::BlockInt engine::ChunkStack::GetBlock(int x, int y, int z) const {
     return m_Chunks[y / CS].GetBlock(x, 1 + y % CS, z);
 }
-
-
 
 /*
 MIT License
