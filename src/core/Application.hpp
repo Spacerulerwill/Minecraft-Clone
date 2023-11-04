@@ -15,14 +15,10 @@ License: MIT
 #include <opengl/Framebuffer.hpp>
 #include <world/World.hpp>
 #include <opengl/Texture.hpp>
-#include <memory>
 
 namespace engine {
 	class Application {
 	private:
-		Application();
-		static std::unique_ptr<Application> s_Instance;
-
         GLFWwindow* p_Window = nullptr;
         Framebuffer* p_Framebuffer = nullptr;
         World* m_World = nullptr;
@@ -38,10 +34,10 @@ namespace engine {
         void InitOpenGL();
         void ProcessInput(Camera& camera);
 	public:
-		static void Init();
+        Application();
+
 		void Run();
         void Cleanup();
-		static std::unique_ptr<Application>& GetInstance();
         void GLFWMouseMoveCallback(GLFWwindow* window, double xposIn, double yposIn);
 		void GLFWScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 		void GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);

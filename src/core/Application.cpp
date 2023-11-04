@@ -23,30 +23,16 @@ License: MIT
 #include <chrono>
 #include <util/Exceptions.hpp>
 
-// Unique pointer to the singleton instance
-std::unique_ptr<engine::Application> engine::Application::s_Instance = nullptr;
-
 // free floating callback functions
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_move_callback(GLFWwindow* window, double xposIn, double yposIn);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+namespace engine {
+    void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+    void mouse_move_callback(GLFWwindow* window, double xposIn, double yposIn);
+    void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+    void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
-constexpr GLsizei SCREEN_WIDTH = 1280;
-constexpr GLsizei SCREEN_HEIGHT = 720;
-
-engine::Application::Application()
-{
-   
-}
-
-// Used to initailise the singleton - will have any effect once
-void engine::Application::Init()
-{
-    if (Application::s_Instance == nullptr) {
-        Application::s_Instance = std::unique_ptr<Application>(new Application);
-    }
+    constexpr GLsizei SCREEN_WIDTH = 1280;
+    constexpr GLsizei SCREEN_HEIGHT = 720;
 }
 
 std::string engine::Application::MainMenu() {
@@ -156,6 +142,10 @@ std::string engine::Application::MainMenu() {
         engine::WriteStructToDisk(fmt::format("worlds/{}/player.dat", worldName), playerSave);
     }
     return worldName;
+}
+
+engine::Application::Application() {
+    
 }
 
 void engine::Application::Run()
@@ -370,6 +360,7 @@ void engine::Application::InitOpenGL() {
     glfwSetMouseButtonCallback(p_Window, mouse_button_callback);
     glfwSetScrollCallback(p_Window, scroll_callback);
     glfwSetKeyCallback(p_Window, key_callback);
+    glfwSetWindowUserPointer(p_Window, reinterpret_cast<void *>(this));
 	glfwMakeContextCurrent(p_Window);
 
     // Set input mode to cursor disabled so use can't move mouse out of window
@@ -594,37 +585,37 @@ void engine::Application::GLFWKeyCallback(GLFWwindow* window, int key, int scanc
     }
 }
 
-std::unique_ptr<engine::Application>& engine::Application::GetInstance()
-{
-    return s_Instance;
-}
-
 // input callback that wraps the application singleton mouse callback function
-void mouse_move_callback(GLFWwindow* window, double xposIn, double yposIn)
+void engine::mouse_move_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
-    engine::Application::GetInstance()->GLFWMouseMoveCallback(window, xposIn, yposIn);
+    Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
+    app->GLFWMouseMoveCallback(window, xposIn, yposIn);
 }
 
 // input callback that wraps the application singleton scroll callback function
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+void engine::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    engine::Application::GetInstance()->GLFWScrollCallback(window, xoffset, yoffset);
+    Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
+    app->GLFWScrollCallback(window, xoffset, yoffset);
 }
 
 // input callback that wraps the application singleton key callback function
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    engine::Application::GetInstance()->GLFWKeyCallback(window, key, scancode, action, mods);
+void engine::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
+    app->GLFWKeyCallback(window, key, scancode, action, mods);
 }
 
 // input callback that wraps the application singleton mouse button callback function
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    engine::Application::GetInstance()->GLFWMouseButtonCallback(window, button, action, mods);
+void engine::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
+    app->GLFWMouseButtonCallback(window, button, action, mods);
 }
 
 // screen resize callback that wraps the application framebuffer resize callback
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void engine::framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    engine::Application::GetInstance()->GLFWFramebufferResizeCallback(window, width, height);
+    Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
+    app->GLFWFramebufferResizeCallback(window, width, height);
 }
 /*
 MIT License

@@ -6,10 +6,10 @@
 
 int main() {
     engine::Log::Init();
-	engine::Application::Init();
 	try {
-		engine::Application::GetInstance()->Run();
-	}
+		engine::Application application;
+        application.Run();
+    }
 	catch (const std::system_error& e) {
 		LOG_CRITICAL(e.what());
         glfwTerminate();
