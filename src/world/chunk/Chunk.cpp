@@ -20,10 +20,7 @@ void engine::Chunk::AddVertexBufferAttributes() {
 }
 
 void engine::Chunk::SetupModelMatrix(Vec3<int> chunkPos) {
-    m_Model = m_Model * translate(Vec3<float>(-CS * 0.5f, 0.0f, -CS * 0.5f));
-    m_Model = m_Model* rotate(Vec3<float>(1,0,0), radians(-90));
-    m_Model = m_Model * translate(Vec3<float>(CS * 0.5f, 0.0f, CS * 0.5f));
-    m_Model = m_Model *  translate(Vec3<float>(static_cast<float>(chunkPos.x * CS), static_cast<float>(chunkPos.z * CS), static_cast<float>(chunkPos.y * CS)));
+    m_Model = m_Model *  translate(Vec3<float>(static_cast<float>(chunkPos.x * CS), static_cast<float>(chunkPos.y * CS), static_cast<float>(chunkPos.z * CS)));
 }
 
 engine::Chunk::Chunk(): m_Pos(0,0,0){

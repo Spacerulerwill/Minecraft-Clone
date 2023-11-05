@@ -28,7 +28,7 @@ namespace engine {
 	constexpr float INV_BLOCK_SCALE = 1 / BLOCK_SCALE;
 
     inline int voxelIndex(int x, int y, int z) {
-        return y + (x << CHUNK_SIZE_EXP) + (z << CHUNK_SIZE_EXP_X2);
+        return z + (x << CHUNK_SIZE_EXP) + (y << CHUNK_SIZE_EXP_X2);
     }
 
     /*
@@ -95,10 +95,6 @@ namespace engine {
 		inline void SetBlock(BlockInt block, int x, int y, int z) {
 			m_Voxels[voxelIndex(x,y,z)] = block;
 		}
-
-        inline void SetBlockVerticalColumn(BlockInt block, Vec3<int> start, int length) {
-            memset(m_Voxels + voxelIndex(start.x, start.y, start.z), block, length * sizeof(BlockInt));
-        }
 
         inline void SetBlock(BlockInt block, Vec3<int> pos) {
 			m_Voxels[voxelIndex(pos.x,pos.y,pos.z)] = block;

@@ -37,7 +37,6 @@ namespace engine {
         Application();
 
 		void Run();
-        void Cleanup();
         void GLFWMouseMoveCallback(GLFWwindow* window, double xposIn, double yposIn);
 		void GLFWScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 		void GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
