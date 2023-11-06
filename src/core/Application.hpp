@@ -23,6 +23,8 @@ namespace engine {
         Framebuffer* p_Framebuffer = nullptr;
         World* m_World = nullptr;
         BlockInt m_SelectedBlock = GRASS;
+
+        int MicrosecondsPerFrame = 0;
         
         bool m_Wireframe = false;
         bool m_PlayingGame = false;

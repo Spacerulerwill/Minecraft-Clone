@@ -14,6 +14,7 @@ LICENSE: MIT
 #include <PerlinNoise.hpp>
 #include <concurrentqueue.h>
 #include <BS_thread_pool.hpp>
+#include <chrono>
 
 namespace engine {
 
@@ -27,10 +28,20 @@ namespace engine {
         BS::thread_pool m_TerrainGenPool;
         BS::thread_pool m_ChunkMergePool;
         BS::thread_pool m_ChunkMeshPool;
+        
         moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
+
+        bool startedTerrainGeneration = false;
+        bool terrainGenerated = false;
+
+        bool startedMerging = false;
+        bool chunksMerged = false;
+
+        bool startedChunkMeshing = false;
+        bool chunksMeshed = false;
     public:
         ChunkRegion();
-        void GenerateChunks(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
+        void GenerateChunks(std::chrono::_V2::system_clock::time_point frameEnd, const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
         void BufferChunksPerFrame(size_t perFrame);
         void DrawOpaque(Shader& opaqueShader);
         void DrawWater(Shader& waterShader);

@@ -11,7 +11,6 @@ LICENSE: MIT
 #include <util/Exceptions.hpp>
 #include <world/Player.hpp>
 #include <util/Log.hpp>
-#include <chrono>
 
 engine::World::World(const char* worldName) : m_WorldName(worldName) {
     bool success;
@@ -28,11 +27,6 @@ engine::World::World(const char* worldName) : m_WorldName(worldName) {
     m_Player = Player(playerSave.position, playerSave.pitch, playerSave.yaw);
 
     m_Noise.reseed(worldSave.seed);
-
-    auto start = std::chrono::high_resolution_clock::now();
-    m_ChunkRegion.GenerateChunks(m_Noise, gen, distrib);
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000000.0f;
 }
 
 engine::Player& engine::World::GetPlayer() {
@@ -75,9 +69,12 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
     m_ChunkRegion.DrawWater(waterShader);
     glDisable(GL_BLEND);   
 
-    m_ChunkRegion.BufferChunksPerFrame(20);
+    m_ChunkRegion.BufferChunksPerFrame(40);
 }
 
+void engine::World::GenerateChunks(std::chrono::_V2::system_clock::time_point frameEnd) {
+    m_ChunkRegion.GenerateChunks(frameEnd, m_Noise, gen, distrib);
+}
 
 engine::World::~World() {
     // Save player position and view direction

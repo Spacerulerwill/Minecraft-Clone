@@ -33,23 +33,51 @@ void engine::ChunkRegion::DrawCustomModel(Shader& customModelShader) {
     }
 }
 
-void engine::ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib) {
-    for (ChunkStack& chunkStack : m_ChunkStacks) {
-        m_TerrainGenPool.push_task([&chunkStack, &perlin, &gen, &distrib]{
-            chunkStack.GenerateTerrain(perlin, gen, distrib);
-        });
-    }
-    m_TerrainGenPool.wait_for_tasks();
-
-    for (ChunkStack& chunkStack : m_ChunkStacks) {
-        for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
-            m_ChunkMeshPool.push_task([it, this]{
-                (*it).CreateMesh();
-                m_ChunkBufferQueue.enqueue(&(*it));
-            });
+void engine::ChunkRegion::GenerateChunks(std::chrono::_V2::system_clock::time_point frameEnd, const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib) {
+    if (!terrainGenerated) {
+        if (!startedTerrainGeneration) {
+            for (ChunkStack& chunkStack : m_ChunkStacks) {
+                m_TerrainGenPool.push_task([&chunkStack, &perlin, &gen, &distrib]{
+                    chunkStack.GenerateTerrain(perlin, gen, distrib);
+                });
+            }
+            startedTerrainGeneration = true;
+        }
+        
+        bool finished = m_TerrainGenPool.wait_for_tasks_until(frameEnd);
+        if (finished) {
+            terrainGenerated = true;
+        } else {
+            return;
         }
     }
-    m_ChunkMeshPool.wait_for_tasks();
+
+    if (!chunksMerged) {
+        if (!startedMerging) {
+            /*
+            Add tasks for chunk merging
+            */
+            startedMerging = true;
+        }
+
+        bool finished = m_ChunkMergePool.wait_for_tasks_until(frameEnd);
+        if (finished) {
+            chunksMerged = true;
+            /*
+            After chunks have finished merging we are free to add our mesh tasks
+            */
+            for (ChunkStack& chunkStack : m_ChunkStacks) {
+                for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+                    m_ChunkMeshPool.push_task([it, this]{
+                        (*it).CreateMesh();
+                        m_ChunkBufferQueue.enqueue(&(*it));
+                    });
+                }
+            }
+        } else {
+            return;
+        }
+    }
 }
 
 void engine::ChunkRegion::BufferChunksPerFrame(size_t perFrame) {

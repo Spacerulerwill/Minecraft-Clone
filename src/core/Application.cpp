@@ -315,10 +315,7 @@ void engine::Application::Run()
 
             glDrawArrays(GL_TRIANGLES, 0, 6);
 
-            // Calculate new chunks to be made
-            if (chunkPos != prevChunkPos) {
-
-            }
+            m_World->GenerateChunks(start + std::chrono::microseconds(MicrosecondsPerFrame));
 
             glfwPollEvents();
             glfwSwapBuffers(p_Window);
@@ -347,13 +344,16 @@ void engine::Application::InitOpenGL() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-	p_Window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Voxel Engine", nullptr, nullptr);
+	p_Window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Voxel Engine", NULL, NULL);
 
 	if (p_Window == NULL)
 	{
 		glfwTerminate();
 		throw std::runtime_error("Failed to create GLFW Window");
 	}
+
+    const GLFWvidmode* videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    MicrosecondsPerFrame = (1.0f/videoMode->refreshRate) * 1000;
 
     glfwSetWindowSizeCallback(p_Window, framebuffer_size_callback);
     glfwSetCursorPosCallback(p_Window, mouse_move_callback);
