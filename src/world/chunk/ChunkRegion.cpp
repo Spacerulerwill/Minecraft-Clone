@@ -35,13 +35,33 @@ void engine::ChunkRegion::DrawCustomModel(Shader& customModelShader) {
 
 void engine::ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib) {
     for (ChunkStack& chunkStack : m_ChunkStacks) {
-       chunkStack.GenerateTerrain(perlin, gen, distrib);
-       chunkStack.MeshAndBufferChunks();
+        m_TerrainGenPool.push_task([&chunkStack, &perlin, &gen, &distrib]{
+            chunkStack.GenerateTerrain(perlin, gen, distrib);
+        });
     }
+    m_TerrainGenPool.wait_for_tasks();
+
+    for (ChunkStack& chunkStack : m_ChunkStacks) {
+        for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+            m_ChunkMeshPool.push_task([it, this]{
+                (*it).CreateMesh();
+                m_ChunkBufferQueue.enqueue(&(*it));
+            });
+        }
+    }
+    m_ChunkMeshPool.wait_for_tasks();
 }
 
+void engine::ChunkRegion::BufferChunksPerFrame(size_t perFrame) {
+    Chunk** chunks = new Chunk*[perFrame];
+    size_t dequeued = m_ChunkBufferQueue.try_dequeue_bulk(chunks, perFrame);
+    for (size_t i = 0; i < dequeued; i++){
+        chunks[i]->BufferData();
+    }
+    delete[] chunks;
+}
 /*
-MIT License
+MIT Licese
 
 Copyright (c) 2023 William Redding
 

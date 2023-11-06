@@ -25,15 +25,20 @@ namespace engine {
         std::vector<Chunk> m_Chunks;
         Vec2<int> m_Pos;
     public:
+        using iterator = std::vector<Chunk>::iterator;
+        using const_iterator = std::vector<Chunk>::const_iterator;
         ChunkStack(Vec2<int> pos);
         Vec2<int> GetPos() const;
         void DrawOpaque(Shader& opaqueShader);
         void DrawWater(Shader& waterShader);
         void DrawCustomModel(Shader& customModelShader);
         void SetBlock(BlockInt block, int x, int y, int z);
-        void GenerateTerrain(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
-        void MeshAndBufferChunks();
         BlockInt GetBlock(int x, int y, int z) const; 
+        iterator begin();
+        iterator end();
+        const_iterator cbegin() const;
+        const_iterator cend() const;
+        void GenerateTerrain(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
     };
 }
 

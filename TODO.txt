@@ -1,0 +1,2 @@
+Fix move constructor for chunk (atomic variables)
+Fix bug in matrix multiplication Mat4 *= operator

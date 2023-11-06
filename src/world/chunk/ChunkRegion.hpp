@@ -12,6 +12,8 @@ LICENSE: MIT
 #include <world/chunk/ChunkStack.hpp>
 #include <core/Shader.hpp>
 #include <PerlinNoise.hpp>
+#include <concurrentqueue.h>
+#include <BS_thread_pool.hpp>
 
 namespace engine {
 
@@ -22,12 +24,17 @@ namespace engine {
     class ChunkRegion {
     private:
         std::vector<ChunkStack> m_ChunkStacks;
+        BS::thread_pool m_TerrainGenPool;
+        BS::thread_pool m_ChunkMergePool;
+        BS::thread_pool m_ChunkMeshPool;
+        moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
     public:
         ChunkRegion();
         void GenerateChunks(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
+        void BufferChunksPerFrame(size_t perFrame);
         void DrawOpaque(Shader& opaqueShader);
         void DrawWater(Shader& waterShader);
-        void DrawCustomModel(Shader& customModelShader);
+        void DrawCustomModel(Shader& customModelShader);    
     };
 }
 

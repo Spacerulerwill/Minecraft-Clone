@@ -73,7 +73,9 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
     waterShader.setMat4("view", view);
     waterShader.SetInt("tex_array", 0);
     m_ChunkRegion.DrawWater(waterShader);
-    glDisable(GL_BLEND);
+    glDisable(GL_BLEND);   
+
+    m_ChunkRegion.BufferChunksPerFrame(20);
 }
 
 

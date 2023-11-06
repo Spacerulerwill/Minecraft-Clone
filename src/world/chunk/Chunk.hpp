@@ -9,6 +9,7 @@ LICENSE: MIT
 #include <cstdint>
 #include <cstring>
 #include <vector>
+#include <atomic>
 #include <opengl/BufferObject.hpp>
 #include <opengl/VertexArray.hpp>
 #include <core/Shader.hpp>
@@ -68,7 +69,8 @@ namespace engine {
         
 	public:
     	BlockInt* m_Voxels = new BlockInt[CS_P3] {};
-        
+        std::atomic<bool> buffered = false;
+
         Chunk();
         Chunk(Vec3<int> chunkPos);
 		~Chunk();

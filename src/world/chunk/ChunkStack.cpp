@@ -17,6 +17,22 @@ engine::Vec2<int> engine::ChunkStack::GetPos() const {
     return m_Pos;
 }
 
+engine::ChunkStack::iterator engine::ChunkStack::begin() {
+    return m_Chunks.begin();
+}
+
+engine::ChunkStack::iterator engine::ChunkStack::end() {
+    return m_Chunks.end();
+}
+
+engine::ChunkStack::const_iterator engine::ChunkStack::cbegin() const {
+    return m_Chunks.cbegin();
+}
+
+engine::ChunkStack::const_iterator engine::ChunkStack::cend() const {
+    return m_Chunks.cend();
+}
+
 void engine::ChunkStack::DrawOpaque(Shader& opaqueShader) {
     for (Chunk& chunk : m_Chunks) {
         chunk.DrawOpaque(opaqueShader);
@@ -50,13 +66,6 @@ void engine::ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin, std::mt
             SetBlock(GRASS, x, height-1, z);
             SetBlock(BEDROCK, x, 0, z);
         }
-    }
-}
-
-void engine::ChunkStack::MeshAndBufferChunks() {
-    for (Chunk& chunk: m_Chunks) {
-        chunk.CreateMesh();
-        chunk.BufferData();
     }
 }
 

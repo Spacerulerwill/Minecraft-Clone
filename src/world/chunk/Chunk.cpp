@@ -88,6 +88,8 @@ void engine::Chunk::BufferData()
         m_CustomModelVBO.BufferData(m_CustomModelVertices.data(), m_CustomModelVertexCount * sizeof(CustomModelChunkVertex), GL_STATIC_DRAW);
         std::vector<CustomModelChunkVertex>().swap(m_CustomModelVertices);
     }
+
+    buffered = true;
 }
 
 engine::Vec3<int> engine::Chunk::GetPos() const {
@@ -96,7 +98,7 @@ engine::Vec3<int> engine::Chunk::GetPos() const {
 
 void engine::Chunk::DrawOpaque(Shader& shader)
 {
-	if (m_VertexCount > 0) {
+	if (m_VertexCount > 0 && buffered) {
 		m_VAO.Bind();
 		shader.setMat4("model", m_Model);
 		glDrawArrays(GL_TRIANGLES, 0, m_VertexCount);
@@ -105,7 +107,7 @@ void engine::Chunk::DrawOpaque(Shader& shader)
 
 void engine::Chunk::DrawWater(Shader& shader)
 {
-	if (m_WaterVertexCount > 0) {
+	if (m_WaterVertexCount > 0 && buffered) {
 		m_WaterVAO.Bind();
 		shader.setMat4("model", m_Model);
 		glDrawArrays(GL_TRIANGLES, 0, m_WaterVertexCount);
@@ -114,7 +116,7 @@ void engine::Chunk::DrawWater(Shader& shader)
 
 void engine::Chunk::DrawCustomModelBlocks(Shader& shader)
 {
-	if (m_CustomModelVertexCount > 0) {
+	if (m_CustomModelVertexCount > 0 && buffered) {
 		m_CustomModelVAO.Bind();
 		shader.setMat4("model", m_Model);
         glDrawArrays(GL_TRIANGLES, 0, m_CustomModelVertexCount);
