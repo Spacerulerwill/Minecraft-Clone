@@ -69,7 +69,7 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
     m_ChunkRegion.DrawWater(waterShader);
     glDisable(GL_BLEND);   
 
-    m_ChunkRegion.BufferChunksPerFrame(40);
+    m_ChunkRegion.BufferChunksPerFrame(20);
 }
 
 void engine::World::GenerateChunks(std::chrono::_V2::system_clock::time_point frameEnd) {

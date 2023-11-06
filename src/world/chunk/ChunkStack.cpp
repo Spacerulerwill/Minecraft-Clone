@@ -64,6 +64,20 @@ void engine::ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin, std::mt
                 SetBlock(DIRT, x, i, z);
             }
             SetBlock(GRASS, x, height-1, z);
+
+            int randInt = distrib(gen);
+            if (height <= MAX_WORLD_GEN_HEIGHT) {
+                if (randInt < 20) {
+                    SetBlock(TALL_GRASS, x, height, z);
+                }
+                else if (randInt < 28) {
+					SetBlock(ROSE, x, height, z);
+
+                } 
+                else if (randInt < 30) {
+                    SetBlock(PINK_TULIP, x, height, z);
+                }
+            }
             SetBlock(BEDROCK, x, 0, z);
         }
     }
