@@ -360,7 +360,7 @@ void engine::Application::InitOpenGL() {
     glfwSetMouseButtonCallback(p_Window, mouse_button_callback);
     glfwSetScrollCallback(p_Window, scroll_callback);
     glfwSetKeyCallback(p_Window, key_callback);
-    glfwSetWindowUserPointer(p_Window, reinterpret_cast<void *>(this));
+    glfwSetWindowUserPointer(p_Window, reinterpret_cast<void*>(this));
 	glfwMakeContextCurrent(p_Window);
 
     // Set input mode to cursor disabled so use can't move mouse out of window
