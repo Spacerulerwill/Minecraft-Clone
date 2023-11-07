@@ -423,15 +423,15 @@ void engine::MeshCustomModelBlocks(std::vector<CustomModelChunkVertex>& vertices
     for (int x = 1; x < CS_P_MINUS_ONE; x++){
         for (int y = 1; y < CS_P_MINUS_ONE; y++) {
             for (int z =1; z < CS_P_MINUS_ONE; z++) {
-                BlockInt type = voxels[voxelIndex(x,y,z)];
+                BlockInt type = voxels[VoxelIndex(x,y,z)];
                 BlockDataStruct blockData = BlockData[type];
                 if (blockData.model != CUBE && (
-                    !BlockData[voxels[voxelIndex(x+1,y,z)]].opaque ||
-                    !BlockData[voxels[voxelIndex(x-1,y,z)]].opaque ||
-                    !BlockData[voxels[voxelIndex(x,y+1,z)]].opaque ||
-                    !BlockData[voxels[voxelIndex(x,y-1,z)]].opaque ||
-                    !BlockData[voxels[voxelIndex(x,y,z+1)]].opaque ||
-                    !BlockData[voxels[voxelIndex(x,y,z-1)]].opaque
+                    !BlockData[voxels[VoxelIndex(x+1,y,z)]].opaque ||
+                    !BlockData[voxels[VoxelIndex(x-1,y,z)]].opaque ||
+                    !BlockData[voxels[VoxelIndex(x,y+1,z)]].opaque ||
+                    !BlockData[voxels[VoxelIndex(x,y-1,z)]].opaque ||
+                    !BlockData[voxels[VoxelIndex(x,y,z+1)]].opaque ||
+                    !BlockData[voxels[VoxelIndex(x,y,z-1)]].opaque
                 )) {
                     BlockModelStruct modelData = BlockModelData[blockData.model];
                     std::vector<uint32_t> modelVerts(modelData.begin, modelData.end);

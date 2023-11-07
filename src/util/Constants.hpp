@@ -28,6 +28,8 @@ namespace engine {
     // Chunk region sizes
     constexpr int CHUNK_REGION_SIZE = 1 << CHUNK_REGION_SIZE_EXP;
     constexpr int CHUNK_REGION_SIZE_SQUARED = CHUNK_REGION_SIZE * CHUNK_REGION_SIZE;
+    constexpr int CHUNK_REGION_SIZE_MINUS_ONE = CHUNK_REGION_SIZE - 1;
+
 
     // World gen constants
     constexpr int DEFAULT_CHUNK_STACK_HEIGHT = 8;

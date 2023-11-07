@@ -49,13 +49,13 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
     chunkShader.SetInt("grass_mask", 2);
     m_ChunkRegion.DrawOpaque(chunkShader);
     
-    glDisable(GL_CULL_FACE);
+    //glDisable(GL_CULL_FACE);
     customModelShader.Bind();
     customModelShader.setMat4("projection", perspective);
     customModelShader.setMat4("view", view);
     customModelShader.SetInt("tex_array", 0);
     m_ChunkRegion.DrawCustomModel(customModelShader);
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
 
     glDepthFunc(GL_LEQUAL);
     m_Skybox.Draw(perspective, translationRemoved(view));

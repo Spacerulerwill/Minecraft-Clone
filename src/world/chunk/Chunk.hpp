@@ -24,11 +24,14 @@ LICENSE: MIT
 
 namespace engine {
 
+    // forward declaration
+    class ChunkRegion;
+
 	constexpr float BLOCK_SCALE = 1.0f;
     constexpr float CHUNK_SCALE = CS * BLOCK_SCALE;
 	constexpr float INV_BLOCK_SCALE = 1 / BLOCK_SCALE;
 
-    inline int voxelIndex(int x, int y, int z) {
+    inline int VoxelIndex(int x, int y, int z) {
         return z + (x << CHUNK_SIZE_EXP) + (y << CHUNK_SIZE_EXP_X2);
     }
 
@@ -87,20 +90,30 @@ namespace engine {
         void DrawCustomModelBlocks(Shader& shader);
 
 		inline BlockInt GetBlock(int x, int y, int z) const {
-			return m_Voxels[voxelIndex(x,y,z)];
+			return m_Voxels[VoxelIndex(x,y,z)];
 		}
 
         inline BlockInt GetBlock(Vec3<int> pos) {
-            return m_Voxels[voxelIndex(pos.x, pos.y, pos.z)];
+            return m_Voxels[VoxelIndex(pos.x, pos.y, pos.z)];
         }
 
 		inline void SetBlock(BlockInt block, int x, int y, int z) {
-			m_Voxels[voxelIndex(x,y,z)] = block;
+			m_Voxels[VoxelIndex(x,y,z)] = block;
 		}
 
         inline void SetBlock(BlockInt block, Vec3<int> pos) {
-			m_Voxels[voxelIndex(pos.x,pos.y,pos.z)] = block;
+			m_Voxels[VoxelIndex(pos.x,pos.y,pos.z)] = block;
 		}
+
+        /*
+        These functions are used for copying neighbor chunk data into this chunk
+        */
+        void CopyNeighborFrontData(ChunkRegion* chunkRegion);
+        void CopyNeighborBackData(ChunkRegion* chunkRegion);
+        void CopyNeighborLeftData(ChunkRegion* chunkRegion);
+        void CopyNeighborRightData(ChunkRegion* chunkRegion);
+        void CopyNeighborTopData(ChunkRegion* chunkRegion);
+        void CopyNeighborBottomData(ChunkRegion* chunkRegion);
     };
 }
 

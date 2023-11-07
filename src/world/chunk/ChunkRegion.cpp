@@ -33,50 +33,43 @@ void engine::ChunkRegion::DrawCustomModel(Shader& customModelShader) {
     }
 }
 
+engine::Chunk* engine::ChunkRegion::GetChunk(int x, int y, int z) {
+    return m_ChunkStacks.at(ChunkStackIndex(x, z)).GetChunk(y);
+}
+
 void engine::ChunkRegion::GenerateChunks(std::chrono::_V2::system_clock::time_point frameEnd, const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib) {
-    if (!terrainGenerated) {
-        if (!startedTerrainGeneration) {
-            for (ChunkStack& chunkStack : m_ChunkStacks) {
-                m_TerrainGenPool.push_task([&chunkStack, &perlin, &gen, &distrib]{
-                    chunkStack.GenerateTerrain(perlin, gen, distrib);
-                });
-            }
-            startedTerrainGeneration = true;
+    if (!startedTerrainGeneration && m_TerrainGenPool.get_tasks_total() == 0) {
+        for (ChunkStack& chunkStack : m_ChunkStacks) {
+            m_TerrainGenPool.push_task([&chunkStack, &perlin, &gen, &distrib]{
+                chunkStack.GenerateTerrain(perlin, gen, distrib);
+            });
         }
-        
-        bool finished = m_TerrainGenPool.wait_for_tasks_until(frameEnd);
-        if (finished) {
-            terrainGenerated = true;
-        } else {
-            return;
-        }
+        startedTerrainGeneration = true;
+        return;
     }
 
-    if (!chunksMerged) {
-        if (!startedMerging) {
-            /*
-            Add tasks for chunk merging
-            */
-            startedMerging = true;
-        }
-
-        bool finished = m_ChunkMergePool.wait_for_tasks_until(frameEnd);
-        if (finished) {
-            chunksMerged = true;
-            /*
-            After chunks have finished merging we are free to add our mesh tasks
-            */
-            for (ChunkStack& chunkStack : m_ChunkStacks) {
-                for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
-                    m_ChunkMeshPool.push_task([it, this]{
-                        (*it).CreateMesh();
-                        m_ChunkBufferQueue.enqueue(&(*it));
-                    });
+    if (!startedChunkMerging && !m_ChunkMeshPool.get_tasks_total() == 0) {
+        for (int x = 0; x < CHUNK_REGION_SIZE; x++) {
+            for (int z = 0; z < CHUNK_REGION_SIZE; z++) {
+                ChunkStack* stack = &m_ChunkStacks.at(ChunkStackIndex(x, z));
+                for (int y = 0; y < stack->size(); y++) {
+                    Chunk* chunk = stack->GetChunk(y);
                 }
             }
-        } else {
-            return;
         }
+        startedChunkMerging = true;
+    }
+
+    if (!startedChunkMeshing) {
+        for (ChunkStack& chunkStack : m_ChunkStacks) {
+            for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+                m_ChunkMeshPool.push_task([it, this]{
+                    (*it).CreateMesh();
+                    m_ChunkBufferQueue.enqueue(&(*it));
+                });
+            }
+        }
+        startedChunkMeshing = true;
     }
 }
 
@@ -88,6 +81,7 @@ void engine::ChunkRegion::BufferChunksPerFrame(size_t perFrame) {
     }
     delete[] chunks;
 }
+
 /*
 MIT Licese
 

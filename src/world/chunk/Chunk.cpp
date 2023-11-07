@@ -10,6 +10,7 @@ LICENSE: MIT
 #include <util/Log.hpp>
 #include <math/Math.hpp>
 #include <GLFW/glfw3.h>
+#include <world/chunk/ChunkRegion.hpp>
 
 void engine::Chunk::AddVertexBufferAttributes() {
     VertexBufferLayout bufLayout;
@@ -122,6 +123,31 @@ void engine::Chunk::DrawCustomModelBlocks(Shader& shader)
         glDrawArrays(GL_TRIANGLES, 0, m_CustomModelVertexCount);
     }
 }
+
+void engine::Chunk::CopyNeighborFrontData(ChunkRegion* region) {
+    
+}
+
+void engine::Chunk::CopyNeighborBackData(ChunkRegion* region) {
+   
+}
+
+void engine::Chunk::CopyNeighborLeftData(ChunkRegion* region) {
+    
+}
+
+void engine::Chunk::CopyNeighborRightData(ChunkRegion* region) {
+    
+}
+
+void engine::Chunk::CopyNeighborTopData(ChunkRegion* region) {
+    
+}
+
+void engine::Chunk::CopyNeighborBottomData(ChunkRegion* region) {
+    
+}
+
 
 /*
 MIT License

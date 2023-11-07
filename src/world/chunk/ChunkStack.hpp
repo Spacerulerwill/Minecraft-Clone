@@ -34,10 +34,12 @@ namespace engine {
         void DrawCustomModel(Shader& customModelShader);
         void SetBlock(BlockInt block, int x, int y, int z);
         BlockInt GetBlock(int x, int y, int z) const; 
+        Chunk* GetChunk(int y);
         iterator begin();
         iterator end();
         const_iterator cbegin() const;
         const_iterator cend() const;
+        size_t size() const;
         void GenerateTerrain(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
     };
 }

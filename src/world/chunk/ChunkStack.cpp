@@ -33,6 +33,10 @@ engine::ChunkStack::const_iterator engine::ChunkStack::cend() const {
     return m_Chunks.cend();
 }
 
+size_t engine::ChunkStack::size() const {
+    return m_Chunks.size();
+}
+
 void engine::ChunkStack::DrawOpaque(Shader& opaqueShader) {
     for (Chunk& chunk : m_Chunks) {
         chunk.DrawOpaque(opaqueShader);
@@ -97,6 +101,10 @@ void engine::ChunkStack::SetBlock(BlockInt block, int x, int y, int z) {
 engine::BlockInt engine::ChunkStack::GetBlock(int x, int y, int z) const {
     return m_Chunks[y / CS].GetBlock(x, 1 + y % CS, z);
 }
+
+engine::Chunk* engine::ChunkStack::GetChunk(int y) {
+    return &m_Chunks.at(y);
+} 
 
 /*
 MIT License

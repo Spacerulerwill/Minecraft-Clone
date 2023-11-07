@@ -18,6 +18,11 @@ LICENSE: MIT
 
 namespace engine {
 
+    // Calculate the index of a ChunkStack in a ChunkRegion
+    inline int ChunkStackIndex(int x, int z) {
+        return z + (x << CHUNK_REGION_SIZE_EXP);
+    }
+
     /*
     Chunk regions are 2D section of chunk stacks. Their size is
     dictated by CHUNK_REGION_SIZE (See util/constants.hpp)
@@ -32,20 +37,16 @@ namespace engine {
         moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
 
         bool startedTerrainGeneration = false;
-        bool terrainGenerated = false;
-
-        bool startedMerging = false;
-        bool chunksMerged = false;
-
+        bool startedChunkMerging = false;
         bool startedChunkMeshing = false;
-        bool chunksMeshed = false;
     public:
         ChunkRegion();
         void GenerateChunks(std::chrono::_V2::system_clock::time_point frameEnd, const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
         void BufferChunksPerFrame(size_t perFrame);
         void DrawOpaque(Shader& opaqueShader);
         void DrawWater(Shader& waterShader);
-        void DrawCustomModel(Shader& customModelShader);    
+        void DrawCustomModel(Shader& customModelShader);   
+        Chunk* GetChunk(int x, int y, int z); 
     };
 }
 
