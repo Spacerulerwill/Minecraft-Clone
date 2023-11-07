@@ -72,8 +72,8 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
     m_ChunkRegion.BufferChunksPerFrame(20);
 }
 
-void engine::World::GenerateChunks(std::chrono::_V2::system_clock::time_point frameEnd) {
-    m_ChunkRegion.GenerateChunks(frameEnd, m_Noise, gen, distrib);
+void engine::World::GenerateChunks() {
+    m_ChunkRegion.GenerateChunks(m_Noise, gen, distrib);
 }
 
 engine::World::~World() {

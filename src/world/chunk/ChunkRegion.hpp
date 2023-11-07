@@ -41,7 +41,7 @@ namespace engine {
         bool startedChunkMeshing = false;
     public:
         ChunkRegion();
-        void GenerateChunks(std::chrono::_V2::system_clock::time_point frameEnd, const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
+        void GenerateChunks(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
         void BufferChunksPerFrame(size_t perFrame);
         void DrawOpaque(Shader& opaqueShader);
         void DrawWater(Shader& waterShader);

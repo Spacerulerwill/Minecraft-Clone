@@ -124,28 +124,61 @@ void engine::Chunk::DrawCustomModelBlocks(Shader& shader)
     }
 }
 
-void engine::Chunk::CopyNeighborFrontData(ChunkRegion* region) {
-    
-}
+void engine::Chunk::CopyNeighborData(ChunkRegion* region) {
+    Chunk* belowChunk = region->GetChunk(m_Pos.x, m_Pos.y - 1, m_Pos.z);
+    Chunk* aboveChunk = region->GetChunk(m_Pos.x, m_Pos.y + 1, m_Pos.z);
+    Chunk* leftChunk = region->GetChunk(m_Pos.x - 1, m_Pos.y, m_Pos.z);
+    Chunk* rightChunk = region->GetChunk(m_Pos.x + 1, m_Pos.y, m_Pos.z);
+    Chunk* frontChunk = region->GetChunk(m_Pos.x, m_Pos.y, m_Pos.z - 1);
+    Chunk* backChunk = region->GetChunk(m_Pos.x, m_Pos.y, m_Pos.z + 1);
 
-void engine::Chunk::CopyNeighborBackData(ChunkRegion* region) {
-   
-}
+    if (belowChunk != nullptr) {
+        for (int x = 1; x < CS_P_MINUS_ONE; x++) {
+            for (int z = 1; z < CS_P_MINUS_ONE; z++) {
+                SetBlock(belowChunk->GetBlock(x, CS, z), x, 0, z);
+            }
+        }
+    }
 
-void engine::Chunk::CopyNeighborLeftData(ChunkRegion* region) {
-    
-}
+    if (aboveChunk != nullptr) {
+        for (int x = 1; x < CS_P_MINUS_ONE; x++) {
+            for (int z = 1; z < CS_P_MINUS_ONE; z++) {
+                SetBlock(aboveChunk->GetBlock(x, 1, z), x, CS_P_MINUS_ONE, z);
+            }
+        }
+    }
 
-void engine::Chunk::CopyNeighborRightData(ChunkRegion* region) {
-    
-}
+    if (leftChunk != nullptr) {
+        for (int y = 1; y < CS_P_MINUS_ONE; y++) {
+            for (int z = 1; z < CS_P_MINUS_ONE; z++) {
+                SetBlock(leftChunk->GetBlock(CS, y, z), 0, y, z);
+            }
+        }
+    }
 
-void engine::Chunk::CopyNeighborTopData(ChunkRegion* region) {
+    if (rightChunk != nullptr) {
+        for (int y = 1; y < CS_P_MINUS_ONE; y++) {
+            for (int z = 1; z < CS_P_MINUS_ONE; z++) {
+                SetBlock(rightChunk->GetBlock(1, y, z), CS_P_MINUS_ONE, y, z);
+            }
+        }
+    }
     
-}
+    if (frontChunk != nullptr) {
+        for (int x = 1; x < CS_P_MINUS_ONE; x++) {
+            for (int y = 1; y < CS_P_MINUS_ONE; y++) {
+                SetBlock(frontChunk->GetBlock(x, y, CS), x, y, 0);
+            }
+        }
+    }
 
-void engine::Chunk::CopyNeighborBottomData(ChunkRegion* region) {
-    
+    if (backChunk != nullptr) {
+        for (int x = 1; x < CS_P_MINUS_ONE; x++) {
+            for (int y = 1; y < CS_P_MINUS_ONE; y++) {
+                SetBlock(backChunk->GetBlock(x, y, 1), x, y, CS_P_MINUS_ONE);
+            }
+        }
+    }
 }
 
 

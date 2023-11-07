@@ -35,7 +35,7 @@ namespace engine {
         Player& GetPlayer();
         const char* GetName();
         void Draw(Shader& chunkShader, Shader& waterShader, Shader& customModelShader);
-        void GenerateChunks(std::chrono::_V2::system_clock::time_point frameEnd);
+        void GenerateChunks();
         ~World();
     private:
         Player m_Player;

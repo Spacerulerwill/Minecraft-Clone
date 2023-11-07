@@ -34,11 +34,17 @@ void engine::ChunkRegion::DrawCustomModel(Shader& customModelShader) {
 }
 
 engine::Chunk* engine::ChunkRegion::GetChunk(int x, int y, int z) {
-    return m_ChunkStacks.at(ChunkStackIndex(x, z)).GetChunk(y);
+    int chunkStackIndex = ChunkStackIndex(x, z);
+    if (chunkStackIndex >= CHUNK_REGION_SIZE_SQUARED || chunkStackIndex < 0) {
+        return nullptr;
+    }
+    else {
+        return m_ChunkStacks.at(chunkStackIndex).GetChunk(y);
+    }
 }
 
-void engine::ChunkRegion::GenerateChunks(std::chrono::_V2::system_clock::time_point frameEnd, const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib) {
-    if (!startedTerrainGeneration && m_TerrainGenPool.get_tasks_total() == 0) {
+void engine::ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib) {
+    if (!startedTerrainGeneration) {
         for (ChunkStack& chunkStack : m_ChunkStacks) {
             m_TerrainGenPool.push_task([&chunkStack, &perlin, &gen, &distrib]{
                 chunkStack.GenerateTerrain(perlin, gen, distrib);
@@ -47,20 +53,25 @@ void engine::ChunkRegion::GenerateChunks(std::chrono::_V2::system_clock::time_po
         startedTerrainGeneration = true;
         return;
     }
-
-    if (!startedChunkMerging && !m_ChunkMeshPool.get_tasks_total() == 0) {
+    bool finishedGenerating = startedTerrainGeneration && m_TerrainGenPool.get_tasks_total() == 0;
+    
+    if (finishedGenerating && !startedChunkMerging) {
         for (int x = 0; x < CHUNK_REGION_SIZE; x++) {
             for (int z = 0; z < CHUNK_REGION_SIZE; z++) {
                 ChunkStack* stack = &m_ChunkStacks.at(ChunkStackIndex(x, z));
                 for (int y = 0; y < stack->size(); y++) {
                     Chunk* chunk = stack->GetChunk(y);
+                    m_ChunkMergePool.push_task([chunk, this]{
+                        chunk->CopyNeighborData(this);                    
+                    });
                 }
             }
         }
         startedChunkMerging = true;
     }
+    bool finishedMerging = startedChunkMerging && m_ChunkMergePool.get_tasks_total() == 0;
 
-    if (!startedChunkMeshing) {
+    if (finishedMerging && !startedChunkMeshing) {
         for (ChunkStack& chunkStack : m_ChunkStacks) {
             for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
                 m_ChunkMeshPool.push_task([it, this]{

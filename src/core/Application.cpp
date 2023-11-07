@@ -254,7 +254,6 @@ void engine::Application::Run()
         
         // Main game loop
         while (m_PlayingGame) { 
-            auto start = std::chrono::high_resolution_clock::now();
             // Calculate delta time
             float currentFrame = static_cast<float>(glfwGetTime());
             m_DeltaTime = currentFrame - m_LastFrame;
@@ -315,7 +314,7 @@ void engine::Application::Run()
 
             glDrawArrays(GL_TRIANGLES, 0, 6);
 
-            m_World->GenerateChunks(start + std::chrono::microseconds(MicrosecondsPerFrame));
+            m_World->GenerateChunks();
 
             glfwPollEvents();
             glfwSwapBuffers(p_Window);

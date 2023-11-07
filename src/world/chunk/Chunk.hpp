@@ -105,15 +105,8 @@ namespace engine {
 			m_Voxels[VoxelIndex(pos.x,pos.y,pos.z)] = block;
 		}
 
-        /*
-        These functions are used for copying neighbor chunk data into this chunk
-        */
-        void CopyNeighborFrontData(ChunkRegion* chunkRegion);
-        void CopyNeighborBackData(ChunkRegion* chunkRegion);
-        void CopyNeighborLeftData(ChunkRegion* chunkRegion);
-        void CopyNeighborRightData(ChunkRegion* chunkRegion);
-        void CopyNeighborTopData(ChunkRegion* chunkRegion);
-        void CopyNeighborBottomData(ChunkRegion* chunkRegion);
+        void CopyNeighborData(ChunkRegion* chunkRegion);
+
     };
 }
 

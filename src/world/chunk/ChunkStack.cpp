@@ -103,7 +103,11 @@ engine::BlockInt engine::ChunkStack::GetBlock(int x, int y, int z) const {
 }
 
 engine::Chunk* engine::ChunkStack::GetChunk(int y) {
-    return &m_Chunks.at(y);
+    if (y >= m_Chunks.size()){
+        return nullptr;
+    } else {
+        return &m_Chunks.at(y);
+    }
 } 
 
 /*
