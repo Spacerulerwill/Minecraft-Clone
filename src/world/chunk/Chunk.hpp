@@ -31,8 +31,8 @@ namespace engine {
     constexpr float CHUNK_SCALE = CS * BLOCK_SCALE;
 	constexpr float INV_BLOCK_SCALE = 1 / BLOCK_SCALE;
 
-    inline int VoxelIndex(int x, int y, int z) {
-        return z + (x << CHUNK_SIZE_EXP) + (y << CHUNK_SIZE_EXP_X2);
+    inline int VoxelIndex(Vec3<int> pos) {
+        return pos.z + (pos.x << CHUNK_SIZE_EXP) + (pos.y << CHUNK_SIZE_EXP_X2);
     }
 
     /*
@@ -89,24 +89,15 @@ namespace engine {
 		void DrawWater(Shader& shader);
         void DrawCustomModelBlocks(Shader& shader);
 
-		inline BlockInt GetBlock(int x, int y, int z) const {
-			return m_Voxels[VoxelIndex(x,y,z)];
-		}
-
-        inline BlockInt GetBlock(Vec3<int> pos) {
-            return m_Voxels[VoxelIndex(pos.x, pos.y, pos.z)];
+        inline BlockInt GetBlock(Vec3<int> pos) const {
+            return m_Voxels[VoxelIndex(pos)];
         }
 
-		inline void SetBlock(BlockInt block, int x, int y, int z) {
-			m_Voxels[VoxelIndex(x,y,z)] = block;
-		}
-
         inline void SetBlock(BlockInt block, Vec3<int> pos) {
-			m_Voxels[VoxelIndex(pos.x,pos.y,pos.z)] = block;
+			m_Voxels[VoxelIndex(pos)] = block;
 		}
 
         void CopyNeighborData(ChunkRegion* chunkRegion);
-
     };
 }
 

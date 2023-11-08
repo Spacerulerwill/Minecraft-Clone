@@ -7,6 +7,10 @@ LICENSE: MIT
 #define CONSTANTS_H
 
 namespace engine {
+
+    // MSAA
+    constexpr int MSAA_SAMPLES = 4;
+    
     // Chunk size exponents (used for bit shifts when calculating array index to find block at x,y,z)
     constexpr int CHUNK_SIZE_EXP = 6;
     constexpr int CHUNK_SIZE_EXP_X2 = CHUNK_SIZE_EXP * 2;
@@ -29,7 +33,7 @@ namespace engine {
     constexpr int CHUNK_REGION_SIZE = 1 << CHUNK_REGION_SIZE_EXP;
     constexpr int CHUNK_REGION_SIZE_SQUARED = CHUNK_REGION_SIZE * CHUNK_REGION_SIZE;
     constexpr int CHUNK_REGION_SIZE_MINUS_ONE = CHUNK_REGION_SIZE - 1;
-
+    constexpr int CHUNK_REGION_BLOCK_SIZE = CS * CHUNK_REGION_SIZE;
 
     // World gen constants
     constexpr int DEFAULT_CHUNK_STACK_HEIGHT = 8;
@@ -39,6 +43,8 @@ namespace engine {
     constexpr int MIN_WORLD_GEN_HEIGHT = (1 * CS) - 1;
     constexpr int MAX_MINUS_MIN_WORLD_GEN_HEIGHT = MAX_WORLD_GEN_HEIGHT - MIN_WORLD_GEN_HEIGHT;
     constexpr int WATER_LEVEL = MIN_WORLD_GEN_HEIGHT + CS;
+
+    constexpr int MAX_BUFFER_PER_FRAME = 20;
 };
 
 #endif // !CONSTANTS_H

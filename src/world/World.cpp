@@ -26,7 +26,12 @@ engine::World::World(const char* worldName) : m_WorldName(worldName) {
         throw WorldCorruptException(fmt::format("Failed to read world data. File worlds/{}/player.data is corrupted or missing!", worldName));
     m_Player = Player(playerSave.position, playerSave.pitch, playerSave.yaw);
 
-    m_Noise.reseed(worldSave.seed);
+    m_Noise.reseed(worldSave.seed);    
+
+    m_ChunkRegions.insert(std::make_pair(Vec2<int>(0,0), new ChunkRegion(Vec2<int>(0,0))));
+    m_ChunkRegions.insert(std::make_pair(Vec2<int>(1,0), new ChunkRegion(Vec2<int>(1,0))));
+    m_ChunkRegions.insert(std::make_pair(Vec2<int>(1,1), new ChunkRegion(Vec2<int>(1,1))));
+    m_ChunkRegions.insert(std::make_pair(Vec2<int>(0,1), new ChunkRegion(Vec2<int>(0,1))));
 }
 
 engine::Player& engine::World::GetPlayer() {
@@ -47,15 +52,19 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
     chunkShader.setMat4("view", view);
     chunkShader.SetInt("tex_array", 0);
     chunkShader.SetInt("grass_mask", 2);
-    m_ChunkRegion.DrawOpaque(chunkShader);
+    for(auto& it : m_ChunkRegions) {
+        it.second->DrawOpaque(chunkShader);
+    }
     
-    //glDisable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
     customModelShader.Bind();
     customModelShader.setMat4("projection", perspective);
     customModelShader.setMat4("view", view);
     customModelShader.SetInt("tex_array", 0);
-    m_ChunkRegion.DrawCustomModel(customModelShader);
-    //glEnable(GL_CULL_FACE);
+    for(auto& it : m_ChunkRegions) {
+        it.second->DrawCustomModel(customModelShader);
+    }
+    glEnable(GL_CULL_FACE);
 
     glDepthFunc(GL_LEQUAL);
     m_Skybox.Draw(perspective, translationRemoved(view));
@@ -66,14 +75,26 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
     waterShader.setMat4("projection", perspective);
     waterShader.setMat4("view", view);
     waterShader.SetInt("tex_array", 0);
-    m_ChunkRegion.DrawWater(waterShader);
-    glDisable(GL_BLEND);   
-
-    m_ChunkRegion.BufferChunksPerFrame(20);
+    for(auto& it : m_ChunkRegions) {
+        it.second->DrawWater(waterShader);
+    }
+    glDisable(GL_BLEND);    
 }
 
 void engine::World::GenerateChunks() {
-    m_ChunkRegion.GenerateChunks(m_Noise, gen, distrib);
+    Vec3<float> playerPos = m_Player.GetCamera().GetPosition();
+    Vec2<int> chunkRegionPos = Vec2<int>(static_cast<int>(playerPos.x) / CHUNK_REGION_BLOCK_SIZE, static_cast<int>(playerPos.z) / CHUNK_REGION_BLOCK_SIZE);
+    if (playerPos.x < 0) 
+        chunkRegionPos.x--;
+    if (playerPos.z < 0)
+        chunkRegionPos.y--; 
+    
+    auto find = m_ChunkRegions.find(chunkRegionPos);
+    if (find == m_ChunkRegions.end())
+        return;
+
+    (*find).second->GenerateChunks(m_Noise, gen, distrib);
+    (*find).second->BufferChunksPerFrame();
 }
 
 engine::World::~World() {
@@ -84,6 +105,11 @@ engine::World::~World() {
         .yaw = m_Player.GetCamera().GetYaw()
     };
     WriteStructToDisk(fmt::format("worlds/{}/player.dat", m_WorldName), playerSave);
+    
+    // Delete chunk regions
+    for (const auto & [ key, value ] : m_ChunkRegions) {
+        delete value;
+    }
 }
 
 /*

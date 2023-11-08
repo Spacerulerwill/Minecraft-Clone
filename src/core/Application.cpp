@@ -338,6 +338,7 @@ void engine::Application::InitOpenGL() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_SAMPLES, MSAA_SAMPLES);
 
 #ifdef __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -350,9 +351,6 @@ void engine::Application::InitOpenGL() {
 		glfwTerminate();
 		throw std::runtime_error("Failed to create GLFW Window");
 	}
-
-    const GLFWvidmode* videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-    MicrosecondsPerFrame = (1.0f/videoMode->refreshRate) * 1000;
 
     glfwSetWindowSizeCallback(p_Window, framebuffer_size_callback);
     glfwSetCursorPosCallback(p_Window, mouse_move_callback);
@@ -380,7 +378,7 @@ void engine::Application::InitOpenGL() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    //glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 }
 

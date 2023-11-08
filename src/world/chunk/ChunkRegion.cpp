@@ -6,13 +6,17 @@ LICENSE: MIT
 #include <world/chunk/ChunkRegion.hpp>
 #include <util/Log.hpp>
 
-engine::ChunkRegion::ChunkRegion() {
+engine::ChunkRegion::ChunkRegion(Vec2<int> pos): m_Pos(pos) {
     m_ChunkStacks.reserve(CHUNK_REGION_SIZE_SQUARED);
     for (int x = 0; x < CHUNK_REGION_SIZE; x++) {
         for (int z = 0; z < CHUNK_REGION_SIZE; z++) {
-            m_ChunkStacks.emplace_back(Vec2<int>(x,z));
+            m_ChunkStacks.emplace_back(Vec2<int>((pos.x * CHUNK_REGION_SIZE) + x,(pos.y * CHUNK_REGION_SIZE) + z));
         }
     }
+}
+
+engine::ChunkRegion::~ChunkRegion() {
+    delete[] m_DequeuedChunks;
 }
 
 void engine::ChunkRegion::DrawOpaque(Shader& opaqueShader){
@@ -33,13 +37,13 @@ void engine::ChunkRegion::DrawCustomModel(Shader& customModelShader) {
     }
 }
 
-engine::Chunk* engine::ChunkRegion::GetChunk(int x, int y, int z) {
-    if (x < 0 || x >= CHUNK_REGION_SIZE || z < 0 || z >= CHUNK_REGION_SIZE) {
+engine::Chunk* engine::ChunkRegion::GetChunk(Vec3<int> pos) {
+    if (pos.x < 0 || pos.x >= CHUNK_REGION_SIZE || pos.z < 0 || pos.z >= CHUNK_REGION_SIZE) {
         return nullptr;
     }
     else {
-        int chunkStackIndex = ChunkStackIndex(x, z);
-        return m_ChunkStacks.at(chunkStackIndex).GetChunk(y);
+        int chunkStackIndex = ChunkStackIndex(pos.x, pos.z);
+        return m_ChunkStacks.at(chunkStackIndex).GetChunk(pos.y);
     }
 }
 
@@ -83,13 +87,11 @@ void engine::ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin, std::mt
     }
 }
 
-void engine::ChunkRegion::BufferChunksPerFrame(size_t perFrame) {
-    Chunk** chunks = new Chunk*[perFrame];
-    size_t dequeued = m_ChunkBufferQueue.try_dequeue_bulk(chunks, perFrame);
+void engine::ChunkRegion::BufferChunksPerFrame() {
+    std::size_t dequeued = m_ChunkBufferQueue.try_dequeue_bulk(m_DequeuedChunks, MAX_BUFFER_PER_FRAME);
     for (size_t i = 0; i < dequeued; i++){
-        chunks[i]->BufferData();
+        m_DequeuedChunks[i]->BufferData();
     }
-    delete[] chunks;
 }
 
 /*

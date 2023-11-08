@@ -32,8 +32,8 @@ namespace engine {
         void DrawOpaque(Shader& opaqueShader);
         void DrawWater(Shader& waterShader);
         void DrawCustomModel(Shader& customModelShader);
-        void SetBlock(BlockInt block, int x, int y, int z);
-        BlockInt GetBlock(int x, int y, int z) const; 
+        void SetBlock(BlockInt block, Vec3<int> pos);
+        BlockInt GetBlock(Vec3<int> pos) const; 
         Chunk* GetChunk(int y);
         iterator begin();
         iterator end();

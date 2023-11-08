@@ -62,44 +62,44 @@ void engine::ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin, std::mt
             int height = MIN_WORLD_GEN_HEIGHT + (heightMultiplayer * MAX_MINUS_MIN_WORLD_GEN_HEIGHT);
 
             for (int i = 0; i < height-4; i++){
-                SetBlock(STONE, x, i, z);
+                SetBlock(STONE, Vec3<int>(x, i, z));
             }
             for (int i = height-4; i < height-1; i++) {
-                SetBlock(DIRT, x, i, z);
+                SetBlock(DIRT, Vec3<int>(x, i, z));
             }
 
             if (height < WATER_LEVEL) {
                 for (int i = height-1; i < WATER_LEVEL; i++) {
-                    SetBlock(WATER, x, i , z);
+                    SetBlock(WATER, Vec3<int>(x, i , z));
                 }
             } else {
-                SetBlock(GRASS, x, height-1, z);
+                SetBlock(GRASS, Vec3<int>(x, height-1, z));
             
                 int randInt = distrib(gen);
                 if (height <= MAX_WORLD_GEN_HEIGHT) {
                     if (randInt < 20) {
-                        SetBlock(TALL_GRASS, x, height, z);
+                        SetBlock(TALL_GRASS, Vec3<int>(x, height, z));
                     }
                     else if (randInt < 28) {
-                        SetBlock(ROSE, x, height, z);
+                        SetBlock(ROSE, Vec3<int>(x, height, z));
 
                     } 
                     else if (randInt < 30) {
-                        SetBlock(PINK_TULIP, x, height, z);
+                        SetBlock(PINK_TULIP, Vec3<int>(x, height, z));
                     }
                 }
             }
-            SetBlock(BEDROCK, x, 0, z);
+            SetBlock(BEDROCK, Vec3<int>(x, 0, z));
         }
     }
 }
 
-void engine::ChunkStack::SetBlock(BlockInt block, int x, int y, int z) {
-    m_Chunks[y / CS].SetBlock(block, x, 1 + y % CS, z);
+void engine::ChunkStack::SetBlock(BlockInt block, Vec3<int> pos) {
+    m_Chunks.at(pos.y / CS).SetBlock(block, Vec3<int>(pos.x, 1 + pos.y % CS, pos.z));
 }
 
-engine::BlockInt engine::ChunkStack::GetBlock(int x, int y, int z) const {
-    return m_Chunks[y / CS].GetBlock(x, 1 + y % CS, z);
+engine::BlockInt engine::ChunkStack::GetBlock(Vec3<int> pos) const {
+    return m_Chunks.at(pos.y / CS).GetBlock(Vec3<int>(pos.x, 1 + pos.y % CS, pos.z));
 }
 
 engine::Chunk* engine::ChunkStack::GetChunk(int y) {

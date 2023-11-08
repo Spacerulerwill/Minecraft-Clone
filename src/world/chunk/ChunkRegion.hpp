@@ -29,6 +29,7 @@ namespace engine {
     */
     class ChunkRegion {
     private:
+        Vec2<int> m_Pos;
         std::vector<ChunkStack> m_ChunkStacks;
         BS::thread_pool m_TerrainGenPool;
         BS::thread_pool m_ChunkMergePool;
@@ -39,14 +40,19 @@ namespace engine {
         bool startedTerrainGeneration = false;
         bool startedChunkMerging = false;
         bool startedChunkMeshing = false;
+
+        Chunk** m_DequeuedChunks = new Chunk*[MAX_BUFFER_PER_FRAME] {};
+
     public:
-        ChunkRegion();
+        ChunkRegion(Vec2<int> pos);
+        ~ChunkRegion();
+
         void GenerateChunks(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
-        void BufferChunksPerFrame(size_t perFrame);
+        void BufferChunksPerFrame();
         void DrawOpaque(Shader& opaqueShader);
         void DrawWater(Shader& waterShader);
         void DrawCustomModel(Shader& customModelShader);   
-        Chunk* GetChunk(int x, int y, int z); 
+        Chunk* GetChunk(Vec3<int> pos); 
     };
 }
 

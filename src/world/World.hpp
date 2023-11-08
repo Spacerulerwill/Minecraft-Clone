@@ -38,9 +38,9 @@ namespace engine {
         void GenerateChunks();
         ~World();
     private:
+        std::unordered_map<Vec2<int>, ChunkRegion*> m_ChunkRegions;
         Player m_Player;
         Skybox m_Skybox;
-        ChunkRegion m_ChunkRegion;
 
         const char* m_WorldName = nullptr;
         Vec3<int> playerChunkPos;
