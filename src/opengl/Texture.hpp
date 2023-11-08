@@ -167,7 +167,6 @@ namespace engine {
                         GL_UNSIGNED_BYTE,  // cpu pixel coord type
                         data);           // pixel data
 
-                    glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
                     glTexParameteri(GL_TEXTURE_2D_ARRAY,
                         GL_TEXTURE_MIN_FILTER,
                         GL_NEAREST_MIPMAP_LINEAR);
@@ -177,6 +176,7 @@ namespace engine {
                     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, 4);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                                        glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
                     stbi_image_free(data);
                 }
                 else

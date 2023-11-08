@@ -34,11 +34,11 @@ void engine::ChunkRegion::DrawCustomModel(Shader& customModelShader) {
 }
 
 engine::Chunk* engine::ChunkRegion::GetChunk(int x, int y, int z) {
-    int chunkStackIndex = ChunkStackIndex(x, z);
-    if (chunkStackIndex >= CHUNK_REGION_SIZE_SQUARED || chunkStackIndex < 0) {
+    if (x < 0 || x >= CHUNK_REGION_SIZE || z < 0 || z >= CHUNK_REGION_SIZE) {
         return nullptr;
     }
     else {
+        int chunkStackIndex = ChunkStackIndex(x, z);
         return m_ChunkStacks.at(chunkStackIndex).GetChunk(y);
     }
 }
@@ -70,7 +70,6 @@ void engine::ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin, std::mt
         startedChunkMerging = true;
     }
     bool finishedMerging = startedChunkMerging && m_ChunkMergePool.get_tasks_total() == 0;
-
     if (finishedMerging && !startedChunkMeshing) {
         for (ChunkStack& chunkStack : m_ChunkStacks) {
             for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
