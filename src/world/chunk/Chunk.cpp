@@ -125,12 +125,13 @@ void engine::Chunk::DrawCustomModelBlocks(Shader& shader)
 }
 
 void engine::Chunk::CopyNeighborData(ChunkRegion* region) {
-    Chunk* belowChunk = region->GetChunk(m_Pos + Vec3<int>(0, -1, 0));
-    Chunk* aboveChunk = region->GetChunk(m_Pos + Vec3<int>(0, 1, 0));
-    Chunk* leftChunk = region->GetChunk(m_Pos + Vec3<int>(-1, 0, 0));
-    Chunk* rightChunk = region->GetChunk(m_Pos + Vec3<int>(1, 0, 0));
-    Chunk* frontChunk = region->GetChunk(m_Pos + Vec3<int>(0, 0, -1));
-    Chunk* backChunk = region->GetChunk(m_Pos + Vec3<int>(0, 0, 1));
+    Vec3<int> localChunkPos = m_Pos % CHUNK_REGION_SIZE;
+    Chunk* belowChunk = region->GetChunk(localChunkPos + Vec3<int>(0, -1, 0));
+    Chunk* aboveChunk = region->GetChunk(localChunkPos + Vec3<int>(0, 1, 0));
+    Chunk* leftChunk = region->GetChunk(localChunkPos + Vec3<int>(-1, 0, 0));
+    Chunk* rightChunk = region->GetChunk(localChunkPos + Vec3<int>(1, 0, 0));
+    Chunk* frontChunk = region->GetChunk(localChunkPos + Vec3<int>(0, 0, -1));
+    Chunk* backChunk = region->GetChunk(localChunkPos + Vec3<int>(0, 0, 1));
 
     if (belowChunk != nullptr) {
         for (int x = 1; x < CS_P_MINUS_ONE; x++) {

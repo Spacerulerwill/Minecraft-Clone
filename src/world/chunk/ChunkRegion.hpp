@@ -42,7 +42,6 @@ namespace engine {
         bool startedChunkMeshing = false;
 
         Chunk** m_DequeuedChunks = new Chunk*[MAX_BUFFER_PER_FRAME] {};
-
     public:
         ChunkRegion(Vec2<int> pos);
         ~ChunkRegion();

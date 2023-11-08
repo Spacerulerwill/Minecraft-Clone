@@ -56,10 +56,11 @@ void engine::ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin, std::mt
         }
         startedTerrainGeneration = true;
         return;
+    } else if (m_TerrainGenPool.get_tasks_total() != 0) {
+        return;
     }
-    bool finishedGenerating = startedTerrainGeneration && m_TerrainGenPool.get_tasks_total() == 0;
-    
-    if (finishedGenerating && !startedChunkMerging) {
+
+    if (!startedChunkMerging) {
         for (int x = 0; x < CHUNK_REGION_SIZE; x++) {
             for (int z = 0; z < CHUNK_REGION_SIZE; z++) {
                 ChunkStack* stack = &m_ChunkStacks.at(ChunkStackIndex(x, z));
@@ -72,9 +73,12 @@ void engine::ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin, std::mt
             }
         }
         startedChunkMerging = true;
+        return;
+    } else if (m_ChunkMergePool.get_tasks_total() != 0){
+        return;
     }
-    bool finishedMerging = startedChunkMerging && m_ChunkMergePool.get_tasks_total() == 0;
-    if (finishedMerging && !startedChunkMeshing) {
+
+    if (!startedChunkMeshing) {
         for (ChunkStack& chunkStack : m_ChunkStacks) {
             for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
                 m_ChunkMeshPool.push_task([it, this]{

@@ -30,8 +30,9 @@ engine::World::World(const char* worldName) : m_WorldName(worldName) {
 
     m_ChunkRegions.insert(std::make_pair(Vec2<int>(0,0), new ChunkRegion(Vec2<int>(0,0))));
     m_ChunkRegions.insert(std::make_pair(Vec2<int>(1,0), new ChunkRegion(Vec2<int>(1,0))));
-    m_ChunkRegions.insert(std::make_pair(Vec2<int>(1,1), new ChunkRegion(Vec2<int>(1,1))));
     m_ChunkRegions.insert(std::make_pair(Vec2<int>(0,1), new ChunkRegion(Vec2<int>(0,1))));
+    m_ChunkRegions.insert(std::make_pair(Vec2<int>(1,1), new ChunkRegion(Vec2<int>(1,1))));
+
 }
 
 engine::Player& engine::World::GetPlayer() {
@@ -78,7 +79,7 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
     for(auto& it : m_ChunkRegions) {
         it.second->DrawWater(waterShader);
     }
-    glDisable(GL_BLEND);    
+    glDisable(GL_BLEND); 
 }
 
 void engine::World::GenerateChunks() {
