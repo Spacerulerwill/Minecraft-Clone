@@ -28,11 +28,6 @@ engine::World::World(const char* worldName) : m_WorldName(worldName) {
 
     m_Noise.reseed(worldSave.seed);    
 
-    m_ChunkRegions.insert(std::make_pair(Vec2<int>(0,0), new ChunkRegion(Vec2<int>(0,0))));
-    m_ChunkRegions.insert(std::make_pair(Vec2<int>(1,0), new ChunkRegion(Vec2<int>(1,0))));
-    m_ChunkRegions.insert(std::make_pair(Vec2<int>(0,1), new ChunkRegion(Vec2<int>(0,1))));
-    m_ChunkRegions.insert(std::make_pair(Vec2<int>(1,1), new ChunkRegion(Vec2<int>(1,1))));
-
 }
 
 engine::Player& engine::World::GetPlayer() {
@@ -92,10 +87,11 @@ void engine::World::GenerateChunks() {
     
     auto find = m_ChunkRegions.find(chunkRegionPos);
     if (find == m_ChunkRegions.end())
-        return;
-
-    (*find).second->GenerateChunks(m_Noise, gen, distrib);
-    (*find).second->BufferChunksPerFrame();
+        m_ChunkRegions.insert(std::make_pair(chunkRegionPos, new ChunkRegion(chunkRegionPos)));
+    else {
+        (*find).second->GenerateChunks(m_Noise, gen, distrib);
+        (*find).second->BufferChunksPerFrame();
+    }
 }
 
 engine::World::~World() {
