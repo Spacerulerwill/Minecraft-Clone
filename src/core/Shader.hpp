@@ -13,7 +13,11 @@ License: MIT
 #include <util/Log.hpp>
 #include <unordered_map>
 #include <math/Mat4.hpp>
+#include <math/Mat3.hpp>
+#include <math/Mat2.hpp>
+#include <math/Vec4.hpp>
 #include <math/Vec3.hpp>
+#include <math/Vec2.hpp>
 #include <util/Concepts.hpp>
 
 namespace engine {
@@ -30,12 +34,13 @@ namespace engine {
     private:
         GLuint u_ID;
         std::string m_Filepath;
-        std::unordered_map<std::string, int> m_UnformLocation;
+        std::unordered_map<std::string, int> m_UnformLocations;
         
         ShaderSources ParseShader(const std::string& filepath);
         GLuint CompileShader(GLenum type, std::string& source);
         GLuint CreateShader(std::string& vertex_source, std::string& fragmement_source);
-        GLint GetLocation(std::string name);
+        void GetShaderUniformLocations();
+        GLint GetLocation(std::string name) const;
     public:
         Shader(std::string filepath);
         ~Shader();
@@ -43,21 +48,17 @@ namespace engine {
         void Bind() const;
         void Unbind() const;
 
-        template<std::floating_point T> 
-        void setMat4(const std::string& name, const Mat4<T>& mat) {
-            glUniformMatrix4fv(GetLocation(name), 1, GL_TRUE, mat.GetPointer());
-        }
-
-        void setIVec3(const std::string& name, const Vec3<int>& vec) {
-            glUniform3i(GetLocation(name), vec.x, vec.y, vec.z);
-        }
-
-        void setIVec3(const std::string& name, int x, int y, int z) {
-            glUniform3i(GetLocation(name), x, y, z);
-        }
-
-        void setFloat(const std::string& name, float x);
-        void SetInt(const std::string& name, int val);
+        void SetMat4(const std::string& name, const Mat4<float>& mat) const;
+        void SetMat3(const std::string& name, const Mat3<float>& mat) const;
+        void SetMat2(const std::string& name, const Mat2<float>& mat) const;
+        void SetVec4(const std::string& name, const Vec4<float>& vec) const;
+        void SetIVec4(const std::string& name, const Vec4<int>& vec) const;
+        void SetIVec3(const std::string& name, const Vec3<int>& vec) const;
+        void SetVec3(const std::string& name, const Vec3<float>& vec) const;
+        void SetIVec2(const std::string& name, const Vec2<int>& vec) const;
+        void SetVec2(const std::string& name, const Vec2<float>& vec) const;
+        void SetFloat(const std::string& name, float x) const;
+        void SetInt(const std::string& name, int val) const;
 
     };
 }

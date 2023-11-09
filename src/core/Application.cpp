@@ -310,7 +310,7 @@ void engine::Application::Run()
             crosshairVAO.Bind();
             crosshairShader.SetInt("screenTexture", 0);
             crosshairShader.SetInt("crosshair", 1);
-            crosshairShader.setMat4<float>("projection", ortho);
+            crosshairShader.SetMat4("projection", ortho);
 
             glDrawArrays(GL_TRIANGLES, 0, 6);
 

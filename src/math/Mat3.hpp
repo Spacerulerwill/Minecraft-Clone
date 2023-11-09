@@ -183,6 +183,10 @@ namespace engine {
             m_Data[8] *= inv_scalar;
         }
 
+        const T* GetPointer() const {
+            return &m_Data[0];
+        }
+
 		T& operator[](size_t idx) {
             return m_Data[idx];
         }   

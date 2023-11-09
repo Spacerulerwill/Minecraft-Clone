@@ -44,8 +44,8 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
     const VoxelRaycastResult& raycastResult = m_Player.GetBlockRaycastResult();
 
     chunkShader.Bind();
-    chunkShader.setMat4("projection", perspective);
-    chunkShader.setMat4("view", view);
+    chunkShader.SetMat4("projection", perspective);
+    chunkShader.SetMat4("view", view);
     chunkShader.SetInt("tex_array", 0);
     chunkShader.SetInt("grass_mask", 2);
     for(auto& it : m_ChunkRegions) {
@@ -54,8 +54,8 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
     
     glDisable(GL_CULL_FACE);
     customModelShader.Bind();
-    customModelShader.setMat4("projection", perspective);
-    customModelShader.setMat4("view", view);
+    customModelShader.SetMat4("projection", perspective);
+    customModelShader.SetMat4("view", view);
     customModelShader.SetInt("tex_array", 0);
     for(auto& it : m_ChunkRegions) {
         it.second->DrawCustomModel(customModelShader);
@@ -68,8 +68,8 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
 
     glEnable(GL_BLEND);
     waterShader.Bind();
-    waterShader.setMat4("projection", perspective);
-    waterShader.setMat4("view", view);
+    waterShader.SetMat4("projection", perspective);
+    waterShader.SetMat4("view", view);
     waterShader.SetInt("tex_array", 0);
     for(auto& it : m_ChunkRegions) {
         it.second->DrawWater(waterShader);

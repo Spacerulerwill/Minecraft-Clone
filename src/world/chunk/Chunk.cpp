@@ -101,7 +101,7 @@ void engine::Chunk::DrawOpaque(Shader& shader)
 {
 	if (m_VertexCount > 0 && buffered) {
 		m_VAO.Bind();
-		shader.setMat4("model", m_Model);
+		shader.SetMat4("model", m_Model);
 		glDrawArrays(GL_TRIANGLES, 0, m_VertexCount);
 	}
 }
@@ -110,7 +110,7 @@ void engine::Chunk::DrawWater(Shader& shader)
 {
 	if (m_WaterVertexCount > 0 && buffered) {
 		m_WaterVAO.Bind();
-		shader.setMat4("model", m_Model);
+		shader.SetMat4("model", m_Model);
 		glDrawArrays(GL_TRIANGLES, 0, m_WaterVertexCount);
     }
 }
@@ -119,7 +119,7 @@ void engine::Chunk::DrawCustomModelBlocks(Shader& shader)
 {
 	if (m_CustomModelVertexCount > 0 && buffered) {
 		m_CustomModelVAO.Bind();
-		shader.setMat4("model", m_Model);
+		shader.SetMat4("model", m_Model);
         glDrawArrays(GL_TRIANGLES, 0, m_CustomModelVertexCount);
     }
 }

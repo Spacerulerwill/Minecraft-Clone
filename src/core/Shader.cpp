@@ -11,6 +11,7 @@ License: MIT
 engine::Shader::Shader(std::string filepath) : m_Filepath(filepath) {
     ShaderSources shaders = ParseShader(filepath);
     u_ID = CreateShader(shaders.Vertex, shaders.Fragment);
+    GetShaderUniformLocations();
 }
 
 engine::ShaderSources engine::Shader::ParseShader(const std::string& filepath) {
@@ -83,11 +84,67 @@ GLuint engine::Shader::CreateShader(std::string& vertex_source, std::string& fra
     return program;
 }
 
-void engine::Shader::setFloat(const std::string& name, float x) {
+void engine::Shader::GetShaderUniformLocations() {
+    
+    GLint i;
+    GLint count;
+
+    GLint size;
+    GLenum type; 
+
+    const GLsizei bufSize = 100;
+    GLchar name[bufSize]; 
+    GLsizei length; 
+
+    glGetProgramiv(u_ID, GL_ACTIVE_UNIFORMS, &count);
+    for (i = 0; i < count; i++)
+    {
+        glGetActiveUniform(u_ID, static_cast<GLuint>(i), bufSize, &length, &size, &type, name);
+        m_UnformLocations[name] = i;
+    }
+}
+
+void engine::Shader::SetMat4(const std::string& name, const Mat4<float>& mat) const {
+    glUniformMatrix4fv(GetLocation(name), 1, GL_TRUE, mat.GetPointer());
+}
+
+void engine::Shader::SetMat3(const std::string& name, const Mat3<float>& mat) const {
+    glUniformMatrix3fv(GetLocation(name), 1, GL_TRUE, mat.GetPointer());
+}
+
+void engine::Shader::SetMat2(const std::string& name, const Mat2<float>& mat) const {
+    glUniformMatrix2fv(GetLocation(name), 1, GL_TRUE, mat.GetPointer());
+}
+
+void engine::Shader::SetVec4(const std::string& name, const Vec4<float>& vec) const {
+    glUniform4f(GetLocation(name), vec.x, vec.y, vec.z, vec.w);
+}
+
+void engine::Shader::SetIVec4(const std::string& name, const Vec4<int>& vec) const {
+    glUniform4i(GetLocation(name), vec.x, vec.y, vec.z, vec.w);
+}
+
+void engine::Shader::SetIVec3(const std::string& name, const Vec3<int>& vec) const {
+    glUniform3i(GetLocation(name), vec.x, vec.y, vec.z);
+}
+
+void engine::Shader::SetVec3(const std::string& name, const Vec3<float>& vec) const {
+    glUniform3f(GetLocation(name), vec.x, vec.y, vec.z);
+}
+
+void engine::Shader::SetIVec2(const std::string& name, const Vec2<int>& vec) const {
+    glUniform2i(GetLocation(name), vec.x, vec.y);
+}
+
+void engine::Shader::SetVec2(const std::string& name, const Vec2<float>& vec) const{
+    glUniform2f(GetLocation(name), vec.x, vec.y);
+}
+
+void engine::Shader::SetFloat(const std::string& name, float x)  const{
     glUniform1f(GetLocation(name), x);
 }
 
-void engine::Shader::SetInt(const std::string& name, int val)
+void engine::Shader::SetInt(const std::string& name, int val) const
 {
     glUniform1i(GetLocation(name), val);
 }
@@ -100,16 +157,14 @@ void engine::Shader::Unbind() const {
     glUseProgram(0);
 }
 
-GLint engine::Shader::GetLocation(std::string name) {
-    if (m_UnformLocation.find(name) != m_UnformLocation.end()) {
-        return m_UnformLocation[name];
-    }
-    GLint location = glGetUniformLocation(u_ID, name.c_str());
-    if (location == -1) {
+GLint engine::Shader::GetLocation(std::string name) const {
+    auto find = m_UnformLocations.find(name);
+    if (find != m_UnformLocations.end()) {
+        return (*find).second;
+    } else {
         LOG_WARNING(fmt::format("Location of {} not found!", name));
+        return -1;
     }
-    m_UnformLocation[name] = location;
-    return location;
 }
 
 engine::Shader::~Shader() {
