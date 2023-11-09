@@ -158,10 +158,9 @@ void engine::Shader::Unbind() const {
 }
 
 GLint engine::Shader::GetLocation(std::string name) const {
-    auto find = m_UnformLocations.find(name);
-    if (find != m_UnformLocations.end()) {
-        return (*find).second;
-    } else {
+    try {
+        return m_UnformLocations.at(name);
+    } catch (const std::out_of_range& e) {
         LOG_WARNING(fmt::format("Location of {} not found!", name));
         return -1;
     }
