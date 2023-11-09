@@ -5,7 +5,7 @@ License: MIT
 
 import yaml
 import os
-from PIL import Image, ImageColor
+from PIL import Image
 
 TEXTURE_SIZE = 16
 MAX_ANIMATION_FRAMES = 32
