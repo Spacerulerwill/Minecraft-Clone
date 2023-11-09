@@ -126,6 +126,15 @@ void engine::Chunk::DrawCustomModelBlocks(Shader& shader)
 
 void engine::Chunk::CopyNeighborData(ChunkRegion* region) {
     Vec3<int> localChunkPos = m_Pos % CHUNK_REGION_SIZE;
+    if (localChunkPos.x < 0){
+        localChunkPos.x = CHUNK_REGION_SIZE - (localChunkPos.x * -1);
+    }
+    if (localChunkPos.y < 0){
+        localChunkPos.y = CHUNK_REGION_SIZE - (localChunkPos.y * -1);
+    }
+    if (localChunkPos.z < 0){
+        localChunkPos.z = CHUNK_REGION_SIZE - (localChunkPos.z * -1);
+    }
     Chunk* belowChunk = region->GetChunk(localChunkPos + Vec3<int>(0, -1, 0));
     Chunk* aboveChunk = region->GetChunk(localChunkPos + Vec3<int>(0, 1, 0));
     Chunk* leftChunk = region->GetChunk(localChunkPos + Vec3<int>(-1, 0, 0));
