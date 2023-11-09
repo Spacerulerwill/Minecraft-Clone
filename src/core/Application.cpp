@@ -224,11 +224,7 @@ void engine::Application::Run()
 
     double lastTime = 0.0f;
     int currentAtlasIndex = 0;
-    int totalFrameDuration = 0;
-
-    const int radius = 5;
-    const int bufferPerFrame = 1;
-
+    
     while (!glfwWindowShouldClose(p_Window)) {
         std::string worldName = MainMenu();
 
