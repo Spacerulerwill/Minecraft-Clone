@@ -42,7 +42,7 @@ namespace engine {
     Position coordinates are stored as integers representing 16ths.
     This means that custom model blocks can be no bigger than 1 cube voxel 
     and that the vertices can only be in multiples of 16th's, correspending
-    to the pixel tile size. The rest of the data is packed into a uint32_t.
+    to the pixel tile size.
     Total used 49/64 bits.
     */
     struct CustomModelChunkVertex {

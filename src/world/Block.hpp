@@ -49,13 +49,16 @@ namespace engine {
 		NUM_MODELS
 	};
 
-    // Block models only consist of a pointer to the start and end of a vector stored
-    // somewhere else to save memory
+    /*
+    Struct that contains the start and end pointers for an array containing
+    the vertex information for a block model
+    */
 	struct BlockModelStruct {
 		uint32_t* begin = nullptr;
 		uint32_t* end = nullptr;
 	};
-
+    
+    // Struct containing the block information for a single block type
 	struct BlockDataStruct {
 		bool opaque;
 		uint8_t unique_faces;
@@ -73,9 +76,21 @@ namespace engine {
 	extern BlockDataStruct BlockData[NUM_BLOCKS];
 	extern BlockModelStruct BlockModelData[NUM_MODELS];
 
+    
+    /*
+    Block texture size in pixels.
+    NOTE: You cannot change this value without making refactoring changes to the meshing of
+    custom model blocks. Just leave it alone please.
+    */
     inline constexpr unsigned int TEXTURE_SIZE = 16;
+    
+    // The max possible frames for an animated tile.
     inline constexpr unsigned int MAX_ANIMATION_FRAMES = 32;
 
+    /*
+    Loads block data from res/blocks.yml and fills the BlockData array
+    with BlockDataStruct for each block.
+    */
 	void InitBlocks();
 };
 

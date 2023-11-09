@@ -14,6 +14,7 @@ License: MIT
 namespace engine {
 	class Log {
 	public:
+        // Initialise the logger singleton. Must be called before use.
 		static void Init();
 		inline static std::shared_ptr<spdlog::logger>& GetLogger() { return s_Logger; }
 
@@ -28,7 +29,7 @@ namespace engine {
 };
 #endif // !LOG_H
 
-// debug messages
+// Logging macros
 #ifdef DEBUG_MODE
 	#define LOG_CRITICAL(...)    engine::Log::GetLogger()->critical(__VA_ARGS__)
 	#define LOG_ERROR(...)		engine::Log::GetLogger()->error(__VA_ARGS__)

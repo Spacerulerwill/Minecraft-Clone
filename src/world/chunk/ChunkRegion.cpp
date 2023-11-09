@@ -15,8 +15,8 @@ engine::ChunkRegion::ChunkRegion(Vec2<int> pos): m_Pos(pos) {
     }
 }
 
-engine::ChunkRegion::~ChunkRegion() {
-    delete[] m_DequeuedChunks;
+engine::Vec2<int> engine::ChunkRegion::GetPos() const {
+    return m_Pos;
 }
 
 void engine::ChunkRegion::DrawOpaque(Shader& opaqueShader){
@@ -92,9 +92,9 @@ void engine::ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin, std::mt
 }
 
 void engine::ChunkRegion::BufferChunksPerFrame() {
-    std::size_t dequeued = m_ChunkBufferQueue.try_dequeue_bulk(m_DequeuedChunks, MAX_BUFFER_PER_FRAME);
+    std::size_t dequeued = m_ChunkBufferQueue.try_dequeue_bulk(m_ChunkBufferQueueDequeueResult, MAX_BUFFER_PER_FRAME);
     for (size_t i = 0; i < dequeued; i++){
-        m_DequeuedChunks[i]->BufferData();
+        m_ChunkBufferQueueDequeueResult[i]->BufferData();
     }
 }
 

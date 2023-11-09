@@ -3,7 +3,7 @@
 
 namespace engine{
     /*
-    Used for when something goes wrong when loading a world
+    Thrown for when something goes wrong when loading a world
     */
     class WorldCorruptException: public std::runtime_error{
         public:

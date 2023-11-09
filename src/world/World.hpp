@@ -19,16 +19,26 @@ LICENSE: MIT
 #include <random>
 
 namespace engine {
+    // Struct containing the persistent world metadata
     struct WorldSave {
         siv::PerlinNoise::seed_type seed;
     };
 
+    // Struct containing the data for a player that needs to persist between saves.
     struct PlayerSave {
         Vec3<float> position;
         float pitch;
         float yaw;
     };
-
+    
+    /*
+    A world contains:
+    * An std::unordered_map of Vec2<int> to ChunkRegions
+    * A player
+    * A skybox
+    * Perlin noise generator
+    It is responsible for managing the drawing and generating chunks
+    */
     class World {
     public:
         World(const char* worldName);

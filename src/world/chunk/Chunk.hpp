@@ -24,13 +24,13 @@ LICENSE: MIT
 
 namespace engine {
 
-    // forward declaration
     class ChunkRegion;
 
 	constexpr float BLOCK_SCALE = 1.0f;
     constexpr float CHUNK_SCALE = CS * BLOCK_SCALE;
 	constexpr float INV_BLOCK_SCALE = 1 / BLOCK_SCALE;
 
+    // Flatten 3D coordinate to a 1D index for the chunk voxel array
     inline int VoxelIndex(Vec3<int> pos) {
         return pos.z + (pos.x << CHUNK_SIZE_EXP) + (pos.y << CHUNK_SIZE_EXP_X2);
     }
@@ -48,8 +48,12 @@ namespace engine {
     */
 	class Chunk {
 	private:        
+        // World space chunk position
         Vec3<int> m_Pos = Vec3<int>(0);
 
+        /*
+        OpenGL Buffer objects to store vertex data
+        */
 		BufferObject<GL_ARRAY_BUFFER> m_VBO;
 		VertexArray m_VAO;
 		std::vector<CubeChunkVertex> m_Vertices;
@@ -65,38 +69,61 @@ namespace engine {
 		std::vector<CustomModelChunkVertex> m_CustomModelVertices;
 		size_t m_CustomModelVertexCount = 0;
 
+        // Model matrix representing the world space transformations of the chunk
 		Mat4<float> m_Model = Mat4<float>(1.0f);
 
         void AddVertexBufferAttributes();
         void SetupModelMatrix(Vec3<int> chunkPos);
         
 	public:
-    	BlockInt* m_Voxels = new BlockInt[CS_P3] {};
-        std::atomic<bool> buffered = false;
-
         Chunk();
         Chunk(Vec3<int> chunkPos);
 		~Chunk();
         Chunk(Chunk&& other); // move constructor
         Chunk& operator=(Chunk&& other); // move assignment
-        
-		void CreateMesh();
-		void BufferData();
 
+        // Get the world space chunk position
         Vec3<int> GetPos() const;
+
+        // Array to store voxel ids
+    	BlockInt* m_Voxels = new BlockInt[CS_P3] {};
+
+        // flag to indicate whether the chunk has had its vertex data sent to the GPU
+        std::atomic<bool> buffered = false;
         
+        // Use greedy meshing to generate a chunk mesh vertex data
+		void CreateMesh();
+
+        // Send the vertex data to the GPU
+		void BufferData();
+        
+        // Drawing functions for the 3 respective parts of the chunk's mesh
 		void DrawOpaque(Shader& shader);
 		void DrawWater(Shader& shader);
         void DrawCustomModelBlocks(Shader& shader);
 
+        /*
+        Get a block from the chunk using chunk local block coordinates.
+        NOTE: visible blocks start at 1, and end at CS (util/Constants.hpp)
+        for all axes. This is due to the outer padding layer.
+        */
         inline BlockInt GetBlock(Vec3<int> pos) const {
             return m_Voxels[VoxelIndex(pos)];
         }
 
+        /*
+        Set a block from in chunk using chunk local block coordinates.
+        NOTE: visible blocks start at 1, and end at CS (util/Constants.hpp)
+        for all axes. This is due to the outer padding layer.
+        */
         inline void SetBlock(BlockInt block, Vec3<int> pos) {
 			m_Voxels[VoxelIndex(pos)] = block;
 		}
 
+        /*
+        For each side of the chunk, grab the outer layer of the chunk adjacent and
+        copy it into the outer padding layer of our chunk data, so our chunk can mesh properly
+        */
         void CopyNeighborData(ChunkRegion* chunkRegion);
     };
 }

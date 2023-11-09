@@ -28,19 +28,38 @@ namespace engine {
         using iterator = std::vector<Chunk>::iterator;
         using const_iterator = std::vector<Chunk>::const_iterator;
         ChunkStack(Vec2<int> pos);
+        
+        // Get the world space chunk region position
         Vec2<int> GetPos() const;
+
+        /*
+        Drawing functions for the 3 components of a chunk mesh.
+        They iterate over the chunks in the chunk stack and call 
+        their respective drawing functions of the same name.
+        */
         void DrawOpaque(Shader& opaqueShader);
         void DrawWater(Shader& waterShader);
         void DrawCustomModel(Shader& customModelShader);
+
+        // Set a block in the chunk stack using chunk stack local block coordinates
         void SetBlock(BlockInt block, Vec3<int> pos);
+
+        // Get a block from the chunk using chunk stack local block coordinates
         BlockInt GetBlock(Vec3<int> pos) const; 
+
+        // Get a chunk from the chunkstack using its vertical position
         Chunk* GetChunk(int y);
+        
+        // Generate the terrain for the chunks in this chunkstack using perlin noise
+        void GenerateTerrain(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
+
+        // Functions that mimic certain parts of the std::vector interface
         iterator begin();
         iterator end();
         const_iterator cbegin() const;
         const_iterator cend() const;
         size_t size() const;
-        void GenerateTerrain(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
+
     };
 }
 

@@ -24,33 +24,54 @@ namespace engine {
     }
 
     /*
-    Chunk regions are 2D section of chunk stacks. Their size is
-    dictated by CHUNK_REGION_SIZE (See util/constants.hpp)
+    Chunk regions are 2D section of chunk stacks.
     */
     class ChunkRegion {
     private:
         Vec2<int> m_Pos;
         std::vector<ChunkStack> m_ChunkStacks;
+
+        // Thread pools to speed up generation tasks
         BS::thread_pool m_TerrainGenPool;
         BS::thread_pool m_ChunkMergePool;
         BS::thread_pool m_ChunkMeshPool;
         
+        /* A concurrent queue to store chunks that need buffering 
+        AFTER they have been terrain generatied, merged and meshed.
+        */
         moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
 
+        // Flags indiciating the state of the chunk generation process
         bool startedTerrainGeneration = false;
         bool startedChunkMerging = false;
         bool startedChunkMeshing = false;
 
-        Chunk** m_DequeuedChunks = new Chunk*[MAX_BUFFER_PER_FRAME] {};
+        // A temporary storage space to store chunks when bulk dequeuing from m_ChunkBufferQueue
+        Chunk* m_ChunkBufferQueueDequeueResult[MAX_BUFFER_PER_FRAME] {};
     public:
         ChunkRegion(Vec2<int> pos);
-        ~ChunkRegion();
 
+        // Get the world space chunk region position
+        Vec2<int> GetPos() const;
+
+        // Generate chunks, tries to progress through the chunk generation pipeline
         void GenerateChunks(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
+
+        /*
+        Dequeues at most MAX_BUFFER_PER_FRAME chunks from m_ChunkBufferQueue and sends their data
+        to the GPU for drawing. 
+        */ 
         void BufferChunksPerFrame();
+        
+        /*
+        Drawing functions for the 3 different components of the chunk mesh.
+        They iterate over the chunk stacks in the region and call their respective identically named functions
+        */
         void DrawOpaque(Shader& opaqueShader);
         void DrawWater(Shader& waterShader);
         void DrawCustomModel(Shader& customModelShader);   
+
+        // Get a chunk from the region using its region local chunk position
         Chunk* GetChunk(Vec3<int> pos); 
     };
 }

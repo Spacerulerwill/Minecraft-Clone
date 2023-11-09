@@ -8,7 +8,7 @@ LICENSE: MIT
 
 namespace engine {
 
-    // MSAA
+    // MSAA samples
     constexpr int MSAA_SAMPLES = 4;
     
     // Chunk size exponents (used for bit shifts when calculating array index to find block at x,y,z)

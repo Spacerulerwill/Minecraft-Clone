@@ -11,7 +11,12 @@ LICENSE: MIT
 #include <filesystem>
 
 namespace engine {
-    // Writes the given struct data to the given file name.
+    /*
+    Write a struct's data to a binary file on secondary storage.
+    NOTE: The struct must be ISO C complaint and not contain 
+    pointers. The full data a pointer points too must be saved instead
+    otherwise the pointer will be potentially dangling when you next load it
+    */
     template<typename T>
     bool WriteStructToDisk(const std::string& file_name, T& data)
     {
@@ -24,7 +29,9 @@ namespace engine {
         return true;
     };
 
-    // Reads from a file into a given struct
+    /*
+    Read a binary file from secondary storage into a struct
+    */
     template<typename T>
     bool ReadStructFromDisk(const std::string& file_name, T& data)
     {

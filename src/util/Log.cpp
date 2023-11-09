@@ -9,7 +9,6 @@ License: MIT
 std::shared_ptr<spdlog::logger> engine::Log::s_Logger;
 
 void engine::Log::Init() {
-
 	spdlog::set_pattern("%^[%T] %n: %v%$");
 	s_Logger = spdlog::stdout_color_mt("Voxel Engine");
 	s_Logger->set_level(spdlog::level::trace);
