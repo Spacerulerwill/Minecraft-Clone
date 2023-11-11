@@ -44,7 +44,6 @@ namespace engine {
             void ProcessKeyboard(CameraMovement direction, float deltaTime);
             void ProcessMouseMovement(float xpos, float ypos);
             void ProcessMouseScroll(float yoffset);
-
         private:
             bool m_FirstMouse = true;
             float m_LastMouseX = 0.0f;

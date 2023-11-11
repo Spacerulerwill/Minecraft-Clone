@@ -51,6 +51,9 @@ namespace engine {
         // World space chunk position
         Vec3<int> m_Pos = Vec3<int>(0);
 
+        // Array to store voxel ids
+    	BlockInt* m_Voxels = new BlockInt[CS_P3] {};
+        
         /*
         OpenGL Buffer objects to store vertex data
         */
@@ -85,8 +88,7 @@ namespace engine {
         // Get the world space chunk position
         Vec3<int> GetPos() const;
 
-        // Array to store voxel ids
-    	BlockInt* m_Voxels = new BlockInt[CS_P3] {};
+        BlockInt* GetBlockDataPointer() const;
 
         // flag to indicate whether the chunk has had its vertex data sent to the GPU
         std::atomic<bool> buffered = false;

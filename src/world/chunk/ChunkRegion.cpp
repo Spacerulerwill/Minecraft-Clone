@@ -38,16 +38,26 @@ void engine::ChunkRegion::DrawCustomModel(Shader& customModelShader) {
 }
 
 engine::Chunk* engine::ChunkRegion::GetChunk(Vec3<int> pos) {
-    if (pos.x < 0 || pos.x >= CHUNK_REGION_SIZE || pos.z < 0 || pos.z >= CHUNK_REGION_SIZE) {
-        return nullptr;
+    ChunkStack* stack = GetChunkStack(Vec2<int>(pos.x, pos.z));
+    if (stack != nullptr) {
+        return stack->GetChunk(pos.y);
     }
     else {
-        int chunkStackIndex = ChunkStackIndex(pos.x, pos.z);
-        return m_ChunkStacks.at(chunkStackIndex).GetChunk(pos.y);
+        return nullptr;
     }
 }
 
-void engine::ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib) {
+engine::ChunkStack* engine::ChunkRegion::GetChunkStack(Vec2<int> pos) {
+    if (pos.x < 0 || pos.x >= CHUNK_REGION_SIZE || pos.y < 0 || pos.y >= CHUNK_REGION_SIZE) {
+        return nullptr;
+    }
+    else {
+        int chunkStackIndex = ChunkStackIndex(pos.x, pos.y);
+        return &m_ChunkStacks.at(chunkStackIndex);
+    }
+}
+
+void engine::ChunkRegion::GenerateChunks(const char* worldName, const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib) {
     if (!startedTerrainGeneration) {
         for (ChunkStack& chunkStack : m_ChunkStacks) {
             m_TerrainGenPool.push_task([&chunkStack, &perlin, &gen, &distrib]{
@@ -75,6 +85,7 @@ void engine::ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin, std::mt
         startedChunkMerging = true;
         return;
     } else if (m_ChunkMergePool.get_tasks_total() != 0){
+        UnloadToFile(worldName);
         return;
     }
 
@@ -95,6 +106,25 @@ void engine::ChunkRegion::BufferChunksPerFrame() {
     std::size_t dequeued = m_ChunkBufferQueue.try_dequeue_bulk(m_ChunkBufferQueueDequeueResult, MAX_BUFFER_PER_FRAME);
     for (size_t i = 0; i < dequeued; i++){
         m_ChunkBufferQueueDequeueResult[i]->BufferData();
+    }
+}
+
+void engine::ChunkRegion::UnloadToFile(const char* worldName) const {
+    std::ofstream wf(fmt::format("worlds/{}/regions/{}.{}.region", worldName, m_Pos.x, m_Pos.y), std::ios::out | std::ios::binary);
+    if (!wf) {
+        LOG_ERROR(fmt::format("Failed to unload chunk {}. File creation error!", std::string(m_Pos)));
+    }
+    
+    for (auto& stack: m_ChunkStacks) {
+        size_t size = stack.size();
+        wf.write(reinterpret_cast<char*>(&size), sizeof(size_t));
+        for (auto it = stack.cbegin(); it != stack.cend(); ++it) {
+            wf.write(reinterpret_cast<char*>((*it).GetBlockDataPointer()), CS_P3 * sizeof(BlockInt));
+        }
+    }
+    wf.close();
+    if (!wf.good()) {
+        LOG_ERROR(fmt::format("Failed to unload chunk region {}. File writing error!", std::string(m_Pos)));
     }
 }
 

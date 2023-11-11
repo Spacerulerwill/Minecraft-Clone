@@ -111,7 +111,7 @@ namespace engine {
             return !(*this == other);
         }
         
-		operator std::string() {
+		operator std::string() const {
             return fmt::format("({}, {}, {}, {})", x, y, z, w);
         }
 

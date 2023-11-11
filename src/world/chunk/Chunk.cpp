@@ -97,6 +97,10 @@ engine::Vec3<int> engine::Chunk::GetPos() const {
     return m_Pos;
 }
 
+engine::BlockInt* engine::Chunk::GetBlockDataPointer() const {
+    return &m_Voxels[0];
+}
+
 void engine::Chunk::DrawOpaque(Shader& shader)
 {
 	if (m_VertexCount > 0 && buffered) {

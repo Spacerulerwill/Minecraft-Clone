@@ -17,7 +17,6 @@ LICENSE: MIT
 #include <chrono>
 
 namespace engine {
-
     // Calculate the index of a ChunkStack in a ChunkRegion
     inline int ChunkStackIndex(int x, int z) {
         return z + (x << CHUNK_REGION_SIZE_EXP);
@@ -41,27 +40,30 @@ namespace engine {
         */
         moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
 
+        // A temporary storage space to store chunks when bulk dequeuing from m_ChunkBufferQueue
+        Chunk* m_ChunkBufferQueueDequeueResult[MAX_BUFFER_PER_FRAME] {};
+    public:
         // Flags indiciating the state of the chunk generation process
         bool startedTerrainGeneration = false;
         bool startedChunkMerging = false;
         bool startedChunkMeshing = false;
 
-        // A temporary storage space to store chunks when bulk dequeuing from m_ChunkBufferQueue
-        Chunk* m_ChunkBufferQueueDequeueResult[MAX_BUFFER_PER_FRAME] {};
-    public:
         ChunkRegion(Vec2<int> pos);
 
         // Get the world space chunk region position
         Vec2<int> GetPos() const;
 
         // Generate chunks, tries to progress through the chunk generation pipeline
-        void GenerateChunks(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
+        void GenerateChunks(const char* worldName, const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
 
         /*
         Dequeues at most MAX_BUFFER_PER_FRAME chunks from m_ChunkBufferQueue and sends their data
         to the GPU for drawing. 
         */ 
         void BufferChunksPerFrame();
+
+        // Saves the region as binary data
+        void UnloadToFile(const char* worldName) const;
         
         /*
         Drawing functions for the 3 different components of the chunk mesh.
@@ -73,6 +75,9 @@ namespace engine {
 
         // Get a chunk from the region using its region local chunk position
         Chunk* GetChunk(Vec3<int> pos); 
+
+        // Get a chunk stack from the region using its region local chunk stack position
+        ChunkStack* GetChunkStack(Vec2<int> pos);
     };
 }
 

@@ -7,7 +7,6 @@ LICENSE: MIT
 #define WORLD_H
 
 #include <unordered_map>
-#include <concurrentqueue.h>
 #include <BS_thread_pool.hpp>
 #include <PerlinNoise.hpp>
 #include <world/chunk/Chunk.hpp>
@@ -51,6 +50,8 @@ namespace engine {
         std::unordered_map<Vec2<int>, ChunkRegion*> m_ChunkRegions;
         Player m_Player;
         Skybox m_Skybox;
+        ChunkRegion* m_CurrentRegion = nullptr;
+        BS::thread_pool m_RegionUnloadPool;
 
         const char* m_WorldName = nullptr;
         Vec3<int> playerChunkPos;

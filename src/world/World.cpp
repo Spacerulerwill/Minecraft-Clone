@@ -27,7 +27,6 @@ engine::World::World(const char* worldName) : m_WorldName(worldName) {
     m_Player = Player(playerSave.position, playerSave.pitch, playerSave.yaw);
 
     m_Noise.reseed(worldSave.seed);    
-
 }
 
 engine::Player& engine::World::GetPlayer() {
@@ -86,12 +85,35 @@ void engine::World::GenerateChunks() {
         chunkRegionPos.y--; 
     
     auto find = m_ChunkRegions.find(chunkRegionPos);
-    if (find == m_ChunkRegions.end())
-        m_ChunkRegions.insert(std::make_pair(chunkRegionPos, new ChunkRegion(chunkRegionPos)));
-    else {
-        (*find).second->GenerateChunks(m_Noise, gen, distrib);
-        (*find).second->BufferChunksPerFrame();
+    if (find == m_ChunkRegions.end()) {
+        std::ifstream rf(fmt::format("worlds/{}/regions/{}.{}.region", m_WorldName, chunkRegionPos.x, chunkRegionPos.y), std::ios::in | std::ios::binary);
+        auto result = m_ChunkRegions.insert(std::make_pair(chunkRegionPos, new ChunkRegion(chunkRegionPos)));
+        m_CurrentRegion = (*result.first).second;
+        if (rf) {
+            // Load data from file into region
+            m_CurrentRegion->startedTerrainGeneration = true;
+            m_CurrentRegion->startedChunkMerging = true;
+            for (int x = 0; x < CHUNK_REGION_SIZE; x++) {
+                for (int z = 0; z < CHUNK_REGION_SIZE; z++) {
+                    ChunkStack* stack = m_CurrentRegion->GetChunkStack(Vec2<int>(x, z));
+                    size_t size;
+                    rf.read(reinterpret_cast<char*>(&size), sizeof(size_t));
+                    for (size_t i = 0; i < size; i++) {
+                        Chunk* chunk = stack->GetChunk(i);
+                        rf.read(reinterpret_cast<char*>(chunk->GetBlockDataPointer()), CS_P3 * sizeof(BlockInt));        
+                    }
+                }
+            }
+        }
+        rf.close();
     }
+    else {
+        m_CurrentRegion = (*find).second;
+    }
+
+    m_CurrentRegion->GenerateChunks(m_WorldName, m_Noise, gen, distrib);
+    m_CurrentRegion->BufferChunksPerFrame();
+
 }
 
 engine::World::~World() {

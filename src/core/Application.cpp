@@ -108,7 +108,7 @@ std::string engine::Application::MainMenu() {
             }
         }
 
-        std::filesystem::create_directory(fmt::format("worlds/{}/chunks", worldName));
+        std::filesystem::create_directory(fmt::format("worlds/{}/regions", worldName));
 
         // Get world seed by hashing the seed string the user provided, or generating a random one if its an empty seed
         const size_t MAXIMUM_CHARS = 32;

@@ -134,7 +134,7 @@ namespace engine {
            z %= num;
         }
 
-		operator std::string() {
+		operator std::string() const {
             return fmt::format("({}, {}, {})", x, y, z);
         }
 
