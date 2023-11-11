@@ -45,6 +45,7 @@ namespace engine {
         const char* GetName();
         void Draw(Shader& chunkShader, Shader& waterShader, Shader& customModelShader);
         void GenerateChunks();
+        ChunkRegion* GetRegion(Vec2<int> pos) const;
         ~World();
     private:
         std::unordered_map<Vec2<int>, ChunkRegion*> m_ChunkRegions;

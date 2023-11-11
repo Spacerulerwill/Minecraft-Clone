@@ -11,24 +11,45 @@ License: MIT
 
 namespace engine {
     VoxelRaycastResult GenerateVoxelRaycastResult(World* world, Vec3<int> normal, Vec3<int> globalBlockPos) {
+        // Chunk region 
+        Vec2<int> regionPos;
 
-        /*
-        Vec3<int> chunkPos;
-
-        chunkPos.y = globalBlockPos.y / CS;
-        if (globalBlockPos.x >= 0) {
-            chunkPos.x = globalBlockPos.x / CS;
+        if (globalBlockPos.x < 0) {
+            regionPos.x = ((globalBlockPos.x+1)/CHUNK_REGION_BLOCK_SIZE) - 1;
         } else {
-            chunkPos.x = ((globalBlockPos.x + 1) / CS) - 1;
+            regionPos.x = globalBlockPos.x / CHUNK_REGION_BLOCK_SIZE;
         }
 
-        if (globalBlockPos.z >= 0) {
-            chunkPos.z = globalBlockPos.z / CS;
-        } else {
-            chunkPos.z = ((globalBlockPos.z + 1) / CS) - 1;
+        if (globalBlockPos.z < 0) {
+            regionPos.y = ((globalBlockPos.z+1)/CHUNK_REGION_BLOCK_SIZE) - 1;
+        } else {    
+            regionPos.y = globalBlockPos.z / CHUNK_REGION_BLOCK_SIZE;
         }
 
+        ChunkRegion* region = world->GetRegion(regionPos);
+
+        if (region == nullptr) {
+            return VoxelRaycastResult {};
+        }
+
+        // Chunk position
+        Vec3<int> chunkPos(
+            (globalBlockPos.x / CS) - regionPos.x * CHUNK_REGION_SIZE,
+            globalBlockPos.y / CS,
+            chunkPos.z = (globalBlockPos.z / CS) - regionPos.y * CHUNK_REGION_SIZE
+        );
+
+        if (globalBlockPos.x < 0) {
+            chunkPos.x--;
+        }
+
+        if (globalBlockPos.z < 0) {
+            chunkPos.z--;
+        }
+        
+        // Block position in chunk
         Vec3<int> blockHitPos;
+
         blockHitPos.y = 1 + abs(globalBlockPos.y) % CS;
 
         if (globalBlockPos.x >= 0) {
@@ -43,7 +64,7 @@ namespace engine {
             blockHitPos.z = CS_P_MINUS_ONE - (1 + (abs(globalBlockPos.z) - 1) % CS);
         }
 
-        Chunk* chunk = world->GetChunk(chunkPos);
+        Chunk* chunk = region->GetChunk(chunkPos);
 
         if (chunk == nullptr) {
             return VoxelRaycastResult{
@@ -61,10 +82,7 @@ namespace engine {
                 blockHit
             };
         }
-        */
-        return VoxelRaycastResult{};
     }
-
 
     float fract0(float x) {
         return x - floorf(x);
@@ -74,92 +92,88 @@ namespace engine {
         return 1 - x + floorf(x);
     }
 
+    VoxelRaycastResult VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, int distance) {
+        assert(!(direction.x == 0 && direction.y == 0 && direction.z == 0));
 
-VoxelRaycastResult VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, int distance) {
-    /*
-    assert(!(direction.x == 0 && direction.y == 0 && direction.z == 0));
+        float tMaxX, tMaxY, tMaxZ, tDeltaX, tDeltaY, tDeltaZ;
 
-    float tMaxX, tMaxY, tMaxZ, tDeltaX, tDeltaY, tDeltaZ;
+        Vec3<float> end = start + direction * distance;
 
-    Vec3<float> end = start + direction * distance;
+        Vec3<int> step = Vec3<int>(
+            direction.x > 0 ? : (direction.x < 0 ? - 1 : 0),
+            direction.y > 0 ? : (direction.y < 0 ? - 1 : 0),
+            direction.z > 0 ? : (direction.z < 0 ? - 1 : 0)
+        );
 
-    Vec3<int> step = Vec3<int>(
-        direction.x > 0 ? : (direction.x < 0 ? - 1 : 0),
-        direction.y > 0 ? : (direction.y < 0 ? - 1 : 0),
-        direction.z > 0 ? : (direction.z < 0 ? - 1 : 0)
-    );
+        Vec3<int> voxel = Vec3<int>(
+            std::floor(start.x),
+            std::floor(start.y),
+            std::floor(start.z)
+        ); 
 
-    Vec3<int> voxel = Vec3<int>(
-        std::floor(start.x),
-        std::floor(start.y),
-        std::floor(start.z)
-    ); 
+        Vec3<int> normal(0);
 
-    Vec3<int> normal(0);
+        if (step.x != 0) tDeltaX = fmin(step.x / (end.x - start.x), std::numeric_limits<float>::max()); else tDeltaX =  std::numeric_limits<float>::max();
+        if (step.x > 0) tMaxX = tDeltaX * fract1(start.x); else tMaxX = tDeltaX * fract0(start.x);
 
-    if (step.x != 0) tDeltaX = fmin(step.x / (end.x - start.x), std::numeric_limits<float>::max()); else tDeltaX =  std::numeric_limits<float>::max();
-    if (step.x > 0) tMaxX = tDeltaX * fract1(start.x); else tMaxX = tDeltaX * fract0(start.x);
+        if (step.y != 0) tDeltaY = fmin(step.y / (end.y- start.y), std::numeric_limits<float>::max()); else tDeltaY =  std::numeric_limits<float>::max();
+        if (step.y > 0) tMaxY = tDeltaY * fract1(start.y); else tMaxY = tDeltaY * fract0(start.y);
 
-    if (step.y != 0) tDeltaY = fmin(step.y / (end.y- start.y), std::numeric_limits<float>::max()); else tDeltaY =  std::numeric_limits<float>::max();
-    if (step.y > 0) tMaxY = tDeltaY * fract1(start.y); else tMaxY = tDeltaY * fract0(start.y);
+        if (step.z != 0) tDeltaZ = fmin(step.z / (end.z - start.z), std::numeric_limits<float>::max()); else tDeltaZ =  std::numeric_limits<float>::max();
+        if (step.z > 0) tMaxZ = tDeltaZ * fract1(start.z); else tMaxZ = tDeltaZ * fract0(start.z);
 
-    if (step.z != 0) tDeltaZ = fmin(step.z / (end.z - start.z), std::numeric_limits<float>::max()); else tDeltaZ =  std::numeric_limits<float>::max();
-    if (step.z > 0) tMaxZ = tDeltaZ * fract1(start.z); else tMaxZ = tDeltaZ * fract0(start.z);
-
-    // process first voxel
-    {
-        VoxelRaycastResult res = GenerateVoxelRaycastResult(world, normal, voxel);
-        if (res.blockHit != AIR) {
-            return res;
-        }
-    }
-
-    while (true) {
-        if (tMaxX < tMaxY) {
-            if (tMaxX < tMaxZ) {
-                voxel.x += step.x;
-                tMaxX += tDeltaX;
-                normal.x = -step.x;
-                normal.y = 0;
-                normal.z = 0;
-            } else {
-                voxel.z += step.z;
-                tMaxZ += tDeltaZ;
-                normal.x = 0;
-                normal.y = 0;
-                normal.z = -step.z;
-            }
-        } else {
-            if (tMaxY < tMaxZ) {
-                voxel.y += step.y;
-                tMaxY += tDeltaY;
-                normal.x = 0;
-                normal.y = -step.y;
-                normal.z = 0;
-            } else {
-                voxel.z += step.z;
-                tMaxZ += tDeltaZ;
-                normal.x = 0;
-                normal.y = 0;
-                normal.z = -step.z;
-            }
-        }
-        if (tMaxX > 1 && tMaxY > 1 && tMaxZ > 1) {
-            // process last voxel
-            VoxelRaycastResult res = GenerateVoxelRaycastResult(world, normal, voxel);
-            return res;
-        } else {
-            // process intermediate voxels
+        // process first voxel
+        {
             VoxelRaycastResult res = GenerateVoxelRaycastResult(world, normal, voxel);
             if (res.blockHit != AIR) {
                 return res;
             }
         }
-        */
-        return VoxelRaycastResult {};
+
+        while (true) {
+            if (tMaxX < tMaxY) {
+                if (tMaxX < tMaxZ) {
+                    voxel.x += step.x;
+                    tMaxX += tDeltaX;
+                    normal.x = -step.x;
+                    normal.y = 0;
+                    normal.z = 0;
+                } else {
+                    voxel.z += step.z;
+                    tMaxZ += tDeltaZ;
+                    normal.x = 0;
+                    normal.y = 0;
+                    normal.z = -step.z;
+                }
+            } else {
+                if (tMaxY < tMaxZ) {
+                    voxel.y += step.y;
+                    tMaxY += tDeltaY;
+                    normal.x = 0;
+                    normal.y = -step.y;
+                    normal.z = 0;
+                } else {
+                    voxel.z += step.z;
+                    tMaxZ += tDeltaZ;
+                    normal.x = 0;
+                    normal.y = 0;
+                    normal.z = -step.z;
+                }
+            }
+            if (tMaxX > 1 && tMaxY > 1 && tMaxZ > 1) {
+                // process last voxel
+                VoxelRaycastResult res = GenerateVoxelRaycastResult(world, normal, voxel);
+                return res;
+            } else {
+                // process intermediate voxels
+                VoxelRaycastResult res = GenerateVoxelRaycastResult(world, normal, voxel);
+                if (res.blockHit != AIR) {
+                    return res;
+                }
+            }
+        }
     }
 }
-
 /*
 MIT License
 

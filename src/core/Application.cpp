@@ -422,7 +422,6 @@ void engine::Application::GLFWScrollCallback(GLFWwindow* window, double xoffset,
 
 void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-    /*
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT: {
             if (action == GLFW_PRESS) {
@@ -432,63 +431,12 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
                     chunk->SetBlock(AIR, raycastResult.blockPos);
                     chunk->CreateMesh();
                     chunk->BufferData();
-
-                    // if block is on a chunk edge, renegerate them too
-                    if (raycastResult.blockPos.x == 1) {
-                        Chunk* leftChunk = m_World->GetChunk(chunk->m_Pos - Vec3<int>(1, 0, 0));
-                        if (leftChunk != nullptr) {
-                            leftChunk->SetBlock(AIR, CS_P_MINUS_ONE, raycastResult.blockPos.y, raycastResult.blockPos.z);
-                            leftChunk->CreateMesh();
-                            leftChunk->BufferData();
-                        }
-                    }
-                    else if (raycastResult.blockPos.x == CS) {
-                        Chunk* rightChunk = m_World->GetChunk(chunk->m_Pos + Vec3<int>(1, 0, 0));
-                        if (rightChunk != nullptr) {
-                            rightChunk->SetBlock(AIR, 0, raycastResult.blockPos.y, raycastResult.blockPos.z);
-                            rightChunk->CreateMesh();
-                            rightChunk->BufferData();
-                        }
-                    }
-
-                    if (raycastResult.blockPos.z == 1) {
-                        Chunk* forwardChunk = m_World->GetChunk(chunk->m_Pos - Vec3<int>(0, 0, 1));
-                        if (forwardChunk != nullptr) {
-                            forwardChunk->SetBlock(AIR, raycastResult.blockPos.x, raycastResult.blockPos.y, CS_P_MINUS_ONE);
-                            forwardChunk->CreateMesh();
-                            forwardChunk->BufferData();
-                        }
-                    }
-                    else if(raycastResult.blockPos.z == CS) {
-                        Chunk* behindChunk = m_World->GetChunk(chunk->m_Pos + Vec3<int>(0, 0, 1));
-                        if (behindChunk != nullptr) {
-                            behindChunk->SetBlock(AIR, raycastResult.blockPos.x, raycastResult.blockPos.y, 0);
-                            behindChunk->CreateMesh();
-                            behindChunk->BufferData();
-                        }
-                    }
-
-                    if (raycastResult.blockPos.y == 1) {
-                        Chunk* belowChunk = m_World->GetChunk(chunk->m_Pos - Vec3<int>(0,1,0));
-                        if (belowChunk != nullptr) {
-                            belowChunk->SetBlock(AIR, raycastResult.blockPos.x, CS_P_MINUS_ONE, raycastResult.blockPos.z);
-                            belowChunk->CreateMesh();
-                            belowChunk->BufferData();
-                        }
-                    } 
-                    else if(raycastResult.blockPos.y == CS) {
-                        Chunk* aboveChunk = m_World->GetChunk(chunk->m_Pos + Vec3<int>(0,1,0));
-                        if (aboveChunk != nullptr) {
-                            aboveChunk->SetBlock(AIR, raycastResult.blockPos.x, 1, raycastResult.blockPos.z);
-                            aboveChunk->CreateMesh();
-                            aboveChunk->BufferData();
-                        }
-                    }
                 }
             }
             break;
         }
         case GLFW_MOUSE_BUTTON_RIGHT: {
+            /*
             if (action == GLFW_PRESS) {
                 const VoxelRaycastResult& raycastResult = m_World->GetPlayer().GetBlockRaycastResult();
                 Chunk* chunk = raycastResult.chunk;
@@ -550,22 +498,24 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
                     }
                 }
             }
+            */
             break;
         }
         case GLFW_MOUSE_BUTTON_MIDDLE: {
+            /*
             const VoxelRaycastResult& raycastResult = m_World->GetPlayer().GetBlockRaycastResult();
             if (raycastResult.blockHit != AIR) {
                 m_SelectedBlock = raycastResult.blockHit;
             }
             break;
+            */
         }
     }
-    */
+    
 }
        
 void engine::Application::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-
     if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
         m_Wireframe = !m_Wireframe;
     if (key == GLFW_KEY_TAB && action == GLFW_PRESS) {

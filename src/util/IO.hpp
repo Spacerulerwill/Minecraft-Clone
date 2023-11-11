@@ -21,7 +21,7 @@ namespace engine {
     bool WriteStructToDisk(const std::string& file_name, T& data)
     {
         std::ofstream out;
-        out.open(file_name,std::ios::binary);
+        out.open(file_name,std::ios::binary | std::ios::trunc);
         if (out.fail())
             return false;
         out.write(reinterpret_cast<char*>(&data), sizeof(T));

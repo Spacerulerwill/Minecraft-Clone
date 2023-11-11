@@ -37,6 +37,16 @@ const char* engine::World::GetName() {
     return m_WorldName;
 }
 
+engine::ChunkRegion* engine::World::GetRegion(Vec2<int> pos) const {
+    auto find = m_ChunkRegions.find(pos);
+    if (find == m_ChunkRegions.end()) {
+        return nullptr;
+    } else {
+        return (*find).second;
+    }
+
+}
+
 void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& customModelShader) {
     Mat4<float> perspective = m_Player.GetCamera().GetPerspectiveMatrix();
     Mat4<float> view = m_Player.GetCamera().GetViewMatrix();
@@ -125,9 +135,15 @@ engine::World::~World() {
     };
     WriteStructToDisk(fmt::format("worlds/{}/player.dat", m_WorldName), playerSave);
     
-    // Delete chunk regions
-    for (const auto & [ key, value ] : m_ChunkRegions) {
-        delete value;
+    // Delete chunk and unload chunk regions
+    for (const auto & [ pos, region ] : m_ChunkRegions) {
+        m_RegionUnloadPool.push_task([region, this]{
+            region->UnloadToFile(m_WorldName);
+        });
+    }
+    m_RegionUnloadPool.wait_for_tasks();
+    for (const auto & [ pos, region ] : m_ChunkRegions) {
+        delete region;
     }
 }
 

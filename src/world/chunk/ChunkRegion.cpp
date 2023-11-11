@@ -5,8 +5,11 @@ LICENSE: MIT
 
 #include <world/chunk/ChunkRegion.hpp>
 #include <util/Log.hpp>
+#include <mutex>
 
 engine::ChunkRegion::ChunkRegion(Vec2<int> pos): m_Pos(pos) {
+    BS::thread_pool pool;
+
     m_ChunkStacks.reserve(CHUNK_REGION_SIZE_SQUARED);
     for (int x = 0; x < CHUNK_REGION_SIZE; x++) {
         for (int z = 0; z < CHUNK_REGION_SIZE; z++) {
@@ -85,7 +88,6 @@ void engine::ChunkRegion::GenerateChunks(const char* worldName, const siv::Perli
         startedChunkMerging = true;
         return;
     } else if (m_ChunkMergePool.get_tasks_total() != 0){
-        UnloadToFile(worldName);
         return;
     }
 
@@ -110,9 +112,9 @@ void engine::ChunkRegion::BufferChunksPerFrame() {
 }
 
 void engine::ChunkRegion::UnloadToFile(const char* worldName) const {
-    std::ofstream wf(fmt::format("worlds/{}/regions/{}.{}.region", worldName, m_Pos.x, m_Pos.y), std::ios::out | std::ios::binary);
+    std::ofstream wf(fmt::format("worlds/{}/regions/{}.{}.region", worldName, m_Pos.x, m_Pos.y), std::ios::out | std::ios::binary | std::ios::trunc);
     if (!wf) {
-        LOG_ERROR(fmt::format("Failed to unload chunk {}. File creation error!", std::string(m_Pos)));
+        LOG_ERROR(fmt::format("Failed to unload chunk region {}. File creation error!", std::string(m_Pos)));
     }
     
     for (auto& stack: m_ChunkStacks) {
