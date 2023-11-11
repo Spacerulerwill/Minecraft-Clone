@@ -436,7 +436,6 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
             break;
         }
         case GLFW_MOUSE_BUTTON_RIGHT: {
-            /*
             if (action == GLFW_PRESS) {
                 const VoxelRaycastResult& raycastResult = m_World->GetPlayer().GetBlockRaycastResult();
                 Chunk* chunk = raycastResult.chunk;
@@ -445,70 +444,48 @@ void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button
                     if (blockToPlaceOn != AIR) {
                         Vec3<int> blockPlacePosition = raycastResult.blockPos + raycastResult.normal;
 
-                        // if making a new vertical chunk we can exit early
-                        if (blockPlacePosition.y == CS_P_MINUS_ONE) {
-                            blockPlacePosition.y = 1;
-                            Chunk* newChunk = m_World->CreateChunk((chunk->m_Pos + Vec3<int>(0,1,0)));
-                            newChunk->SetBlock(m_SelectedBlock, blockPlacePosition);
-                            newChunk->CreateMesh();
-                            newChunk->BufferData();
-                            m_World->AddChunkToDrawVector(newChunk);
+                        // chunk edge cases - if we place and the block will end up in another chunk
+                        if (blockPlacePosition.x == CS_P_MINUS_ONE) {
                             return;
                         }
 
-                        // chunk edge cases - if we place and the block will end up in another chunk
-                        if (blockPlacePosition.x == CS_P_MINUS_ONE) {
-                            blockPlacePosition.x = 1;
-                            chunk = m_World->GetChunk(chunk->m_Pos + Vec3<int>(1,0,0));
-                        }
-
                         else if (blockPlacePosition.x == 0) {
-                            blockPlacePosition.x = CS;
-                            chunk = m_World->GetChunk(chunk->m_Pos - Vec3<int>(1,0,0));
+                            return;
                         }
 
                         if (blockPlacePosition.y == CS_P_MINUS_ONE) {
-                            blockPlacePosition.y = 1;
-                            chunk = m_World->GetChunk(chunk->m_Pos + Vec3<int>(0,1,0));
+                            return;
                         }
 
                         if (blockPlacePosition.y == 0) {
-                            blockPlacePosition.y = CS;
-                            chunk = m_World->GetChunk(chunk->m_Pos - Vec3<int>(0,1,0));
+                            return;
                         }
 
                         if (blockPlacePosition.z == CS_P_MINUS_ONE) {
-                            blockPlacePosition.z = 1;
-                            chunk = m_World->GetChunk(chunk->m_Pos + Vec3<int>(0,0,1));
-                        }
+                            return;
+                        }   
 
                         else if (blockPlacePosition.z == 0) {
-                            blockPlacePosition.z = CS;
-                            chunk = m_World->GetChunk(chunk->m_Pos - Vec3<int>(0,0,1));
+                            return;
                         }
 
-                        if (chunk != nullptr) {
-                            BlockInt blockAtPlacePosition = chunk->GetBlock(blockPlacePosition);
-                            if (blockAtPlacePosition == AIR) {
-                                chunk->SetBlock(m_SelectedBlock, blockPlacePosition);
-                                chunk->CreateMesh();
-                                chunk->BufferData();
-                            }
+                        BlockInt blockAtPlacePosition = chunk->GetBlock(blockPlacePosition);
+                        if (blockAtPlacePosition == AIR) {
+                            chunk->SetBlock(m_SelectedBlock, blockPlacePosition);
+                            chunk->CreateMesh();
+                            chunk->BufferData();
                         }
                     }
                 }
             }
-            */
             break;
         }
         case GLFW_MOUSE_BUTTON_MIDDLE: {
-            /*
             const VoxelRaycastResult& raycastResult = m_World->GetPlayer().GetBlockRaycastResult();
             if (raycastResult.blockHit != AIR) {
                 m_SelectedBlock = raycastResult.blockHit;
             }
             break;
-            */
         }
     }
     
