@@ -57,17 +57,17 @@ namespace engine {
         /*
         OpenGL Buffer objects to store vertex data
         */
-		BufferObject<GL_ARRAY_BUFFER> m_VBO;
+		VertexBuffer m_VBO;
 		VertexArray m_VAO;
 		std::vector<CubeChunkVertex> m_Vertices;
 		size_t m_VertexCount = 0;
 
-		BufferObject<GL_ARRAY_BUFFER> m_WaterVBO;
+		VertexBuffer m_WaterVBO;
 		VertexArray m_WaterVAO;
 		std::vector<CubeChunkVertex> m_WaterVertices;
 		size_t m_WaterVertexCount = 0;
 
-        BufferObject<GL_ARRAY_BUFFER> m_CustomModelVBO;
+        VertexBuffer m_CustomModelVBO;
 		VertexArray m_CustomModelVAO;
 		std::vector<CustomModelChunkVertex> m_CustomModelVertices;
 		size_t m_CustomModelVertexCount = 0;

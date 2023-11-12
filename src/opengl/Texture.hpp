@@ -198,6 +198,11 @@ namespace engine {
                 glBindTexture(type, 0);
             }        
     };
+
+    // Useful synonyms
+    using Tex2D = Texture<GL_TEXTURE_2D>;
+    using TexArray2D = Texture<GL_TEXTURE_2D_ARRAY>;
+    using Cubemap = Texture<GL_TEXTURE_CUBE_MAP>;
 };
 
 #endif // !TEXTURE_H

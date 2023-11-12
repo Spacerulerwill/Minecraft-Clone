@@ -19,10 +19,10 @@ namespace engine {
         static float m_SkyboxVertices[108];
         static const char* m_SkyboxFaces[6];
 
-        BufferObject<GL_ARRAY_BUFFER> m_VBO;
+        VertexBuffer m_VBO;
         VertexArray m_VAO;
         Shader m_Shader = Shader("res/shaders/skybox.shader");
-        Texture<GL_TEXTURE_CUBE_MAP> m_Cubemap;
+        Cubemap m_Cubemap;
 
 	public:
         Skybox();

@@ -12,11 +12,11 @@ License: MIT
 
 namespace engine {
     // integer sizes for each ID type
-	typedef uint8_t BlockInt;
-	typedef uint8_t MaterialInt;
-	typedef uint8_t TextureInt;
-	typedef uint8_t ModelInt;
-
+	using BlockInt = uint8_t;
+    using MaterialInt = uint8_t;
+    using TextureInt = uint8_t;
+    using ModelInt = uint8_t;
+    
     // enum of block IDs
 	enum Block : BlockInt {
 		AIR,

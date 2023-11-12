@@ -185,9 +185,9 @@ void engine::Application::Run()
 
     // Load texture atlases into an array so we can cycle through them
     glActiveTexture(GL_TEXTURE0);
-    std::unique_ptr<Texture<GL_TEXTURE_2D_ARRAY>> atlases[MAX_ANIMATION_FRAMES];
+    std::unique_ptr<TexArray2D> atlases[MAX_ANIMATION_FRAMES];
     for (int i = 0; i < MAX_ANIMATION_FRAMES; i++) {
-        atlases[i] = std::make_unique<Texture<GL_TEXTURE_2D_ARRAY>>(fmt::format("res/textures/atlases/atlas{}.png", i).c_str(), TEXTURE_SIZE);
+        atlases[i] = std::make_unique<TexArray2D>(fmt::format("res/textures/atlases/atlas{}.png", i).c_str(), TEXTURE_SIZE);
     }
 
     // Create framebuffer object and quad
@@ -202,7 +202,7 @@ void engine::Application::Run()
         -1.0f, 1.0f, 0.0f, 1.0f // top left
     };
     
-    BufferObject<GL_ARRAY_BUFFER> VBO;
+    VertexBuffer VBO;
     VBO.BufferData((const void*)quadVerts, sizeof(quadVerts), GL_STATIC_DRAW);
     VertexBufferLayout bufferLayout;
     bufferLayout.AddAttribute<float>(2); // 2 Vertex Coordinates
@@ -215,7 +215,7 @@ void engine::Application::Run()
     
     // Load crosshair texture
     glActiveTexture(GL_TEXTURE1);
-    Texture<GL_TEXTURE_2D> crosshairTexture("res/textures/ui/crosshair.png"); 
+    Tex2D crosshairTexture("res/textures/ui/crosshair.png"); 
 
     // Create vertices, VBO and VAO for crosshair
     int crosshair_size = 32;
@@ -240,7 +240,7 @@ void engine::Application::Run()
 
     // Load grass mask texture
     glActiveTexture(GL_TEXTURE2);
-    Texture<GL_TEXTURE_2D> grassMaskTexture("res/textures/block/mask/grass_side_mask.png");
+    Tex2D grassMaskTexture("res/textures/block/mask/grass_side_mask.png");
 
     // Load shaders
     Shader framebufferShader("res/shaders/framebuffer.shader");

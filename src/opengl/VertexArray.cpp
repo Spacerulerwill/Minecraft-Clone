@@ -32,7 +32,7 @@ engine::VertexArray& engine::VertexArray::operator=(VertexArray&& other)
     return *this;
 }
 
-void engine::VertexArray::AddBuffer(const engine::BufferObject<GL_ARRAY_BUFFER>& vb, const engine::VertexBufferLayout& layout)
+void engine::VertexArray::AddBuffer(const engine::VertexBuffer& vb, const engine::VertexBufferLayout& layout)
 {
     Bind();
     vb.Bind();

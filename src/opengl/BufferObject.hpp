@@ -73,6 +73,9 @@ namespace engine {
                 return m_Count;
             }
     };
+
+    using VertexBuffer = BufferObject<GL_ARRAY_BUFFER>;
+    using ElementBuffer = BufferObject<GL_ELEMENT_ARRAY_BUFFER>;
 }
 
 #endif // !BUFFEROBJECT_H
