@@ -15,11 +15,13 @@ License: MIT
 #include <opengl/Framebuffer.hpp>
 #include <world/World.hpp>
 #include <opengl/Texture.hpp>
+#include <opengl/Window.hpp>
+#include <memory>
 
 namespace engine {
 	class Application {
 	private:
-        GLFWwindow* p_Window = nullptr;
+        std::unique_ptr<Window> m_Window = nullptr;
         Framebuffer* p_Framebuffer = nullptr;
         World* m_World = nullptr;
         BlockInt m_SelectedBlock = GRASS;
@@ -31,7 +33,6 @@ namespace engine {
         float m_LastFrame = 0.0f;
 
         std::string MainMenu();
-        void InitOpenGL();
         void ProcessInput(Camera& camera);
 	public:
         Application();

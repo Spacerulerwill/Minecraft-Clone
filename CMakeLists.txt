@@ -31,6 +31,8 @@ add_executable(${PROJECT_NAME}
     src/opengl/VertexArray.hpp
     src/opengl/VertexBufferLayout.cpp
     src/opengl/VertexBufferLayout.hpp
+    src/opengl/Window.cpp
+    src/opengl/Window.hpp
     src/world/Block.cpp
     src/world/Block.hpp
     src/world/Skybox.cpp

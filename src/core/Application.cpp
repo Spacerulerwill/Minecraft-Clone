@@ -50,7 +50,7 @@ std::string engine::Application::MainMenu() {
         std::transform(option.begin(), option.end(), option.begin(), ::tolower);
 
         if (option == "e") {
-            glfwSetWindowShouldClose(p_Window, GLFW_TRUE);
+            m_Window->SetShouldClose(GLFW_TRUE);
             return "";
         }
 
@@ -153,7 +153,34 @@ void engine::Application::Run()
     srand(time(NULL));
     std::filesystem::create_directory("worlds");
 
-    InitOpenGL();
+     // Try and intialise GLFW
+    if (!glfwInit()) {
+        glfwTerminate();
+		throw std::runtime_error("Failed to intialise GLFW");
+	}
+
+    // Create our window
+    m_Window = std::make_unique<Window>(this, SCREEN_WIDTH, SCREEN_HEIGHT, "Voxel Engine");
+    m_Window->Bind();
+
+    // Load OpenGL function pointers
+    if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
+	{
+		throw std::runtime_error("Failed to intialise GLAD");
+	}
+
+    /*
+	OpenGl setting configuration. We are enabling blend for alpha transparency blending and using the default blend function
+	We also enable culling faces as an optimisation using the default winding order.
+	*/
+    glEnable(GL_MULTISAMPLE);  
+    glDisable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
     InitBlocks();
 
     // Load texture atlases into an array so we can cycle through them
@@ -225,7 +252,7 @@ void engine::Application::Run()
     double lastTime = 0.0f;
     int currentAtlasIndex = 0;
     
-    while (!glfwWindowShouldClose(p_Window)) {
+    while (!m_Window->ShouldClose()) {
         std::string worldName = MainMenu();
 
         if (worldName == "") {
@@ -245,7 +272,7 @@ void engine::Application::Run()
         Vec3<int> prevChunkPos = player.GetChunkPosition();
         Vec3<int> chunkPos = player.GetChunkPosition();
 
-        glfwShowWindow(p_Window);
+        m_Window->SetVisible();
         m_PlayingGame = true;
         
         // Main game loop
@@ -313,69 +340,12 @@ void engine::Application::Run()
             m_World->GenerateChunks();
 
             glfwPollEvents();
-            glfwSwapBuffers(p_Window);
+            m_Window->SwapBuffers();
         }
         delete m_World;
     }
-    glfwDestroyWindow(p_Window);
     delete p_Framebuffer;
     spdlog::shutdown();
-}
-
-void engine::Application::InitOpenGL() {
-    // Try and intialise GLFW
-    if (!glfwInit()) {
-        glfwTerminate();
-		throw std::runtime_error("Failed to intialise GLFW");
-	}
-
-    // Create our window, and add its callbacks
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-    glfwWindowHint(GLFW_SAMPLES, MSAA_SAMPLES);
-
-#ifdef __APPLE__
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-	p_Window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Voxel Engine", NULL, NULL);
-
-	if (p_Window == NULL)
-	{
-		glfwTerminate();
-		throw std::runtime_error("Failed to create GLFW Window");
-	}
-
-    glfwSetWindowSizeCallback(p_Window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(p_Window, mouse_move_callback);
-    glfwSetMouseButtonCallback(p_Window, mouse_button_callback);
-    glfwSetScrollCallback(p_Window, scroll_callback);
-    glfwSetKeyCallback(p_Window, key_callback);
-    glfwSetWindowUserPointer(p_Window, reinterpret_cast<void*>(this));
-	glfwMakeContextCurrent(p_Window);
-
-    // Set input mode to cursor disabled so use can't move mouse out of window
-    glfwSetInputMode(p_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    // Load OpenGL function pointers
-    if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
-	{
-		throw std::runtime_error("Failed to intialise GLAD");
-	}
-
-    /*
-	OpenGl setting configuration. We are enabling blend for alpha transparency blending and using the default blend function
-	We also enable culling faces as an optimisation using the default winding order.
-	*/
-    glEnable(GL_MULTISAMPLE);  
-    glDisable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
 }
 
 void engine::Application::GLFWFramebufferResizeCallback(GLFWwindow* window, int width, int height)
@@ -389,19 +359,19 @@ void engine::Application::GLFWFramebufferResizeCallback(GLFWwindow* window, int 
 
 void engine::Application::ProcessInput(Camera& camera)
 {
-    if (glfwGetKey(p_Window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    if (glfwGetKey(m_Window->GetWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         m_PlayingGame = false;
-        glfwHideWindow(p_Window);
+        m_Window->SetHidden();
     }
-    if (glfwGetKey(p_Window, GLFW_KEY_W) == GLFW_PRESS)
+    if (m_Window->IsKeyPressed(GLFW_KEY_W))
         camera.ProcessKeyboard(FORWARD, m_DeltaTime);
-    if (glfwGetKey(p_Window, GLFW_KEY_S) == GLFW_PRESS)
+    if (m_Window->IsKeyPressed(GLFW_KEY_S))
         camera.ProcessKeyboard(BACKWARD, m_DeltaTime);
-    if (glfwGetKey(p_Window, GLFW_KEY_A) == GLFW_PRESS)
+    if (m_Window->IsKeyPressed(GLFW_KEY_A))
         camera.ProcessKeyboard(LEFT, m_DeltaTime);
-    if (glfwGetKey(p_Window, GLFW_KEY_D) == GLFW_PRESS)
+    if (m_Window->IsKeyPressed(GLFW_KEY_D))
         camera.ProcessKeyboard(RIGHT, m_DeltaTime);
-    if (glfwGetKey(p_Window, GLFW_KEY_LEFT_SHIFT))
+    if (m_Window->IsKeyPressed(GLFW_KEY_LEFT_SHIFT))
         camera.SetMovementSpeed(300.0f);
     else
         camera.SetMovementSpeed(10.0f);
@@ -505,38 +475,6 @@ void engine::Application::GLFWKeyCallback(GLFWwindow* window, int key, int scanc
     }
 }
 
-// input callback that wraps the application singleton mouse callback function
-void engine::mouse_move_callback(GLFWwindow* window, double xposIn, double yposIn)
-{
-    Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
-    app->GLFWMouseMoveCallback(window, xposIn, yposIn);
-}
-
-// input callback that wraps the application singleton scroll callback function
-void engine::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
-    app->GLFWScrollCallback(window, xoffset, yoffset);
-}
-
-// input callback that wraps the application singleton key callback function
-void engine::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
-    app->GLFWKeyCallback(window, key, scancode, action, mods);
-}
-
-// input callback that wraps the application singleton mouse button callback function
-void engine::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
-    app->GLFWMouseButtonCallback(window, button, action, mods);
-}
-
-// screen resize callback that wraps the application framebuffer resize callback
-void engine::framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
-    app->GLFWFramebufferResizeCallback(window, width, height);
-}
 /*
 MIT License
 
