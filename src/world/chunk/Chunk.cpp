@@ -28,16 +28,13 @@ void engine::Chunk::SetupModelMatrix(Vec3<int> chunkPos) {
     m_Model = m_Model *  translate(Vec3<float>(static_cast<float>(chunkPos.x * CS), static_cast<float>(chunkPos.y * CS), static_cast<float>(chunkPos.z * CS)));
 }
 
-engine::Chunk::Chunk(): m_Pos(0,0,0){
-    SetupModelMatrix(m_Pos);
-    AddVertexBufferAttributes();
-}
-
-engine::Chunk::Chunk(Vec3<int> chunkPos): m_Pos(chunkPos.x, chunkPos.y, chunkPos.z)
+engine::Chunk::Chunk(Vec3<int> chunkPos, bool allocate): m_Pos(chunkPos.x, chunkPos.y, chunkPos.z)
 {
-    
     SetupModelMatrix(m_Pos);
     AddVertexBufferAttributes();
+    if (allocate) {
+        Allocate();
+    }
 }
 
 engine::Chunk::~Chunk() {

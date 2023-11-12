@@ -79,8 +79,7 @@ namespace engine {
         void SetupModelMatrix(Vec3<int> chunkPos);
         
 	public:
-        Chunk();
-        Chunk(Vec3<int> chunkPos);
+        Chunk(Vec3<int> chunkPos, bool allocate);
 		~Chunk();
         Chunk(Chunk&& other); // move constructor
         Chunk& operator=(Chunk&& other); // move assignment

@@ -9,7 +9,7 @@ LICENSE: MIT
 
 engine::ChunkStack::ChunkStack(Vec2<int> pos): m_Pos(pos) {
     for (int y = 0; y < DEFAULT_CHUNK_STACK_HEIGHT; y++) {
-        m_Chunks.emplace_back(Vec3<int>(m_Pos.x, y, m_Pos.y));
+        m_Chunks.emplace_back(Vec3<int>(m_Pos.x, y, m_Pos.y), false);
     }
 }
 
@@ -59,6 +59,7 @@ void engine::ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin, std::mt
     for (int y = 0; y < DEFAULT_CHUNK_STACK_HEIGHT; y++) {
         m_Chunks.at(y).Allocate();
     }
+
     for (int x = 1; x < CS_P_MINUS_ONE; x++) {
         for (int z = 1; z < CS_P_MINUS_ONE; z++) {
             float heightMultiplayer = perlin.octave2D_01((m_Pos.x * CS + x) * 0.0025 , (m_Pos.y * CS + z) * 0.0025, 4, 0.5);
