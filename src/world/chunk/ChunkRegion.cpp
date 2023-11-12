@@ -90,7 +90,7 @@ void engine::ChunkRegion::GenerateChunks(const char* worldName, const siv::Perli
     } else if (m_ChunkMergePool.get_tasks_total() != 0){
         return;
     }
-
+    
     if (!startedChunkMeshing) {
         for (ChunkStack& chunkStack : m_ChunkStacks) {
             for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
@@ -101,7 +101,7 @@ void engine::ChunkRegion::GenerateChunks(const char* worldName, const siv::Perli
             }
         }
         startedChunkMeshing = true;
-    }
+    } 
 }
 
 void engine::ChunkRegion::BufferChunksPerFrame() {

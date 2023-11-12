@@ -52,7 +52,7 @@ namespace engine {
         Vec3<int> m_Pos = Vec3<int>(0);
 
         // Array to store voxel ids
-    	BlockInt* m_Voxels = new BlockInt[CS_P3] {};
+    	BlockInt* m_Voxels = nullptr;
         
         /*
         OpenGL Buffer objects to store vertex data
@@ -84,6 +84,9 @@ namespace engine {
 		~Chunk();
         Chunk(Chunk&& other); // move constructor
         Chunk& operator=(Chunk&& other); // move assignment
+
+        // Allocate space for voxels
+        void Allocate();
 
         // Get the world space chunk position
         Vec3<int> GetPos() const;

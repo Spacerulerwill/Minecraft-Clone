@@ -20,6 +20,10 @@ void engine::Chunk::AddVertexBufferAttributes() {
     m_CustomModelVAO.AddBuffer(m_CustomModelVBO, bufLayout);
 }
 
+void engine::Chunk::Allocate() {
+    m_Voxels = new BlockInt[CS_P3] {};
+}
+
 void engine::Chunk::SetupModelMatrix(Vec3<int> chunkPos) {
     m_Model = m_Model *  translate(Vec3<float>(static_cast<float>(chunkPos.x * CS), static_cast<float>(chunkPos.y * CS), static_cast<float>(chunkPos.z * CS)));
 }
