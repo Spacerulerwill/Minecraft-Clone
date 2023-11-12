@@ -4,7 +4,6 @@ License: MIT
 */
 
 #include <opengl/Window.hpp>
-#include <util/Constants.hpp>
 #include <core/Application.hpp>
 #include <stdexcept>
 
@@ -15,7 +14,6 @@ engine::Window::Window(Application* app, unsigned int width, unsigned int height
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-    glfwWindowHint(GLFW_SAMPLES, MSAA_SAMPLES);
 
 #ifdef __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -43,6 +41,7 @@ engine::Window::Window(Application* app, unsigned int width, unsigned int height
 
 engine::Window::~Window() {
     glfwDestroyWindow(p_Window);
+    glfwTerminate();
 }
 
 void engine::Window::Bind() const {

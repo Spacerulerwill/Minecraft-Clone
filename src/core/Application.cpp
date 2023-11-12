@@ -3,9 +3,8 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#include <glad/gl.h>
 #include <util/Log.hpp>
-#include <util/IO.hpp>
+#include <glad/gl.h>
 #include <core/Application.hpp>
 #include <core/Shader.hpp>
 #include <opengl/Texture.hpp>
@@ -15,13 +14,13 @@ License: MIT
 #include <world/Block.hpp>
 #include <world/chunk/Chunk.hpp>
 #include <world/World.hpp>
+#include <util/IO.hpp>
+#include <util/Exceptions.hpp>
 #include <math/Math.hpp>
 #include <algorithm>
 #include <filesystem>
 #include <memory>
-#include <fstream>
 #include <chrono>
-#include <util/Exceptions.hpp>
 
 // free floating callback functions
 namespace engine {
@@ -174,6 +173,7 @@ void engine::Application::Run()
 	We also enable culling faces as an optimisation using the default winding order.
 	*/
     glEnable(GL_MULTISAMPLE);  
+    glEnable(GL_POLYGON_SMOOTH);
     glDisable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
@@ -191,24 +191,7 @@ void engine::Application::Run()
     }
 
     // Create framebuffer object and quad
-    p_Framebuffer = new Framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
-
-    float quadVerts[24] = {
-        -1.0f, -1.0f, 0.0f, 0.0f, // bottom left
-        1.0f, -1.0f, 1.0f, 0.0f, // bottom right
-        1.0f, 1.0f, 1.0f, 1.0f, // top right
-        -1.0f, -1.0f, 0.0f, 0.0f, // bottom left
-        1.0f, 1.0f, 1.0f, 1.0f, // top right
-        -1.0f, 1.0f, 0.0f, 1.0f // top left
-    };
-    
-    VertexBuffer VBO;
-    VBO.BufferData((const void*)quadVerts, sizeof(quadVerts), GL_STATIC_DRAW);
-    VertexBufferLayout bufferLayout;
-    bufferLayout.AddAttribute<float>(2); // 2 Vertex Coordinates
-    bufferLayout.AddAttribute<float>(2); // 2 Texture Coordinates
-    VertexArray VAO;
-    VAO.AddBuffer(VBO, bufferLayout);
+    p_MSAARenderer = new MSAARenderer(SCREEN_WIDTH, SCREEN_HEIGHT);
     
     // Orthographic projection matrix maps normalised device coordinates to pixel screen space coordinates
     Mat4 ortho = orthographic(0.0f, SCREEN_HEIGHT, 0.0f, SCREEN_WIDTH, -1.0f, 100.0f);
@@ -231,7 +214,7 @@ void engine::Application::Run()
         bottom_corner_x, bottom_corner_y + crosshair_size, 0.0f, 1.0f,  // top left
     };
 
-    BufferObject<GL_ARRAY_BUFFER> crosshairVBO;
+    VertexBuffer crosshairVBO;
     crosshairVBO.BufferData((const void*)crosshairVerts, sizeof(crosshairVerts), GL_STATIC_DRAW);
     VertexBufferLayout bufferLayout2;
     bufferLayout2.AddAttribute<float>(4);
@@ -298,35 +281,28 @@ void engine::Application::Run()
 
             player.BlockRaycast(m_World);
 
-            // Bind our framebuffer and render to it
-            p_Framebuffer->Bind();
-
             if (m_Wireframe)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             else
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+            // Bind our framebuffer and render to it
+            p_MSAARenderer->BindMSAAFBO();
 
             glEnable(GL_DEPTH_TEST);
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             
             m_World->Draw(chunkShader, waterShader, customModelShader);
+
+            if(m_Wireframe)
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             
             /* 
             Unbind our framebuffer, binding the default framebuffer and render the result texture to a quad
             */
-            p_Framebuffer->Unbind();
-
-            if(m_Wireframe)
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-            glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
-
-            framebufferShader.Bind();
-            VAO.Bind();
             glDisable(GL_DEPTH_TEST);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+            p_MSAARenderer->Draw(framebufferShader);
 
             // Render UI last
             crosshairShader.Bind();
@@ -344,7 +320,7 @@ void engine::Application::Run()
         }
         delete m_World;
     }
-    delete p_Framebuffer;
+    delete p_MSAARenderer;
     spdlog::shutdown();
 }
 
@@ -353,8 +329,8 @@ void engine::Application::GLFWFramebufferResizeCallback(GLFWwindow* window, int 
 	// On resize, we adjust glViewport and regenerate our framebuffer at the new resolution
     glViewport(0, 0, width, height);
 	glActiveTexture(GL_TEXTURE0);
-    delete p_Framebuffer;
-    p_Framebuffer = new Framebuffer(width, height);
+    delete p_MSAARenderer;
+    p_MSAARenderer = new MSAARenderer(width, height);
 }
 
 void engine::Application::ProcessInput(Camera& camera)

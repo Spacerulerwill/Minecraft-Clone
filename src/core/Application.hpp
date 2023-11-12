@@ -12,17 +12,16 @@ License: MIT
 #include <math/Vec4.hpp>
 #include <math/VoxelRaycast.hpp>
 #include <world/Player.hpp>
-#include <opengl/Framebuffer.hpp>
+#include <opengl/MSAARenderer.hpp>
 #include <world/World.hpp>
 #include <opengl/Texture.hpp>
 #include <opengl/Window.hpp>
-#include <memory>
 
 namespace engine {
 	class Application {
 	private:
-        std::unique_ptr<Window> m_Window = nullptr;
-        Framebuffer* p_Framebuffer = nullptr;
+        std::unique_ptr<Window> m_Window;
+        MSAARenderer* p_MSAARenderer = nullptr;
         World* m_World = nullptr;
         BlockInt m_SelectedBlock = GRASS;
         

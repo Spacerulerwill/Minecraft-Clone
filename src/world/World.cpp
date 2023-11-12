@@ -88,6 +88,7 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
 
 void engine::World::GenerateChunks() {
     Vec3<float> playerPos = m_Player.GetCamera().GetPosition();
+    
     Vec2<int> chunkRegionPos = Vec2<int>(static_cast<int>(playerPos.x) / CHUNK_REGION_BLOCK_SIZE, static_cast<int>(playerPos.z) / CHUNK_REGION_BLOCK_SIZE);
     if (playerPos.x < 0) 
         chunkRegionPos.x--;

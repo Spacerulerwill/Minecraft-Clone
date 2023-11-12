@@ -25,8 +25,8 @@ add_executable(${PROJECT_NAME}
     src/math/VoxelRaycast.hpp
     src/opengl/BufferObject.hpp
     src/opengl/Texture.hpp
-    src/opengl/Framebuffer.cpp
-    src/opengl/Framebuffer.hpp
+    src/opengl/MSAARenderer.cpp
+    src/opengl/MSAARenderer.hpp
     src/opengl/VertexArray.cpp
     src/opengl/VertexArray.hpp
     src/opengl/VertexBufferLayout.cpp

@@ -28,7 +28,7 @@ namespace engine {
 
 		GLuint GetID() { return m_ID; }
 
-		void AddBuffer(const BufferObject<GL_ARRAY_BUFFER>& vb, const VertexBufferLayout& layout);
+		void AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout);
 		void Bind() const;
 		void Unbind() const;
 	};

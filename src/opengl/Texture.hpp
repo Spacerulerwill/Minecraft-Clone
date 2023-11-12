@@ -154,8 +154,11 @@ namespace engine {
                             break;
                         }
                     }
-
-                    glActiveTexture(GL_TEXTURE0);
+                    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, 3);
+                    glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+                    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
                     glTexImage3D(GL_TEXTURE_2D_ARRAY,
                         0,                 // mipmap level
                         GL_RGBA8,          // gpu texel format
@@ -166,17 +169,7 @@ namespace engine {
                         format,      // cpu pixel format
                         GL_UNSIGNED_BYTE,  // cpu pixel coord type
                         data);           // pixel data
-
-                    glTexParameteri(GL_TEXTURE_2D_ARRAY,
-                        GL_TEXTURE_MIN_FILTER,
-                        GL_NEAREST_MIPMAP_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D_ARRAY,
-                        GL_TEXTURE_MAG_FILTER,
-                        GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, 3);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                                        glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+                    glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
                     stbi_image_free(data);
                 }
                 else
