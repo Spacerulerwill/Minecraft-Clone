@@ -169,8 +169,10 @@ void engine::Application::Run()
 	}
 
     /*
-	OpenGl setting configuration. We are enabling blend for alpha transparency blending and using the default blend function
+	OpenGl setting configuration. 
+    We are enabling blend for alpha transparency blending and using the default blend function
 	We also enable culling faces as an optimisation using the default winding order.
+    We enable multisample to reduce moire patterns on distant voxel geometry
 	*/
     glEnable(GL_MULTISAMPLE);  
     glEnable(GL_POLYGON_SMOOTH);
@@ -250,25 +252,19 @@ void engine::Application::Run()
         }
 
         Player& player = m_World->GetPlayer();
-        Camera& camera = player.GetCamera();
-
-        Vec3<int> prevChunkPos = player.GetChunkPosition();
-        Vec3<int> chunkPos = player.GetChunkPosition();
 
         m_Window->SetVisible();
         m_PlayingGame = true;
         
         // Main game loop
         while (m_PlayingGame) { 
+
             // Calculate delta time
             float currentFrame = static_cast<float>(glfwGetTime());
             m_DeltaTime = currentFrame - m_LastFrame;
             m_LastFrame = currentFrame;
 
-            ProcessInput(camera);
-
-            prevChunkPos = chunkPos;
-            chunkPos = player.GetChunkPosition();
+            ProcessInput(player.GetCamera());
 
             // Cycle through texture atlases 10 times a second
             double currentTime = glfwGetTime();
@@ -281,12 +277,13 @@ void engine::Application::Run()
 
             player.BlockRaycast(m_World);
 
-            if (m_Wireframe)
+            // are we rendering in wireframe mode?
+            if (m_Wireframe)    
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             else
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-            // Bind our framebuffer and render to it
+            // Bind our MSAA framebuffer and render to it
             p_MSAARenderer->BindMSAAFBO();
 
             glEnable(GL_DEPTH_TEST);
@@ -299,20 +296,20 @@ void engine::Application::Run()
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             
             /* 
-            Unbind our framebuffer, binding the default framebuffer and render the result texture to a quad
+            Draw our screen quad with the result of the msaa framebuffer
             */
             glDisable(GL_DEPTH_TEST);
             p_MSAARenderer->Draw(framebufferShader);
 
-            // Render UI last
+            // Render UI last (so it wont be effected by post processing or wireframe mode)
             crosshairShader.Bind();
             crosshairVAO.Bind();
             crosshairShader.SetInt("screenTexture", 0);
             crosshairShader.SetInt("crosshair", 1);
             crosshairShader.SetMat4("projection", ortho);
-
             glDrawArrays(GL_TRIANGLES, 0, 6);
 
+            // Generate new chunks
             m_World->GenerateChunks();
 
             glfwPollEvents();

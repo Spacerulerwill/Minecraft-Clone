@@ -86,26 +86,22 @@ void engine::mouse_move_callback(GLFWwindow* window, double xposIn, double yposI
     app->GLFWMouseMoveCallback(window, xposIn, yposIn);
 }
 
-// input callback that wraps the application singleton scroll callback function
 void engine::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
     app->GLFWScrollCallback(window, xoffset, yoffset);
 }
 
-// input callback that wraps the application singleton key callback function
 void engine::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
     app->GLFWKeyCallback(window, key, scancode, action, mods);
 }
 
-// input callback that wraps the application singleton mouse button callback function
 void engine::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
     app->GLFWMouseButtonCallback(window, button, action, mods);
 }
 
-// screen resize callback that wraps the application framebuffer resize callback
 void engine::framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));

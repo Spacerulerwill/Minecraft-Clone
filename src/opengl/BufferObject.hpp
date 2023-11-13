@@ -76,6 +76,7 @@ namespace engine {
 
     using VertexBuffer = BufferObject<GL_ARRAY_BUFFER>;
     using ElementBuffer = BufferObject<GL_ELEMENT_ARRAY_BUFFER>;
+    using IndirectBuffer = BufferObject<GL_DRAW_INDIRECT_BUFFER>;
 }
 
 #endif // !BUFFEROBJECT_H

@@ -111,6 +111,7 @@ void engine::World::GenerateChunks() {
                     rf.read(reinterpret_cast<char*>(&size), sizeof(size_t));
                     for (size_t i = 0; i < size; i++) {
                         Chunk* chunk = stack->GetChunk(i);
+                        chunk->Allocate();
                         rf.read(reinterpret_cast<char*>(chunk->GetBlockDataPointer()), CS_P3 * sizeof(BlockInt));        
                     }
                 }

@@ -8,9 +8,8 @@ License: MIT
 
 #include <vector>
 #include <cstdint>
-#include <string>
 
-namespace engine {
+namespace engine {  
     // integer sizes for each ID type
 	using BlockInt = uint8_t;
     using MaterialInt = uint8_t;
@@ -72,10 +71,9 @@ namespace engine {
 		ModelInt model;
 	};
 
-    // Global arrays used to fetch certain information by integer ID, using array indexing
+    // Global arrays used to fetch certain information of blocks by using their ID as array index
 	extern BlockDataStruct BlockData[NUM_BLOCKS];
 	extern BlockModelStruct BlockModelData[NUM_MODELS];
-
     
     /*
     Block texture size in pixels.
@@ -89,7 +87,8 @@ namespace engine {
 
     /*
     Loads block data from res/blocks.yml and fills the BlockData array
-    with BlockDataStruct for each block.
+    with BlockDataStruct for each block. 
+    NOTE: Must be called before trying to access BlockData!
     */
 	void InitBlocks();
 };

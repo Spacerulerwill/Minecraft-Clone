@@ -7,6 +7,7 @@ License: MIT
 
 engine::VertexBufferLayout::VertexBufferLayout() :m_Stride(0)
 {
+    
 }
 
 template <>
