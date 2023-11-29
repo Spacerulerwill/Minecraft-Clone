@@ -17,9 +17,9 @@ namespace engine {
         Chunk* chunk;
         Vec3<int> blockPos;
         Vec3<int> normal;
-		BlockInt blockHit;
-	};
-    
+        BlockInt blockHit;
+    };
+
     VoxelRaycastResult VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, int distance);
 }
 

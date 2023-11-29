@@ -9,88 +9,88 @@ License: MIT
 #include <vector>
 #include <cstdint>
 
-namespace engine {  
+namespace engine {
     // integer sizes for each ID type
-	using BlockInt = uint8_t;
+    using BlockInt = uint8_t;
     using MaterialInt = uint8_t;
     using TextureInt = uint8_t;
     using ModelInt = uint8_t;
-    
+
     // enum of block IDs
-	enum Block : BlockInt {
-		AIR,
-		WATER,
-		BEDROCK,
-		DIRT,
-		COBBLE,
-		STONE,
-		GLASS,
-		OAK_PLANKS,
-		CHERRY_PLANKS,
-		CHERRY_LOG,
-		GRASS,
-		TNT,
-		OAK_LOG,
-		OAK_LEAVES,
-		ROSE,
+    enum Block : BlockInt {
+        AIR,
+        WATER,
+        BEDROCK,
+        DIRT,
+        COBBLE,
+        STONE,
+        GLASS,
+        OAK_PLANKS,
+        CHERRY_PLANKS,
+        CHERRY_LOG,
+        GRASS,
+        TNT,
+        OAK_LOG,
+        OAK_LEAVES,
+        ROSE,
         TALL_GRASS,
         PINK_TULIP,
         SAND,
         CLAY,
         GRAVEL,
-		NUM_BLOCKS
-	};
-    
+        NUM_BLOCKS
+    };
+
     // enum of model IDs
-	enum BlockModel: uint8_t {
-		CUBE,
-		CROSS,
-		NUM_MODELS
-	};
+    enum BlockModel : uint8_t {
+        CUBE,
+        CROSS,
+        NUM_MODELS
+    };
 
     /*
     Struct that contains the start and end pointers for an array containing
     the vertex information for a block model
     */
-	struct BlockModelStruct {
-		uint32_t* begin = nullptr;
-		uint32_t* end = nullptr;
-	};
-    
+    struct BlockModelStruct {
+        uint32_t* begin = nullptr;
+        uint32_t* end = nullptr;
+    };
+
     // Struct containing the block information for a single block type
-	struct BlockDataStruct {
-		bool opaque;
-		uint8_t unique_faces;
-		MaterialInt material;
-		TextureInt top_face;
-		TextureInt bottom_face;
-		TextureInt left_face;
-		TextureInt right_face;
-		TextureInt front_face;
-		TextureInt back_face;
-		ModelInt model;
-	};
+    struct BlockDataStruct {
+        bool opaque;
+        uint8_t unique_faces;
+        MaterialInt material;
+        TextureInt top_face;
+        TextureInt bottom_face;
+        TextureInt left_face;
+        TextureInt right_face;
+        TextureInt front_face;
+        TextureInt back_face;
+        ModelInt model;
+    };
 
     // Global arrays used to fetch certain information of blocks by using their ID as array index
-	extern BlockDataStruct BlockData[NUM_BLOCKS];
-	extern BlockModelStruct BlockModelData[NUM_MODELS];
-    
+    extern BlockDataStruct BlockData[NUM_BLOCKS];
+    extern BlockModelStruct BlockModelData[NUM_MODELS];
+
     /*
     Block texture size in pixels.
     NOTE: You cannot change this value without making refactoring changes to the meshing of
     custom model blocks. Just leave it alone please.
     */
     inline constexpr unsigned int TEXTURE_SIZE = 16;
-    
+
     // The max possible frames for an animated tile.
     inline constexpr unsigned int MAX_ANIMATION_FRAMES = 32;
 
     /*
     Loads block data from res/blocks.yml and fills the BlockData array
-    with BlockDataStruct for each block. 
+    with BlockDataStruct for each block.
     NOTE: Must be called before trying to access BlockData!
     */
-	void InitBlocks();
+    void InitBlocks();
 };
 
 #endif // !BLOCK_H

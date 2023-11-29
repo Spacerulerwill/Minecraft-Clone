@@ -18,13 +18,13 @@ License: MIT
 #include <opengl/Window.hpp>
 
 namespace engine {
-	class Application {
-	private:
+    class Application {
+    private:
         std::unique_ptr<Window> m_Window;
         MSAARenderer* p_MSAARenderer = nullptr;
         World* m_World = nullptr;
         BlockInt m_SelectedBlock = GRASS;
-        
+
         bool m_Wireframe = false;
         bool m_PlayingGame = false;
 
@@ -33,20 +33,20 @@ namespace engine {
 
         std::string MainMenu();
         void ProcessInput(Camera& camera);
-	public:
+    public:
         Application();
 
-		void Run();
+        void Run();
         void GLFWMouseMoveCallback(GLFWwindow* window, double xposIn, double yposIn);
-		void GLFWScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
-		void GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-		void GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
-		void GLFWFramebufferResizeCallback(GLFWwindow* window, int width, int height);
-		Application(const Application& arg) = delete; // Copy constructor
-		Application(const Application&& arg) = delete;  // Move constructor
-		Application& operator=(const Application& arg) = delete; // Assignment operator
-		Application& operator=(const Application&& arg) = delete; // Move operator
-	};
+        void GLFWScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+        void GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+        void GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+        void GLFWFramebufferResizeCallback(GLFWwindow* window, int width, int height);
+        Application(const Application& arg) = delete; // Copy constructor
+        Application(const Application&& arg) = delete;  // Move constructor
+        Application& operator=(const Application& arg) = delete; // Assignment operator
+        Application& operator=(const Application&& arg) = delete; // Move operator
+    };
 };
 #endif // !APPLICATION_H
 

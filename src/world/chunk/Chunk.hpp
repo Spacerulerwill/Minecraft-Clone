@@ -26,9 +26,9 @@ namespace engine {
 
     class ChunkRegion;
 
-	constexpr float BLOCK_SCALE = 1.0f;
+    constexpr float BLOCK_SCALE = 1.0f;
     constexpr float CHUNK_SCALE = CS * BLOCK_SCALE;
-	constexpr float INV_BLOCK_SCALE = 1 / BLOCK_SCALE;
+    constexpr float INV_BLOCK_SCALE = 1 / BLOCK_SCALE;
 
     // Flatten 3D coordinate to a 1D index for the chunk voxel array
     inline int VoxelIndex(Vec3<int> pos) {
@@ -46,41 +46,41 @@ namespace engine {
     * A water vertex buffer - 8 byte vertices
     * A custom block model vertex buffer - 8 byte vertices
     */
-	class Chunk {
-	private:        
+    class Chunk {
+    private:
         // World space chunk position
         Vec3<int> m_Pos = Vec3<int>(0);
 
         // Array to store voxel ids
-    	BlockInt* m_Voxels = nullptr;
-        
+        BlockInt* m_Voxels = nullptr;
+
         /*
         OpenGL Buffer objects to store vertex data
         */
-		VertexBuffer m_VBO;
-		VertexArray m_VAO;
-		std::vector<CubeChunkVertex> m_Vertices;
-		size_t m_VertexCount = 0;
+        VertexBuffer m_VBO;
+        VertexArray m_VAO;
+        std::vector<CubeChunkVertex> m_Vertices;
+        size_t m_VertexCount = 0;
 
-		VertexBuffer m_WaterVBO;
-		VertexArray m_WaterVAO;
-		std::vector<CubeChunkVertex> m_WaterVertices;
-		size_t m_WaterVertexCount = 0;
+        VertexBuffer m_WaterVBO;
+        VertexArray m_WaterVAO;
+        std::vector<CubeChunkVertex> m_WaterVertices;
+        size_t m_WaterVertexCount = 0;
 
         VertexBuffer m_CustomModelVBO;
-		VertexArray m_CustomModelVAO;
-		std::vector<CustomModelChunkVertex> m_CustomModelVertices;
-		size_t m_CustomModelVertexCount = 0;
+        VertexArray m_CustomModelVAO;
+        std::vector<CustomModelChunkVertex> m_CustomModelVertices;
+        size_t m_CustomModelVertexCount = 0;
 
         // Model matrix representing the world space transformations of the chunk
-		Mat4<float> m_Model = Mat4<float>(1.0f);
+        Mat4<float> m_Model = Mat4<float>(1.0f);
 
         void AddVertexBufferAttributes();
         void SetupModelMatrix(Vec3<int> chunkPos);
-        
-	public:
+
+    public:
         Chunk(Vec3<int> chunkPos, bool allocate);
-		~Chunk();
+        ~Chunk();
         Chunk(Chunk&& other); // move constructor
         Chunk& operator=(Chunk&& other); // move assignment
 
@@ -94,16 +94,16 @@ namespace engine {
 
         // flag to indicate whether the chunk has had its vertex data sent to the GPU
         std::atomic<bool> buffered = false;
-        
+
         // Use greedy meshing to generate a chunk mesh vertex data
-		void CreateMesh();
+        void CreateMesh();
 
         // Send the vertex data to the GPU
-		void BufferData();
-        
+        void BufferData();
+
         // Drawing functions for the 3 respective parts of the chunk's mesh
-		void DrawOpaque(Shader& shader);
-		void DrawWater(Shader& shader);
+        void DrawOpaque(Shader& shader);
+        void DrawWater(Shader& shader);
         void DrawCustomModelBlocks(Shader& shader);
 
         /*
@@ -121,8 +121,8 @@ namespace engine {
         for all axes. This is due to the outer padding layer.
         */
         inline void SetBlock(BlockInt block, Vec3<int> pos) {
-			m_Voxels[VoxelIndex(pos)] = block;
-		}
+            m_Voxels[VoxelIndex(pos)] = block;
+        }
 
         /*
         For each side of the chunk, grab the outer layer of the chunk adjacent and

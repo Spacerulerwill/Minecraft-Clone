@@ -16,9 +16,9 @@ namespace engine {
     MSAARenderer is an interface for rendering the screen to a texture with MSAA,
     allowing for a post processing shader on the resultant texture.
     */
-	class MSAARenderer {
-	public:
-		MSAARenderer(GLsizei width, GLsizei height);
+    class MSAARenderer {
+    public:
+        MSAARenderer(GLsizei width, GLsizei height);
         ~MSAARenderer();
 
         // Bind the MSAA framebuffer object for rendering
@@ -26,7 +26,7 @@ namespace engine {
 
         // Blit the MSAA FBO to the intermediate FBO, and draw that intermediate FBO onto a quad with a post process shader
         void Draw(const Shader& postprocessShader) const;
-	private:
+    private:
         VertexBuffer m_VBO;
         VertexArray m_VAO;
         GLsizei width = 0;
@@ -36,7 +36,7 @@ namespace engine {
         GLuint rbo = 0;
         GLuint intermediateFBO = 0;
         GLuint screenTexture;
-	};
+    };
 }
 
 #endif // !FRAMEBUFFER_H

@@ -7,7 +7,7 @@ License: MIT
 
 engine::VertexBufferLayout::VertexBufferLayout() :m_Stride(0)
 {
-    
+
 }
 
 template <>
@@ -20,7 +20,7 @@ void engine::VertexBufferLayout::AddAttribute<float>(unsigned int count)
 template <>
 void engine::VertexBufferLayout::AddAttribute<unsigned int>(unsigned int count)
 {
-    m_Elements.push_back({ GL_UNSIGNED_INT, count, GL_FALSE});
+    m_Elements.push_back({ GL_UNSIGNED_INT, count, GL_FALSE });
     m_Stride += VertexBufferLayoutElement::GetSize(GL_UNSIGNED_INT) * count;
 }
 
@@ -34,12 +34,12 @@ void engine::VertexBufferLayout::AddAttribute<int>(unsigned int count)
 
 std::vector<engine::VertexBufferLayoutElement> engine::VertexBufferLayout::GetElements() const
 {
-	return m_Elements;
+    return m_Elements;
 }
 
 unsigned int engine::VertexBufferLayout::GetStride() const
 {
-	return m_Stride;
+    return m_Stride;
 }
 
 /*

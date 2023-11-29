@@ -3,8 +3,8 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#include <opengl/VertexArray.hpp>
 #include "glad/gl.h"
+#include <opengl/VertexArray.hpp>
 #include <util/Log.hpp>
 
 engine::VertexArray::VertexArray()
@@ -14,17 +14,17 @@ engine::VertexArray::VertexArray()
 
 engine::VertexArray::~VertexArray()
 {
-	glDeleteVertexArrays(1, &m_ID);
+    glDeleteVertexArrays(1, &m_ID);
 }
 
-engine::VertexArray::VertexArray(VertexArray &&other) : m_ID(other.m_ID)
+engine::VertexArray::VertexArray(VertexArray&& other) : m_ID(other.m_ID)
 {
     other.m_ID = 0;
 }
 
 engine::VertexArray& engine::VertexArray::operator=(VertexArray&& other)
 {
-    if(this != &other)
+    if (this != &other)
     {
         glDeleteVertexArrays(1, &m_ID);
         std::swap(m_ID, other.m_ID);
@@ -54,13 +54,13 @@ void engine::VertexArray::AddBuffer(const engine::VertexBuffer& vb, const engine
 
 void engine::VertexArray::Bind() const
 {
-	glBindVertexArray(m_ID);
+    glBindVertexArray(m_ID);
 
 }
 
 void engine::VertexArray::Unbind() const
 {
-	glBindVertexArray(0);
+    glBindVertexArray(0);
 }
 
 /*

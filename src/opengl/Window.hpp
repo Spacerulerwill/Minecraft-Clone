@@ -13,20 +13,20 @@ namespace engine {
     class Application;
 
     class Window {
-        private:
-            GLFWwindow* p_Window = nullptr;
-        public:
-            Window(Application* app, unsigned int width, unsigned int height, const char* title);
-            ~Window();
-            void Bind() const;
-            void Unbind() const;
-            void SetShouldClose(int value);
-            bool ShouldClose() const;
-            void SetHidden();
-            void SetVisible();
-            void SwapBuffers();
-            bool IsKeyPressed(int key) const;
-            GLFWwindow* GetWindow() const;
+    private:
+        GLFWwindow* p_Window = nullptr;
+    public:
+        Window(Application* app, unsigned int width, unsigned int height, const char* title);
+        ~Window();
+        void Bind() const;
+        void Unbind() const;
+        void SetShouldClose(int value);
+        bool ShouldClose() const;
+        void SetHidden();
+        void SetVisible();
+        void SwapBuffers();
+        bool IsKeyPressed(int key) const;
+        GLFWwindow* GetWindow() const;
     };
 
     void framebuffer_size_callback(GLFWwindow* window, int width, int height);

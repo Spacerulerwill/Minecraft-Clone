@@ -12,36 +12,36 @@ License: MIT
 #include <math/Vec3.hpp>
 
 namespace engine {
-    template<std::floating_point T> 
-	class Mat4 {
-	private:
-		std::array<T, 16> m_Data;
-	public:
-		Mat4() : m_Data({
-            T(0), T(0), T(0), T(0),
-            T(0), T(0), T(0), T(0),
-            T(0), T(0), T(0), T(0),
-            T(0), T(0), T(0), T(0)
-        }) {}
+    template<std::floating_point T>
+    class Mat4 {
+    private:
+        std::array<T, 16> m_Data;
+    public:
+        Mat4() : m_Data({
+                  T(0), T(0), T(0), T(0),
+                  T(0), T(0), T(0), T(0),
+                  T(0), T(0), T(0), T(0),
+                  T(0), T(0), T(0), T(0)
+            }) {}
 
-		Mat4(T v) : m_Data({
-            v, T(0), T(0), T(0),
-            T(0), v, T(0), T(0),
-            T(0), T(0), v, T(0),
-            T(0), T(0), T(0), v
-        }) {}
+        Mat4(T v) : m_Data({
+                  v, T(0), T(0), T(0),
+                  T(0), v, T(0), T(0),
+                  T(0), T(0), v, T(0),
+                  T(0), T(0), T(0), v
+            }) {}
 
-		Mat4(const std::array<T, 16>& data) : m_Data(data) {}
+        Mat4(const std::array<T, 16>& data) : m_Data(data) {}
         ;
-		Mat4(T v_0, T v_1, T v_2, T v_3, T v_4, T v_5, T v_6, T v_7, T v_8, T v_9, T v_10, T v_11, T v_12, T v_13, T v_14, T v_15) : m_Data({
-            v_0, v_1, v_2, v_3,
-            v_4, v_5, v_6, v_7,
-            v_8, v_9, v_10, v_11,
-            v_12, v_13, v_14, v_15
-        }) {};
+        Mat4(T v_0, T v_1, T v_2, T v_3, T v_4, T v_5, T v_6, T v_7, T v_8, T v_9, T v_10, T v_11, T v_12, T v_13, T v_14, T v_15) : m_Data({
+                  v_0, v_1, v_2, v_3,
+                  v_4, v_5, v_6, v_7,
+                  v_8, v_9, v_10, v_11,
+                  v_12, v_13, v_14, v_15
+            }) {};
 
-		// Return a pointer to the first element in the matrix
-		int determinant() const {
+        // Return a pointer to the first element in the matrix
+        int determinant() const {
             return
                 m_Data[0] * (
                     m_Data[5] * (m_Data[10] * m_Data[15] - m_Data[14] * m_Data[11])
@@ -65,7 +65,7 @@ namespace engine {
                     );
         }
 
-		void inverse() {
+        void inverse() {
             int det = determinant();
             assert(det != 0);
             T inv_determinant = T(1) / det;
@@ -158,7 +158,7 @@ namespace engine {
             };
         }
 
-		void transpose() {
+        void transpose() {
             std::swap(m_Data[1], m_Data[4]);
             std::swap(m_Data[8], m_Data[2]);
             std::swap(m_Data[12], m_Data[3]);
@@ -260,7 +260,7 @@ namespace engine {
             );
         }
 
-		static Mat4 transposed(const Mat4& mat4) {
+        static Mat4 transposed(const Mat4& mat4) {
             return Mat4(
                 mat4[0], mat4[4], mat4[8], mat4[12],
                 mat4[1], mat4[5], mat4[9], mat4[13],
@@ -272,8 +272,8 @@ namespace engine {
         const T* GetPointer() const {
             return &m_Data[0];
         }
-        
-		Mat4 operator+(const Mat4& other) const {
+
+        Mat4 operator+(const Mat4& other) const {
             return Mat4(
                 m_Data[0] + other[0], m_Data[1] + other[1], m_Data[2] + other[2], m_Data[3] + other[3],
                 m_Data[4] + other[4], m_Data[5] + other[5], m_Data[6] + other[6], m_Data[7] + other[7],
@@ -282,7 +282,7 @@ namespace engine {
             );
         }
 
-		void operator+=(const Mat4& other) {
+        void operator+=(const Mat4& other) {
             m_Data[0] += other[0];
             m_Data[1] += other[1];
             m_Data[2] += other[2];
@@ -301,7 +301,7 @@ namespace engine {
             m_Data[15] += other[15];
         }
 
-		Mat4 operator-(const Mat4& other) const {
+        Mat4 operator-(const Mat4& other) const {
             return Mat4(
                 m_Data[0] - other[0], m_Data[1] - other[1], m_Data[2] - other[2], m_Data[3] - other[3],
                 m_Data[4] - other[4], m_Data[5] - other[5], m_Data[6] - other[6], m_Data[7] - other[7],
@@ -310,7 +310,7 @@ namespace engine {
             );
         }
 
-		void operator-=(const Mat4& other) {
+        void operator-=(const Mat4& other) {
             m_Data[0] -= other[0];
             m_Data[1] -= other[1];
             m_Data[2] -= other[2];
@@ -329,7 +329,7 @@ namespace engine {
             m_Data[15] -= other[15];
         }
 
-		Mat4 operator*(const Mat4& other) const {
+        Mat4 operator*(const Mat4& other) const {
             T v_0 = m_Data[0] * other[0] + m_Data[1] * other[4] + m_Data[2] * other[8] + m_Data[3] * other[12];
             T v_1 = m_Data[0] * other[1] + m_Data[1] * other[5] + m_Data[2] * other[9] + m_Data[3] * other[13];
             T v_2 = m_Data[0] * other[2] + m_Data[1] * other[6] + m_Data[2] * other[10] + m_Data[3] * other[14];
@@ -354,7 +354,7 @@ namespace engine {
             );
         }
 
-		void operator*=(const Mat4& other) {
+        void operator*=(const Mat4& other) {
             m_Data[0] = m_Data[0] * other[0] + m_Data[1] * other[4] + m_Data[2] * other[8] + m_Data[3] * other[12];
             m_Data[1] = m_Data[0] * other[1] + m_Data[1] * other[5] + m_Data[2] * other[9] + m_Data[3] * other[13];
             m_Data[2] = m_Data[0] * other[2] + m_Data[1] * other[6] + m_Data[2] * other[10] + m_Data[3] * other[14];
@@ -373,7 +373,7 @@ namespace engine {
             m_Data[15] = m_Data[12] * other[3] + m_Data[13] * other[7] + m_Data[14] * other[11] + m_Data[15] * other[15];
         }
 
-		Vec4<T> operator*(const Vec4<T>& other) {
+        Vec4<T> operator*(const Vec4<T>& other) {
             return Vec4<T>(
                 m_Data[0] * other.x + m_Data[1] * other.y * m_Data[2] * other.z + m_Data[3] * other.w,
                 m_Data[4] * other.x + m_Data[5] * other.y * m_Data[6] * other.z + m_Data[7] * other.w,
@@ -382,7 +382,7 @@ namespace engine {
             );
         }
 
-		Mat4 operator*(T scalar) const {
+        Mat4 operator*(T scalar) const {
             return Mat4(
                 m_Data[0] * scalar, m_Data[1] * scalar, m_Data[2] * scalar, m_Data[3] * scalar,
                 m_Data[4] * scalar, m_Data[5] * scalar, m_Data[6] * scalar, m_Data[7] * scalar,
@@ -391,7 +391,7 @@ namespace engine {
             );
         }
 
-		void operator*=(T scalar) {
+        void operator*=(T scalar) {
             m_Data[0] *= scalar;
             m_Data[1] *= scalar;
             m_Data[2] *= scalar;
@@ -410,7 +410,7 @@ namespace engine {
             m_Data[15] *= scalar;
         }
 
-		Mat4 operator/(T scalar) const {
+        Mat4 operator/(T scalar) const {
             T inv_scalar = T(1) / scalar;
             return Mat4(
                 m_Data[0] * inv_scalar, m_Data[1] * inv_scalar, m_Data[2] * inv_scalar, m_Data[3] * inv_scalar,
@@ -420,7 +420,7 @@ namespace engine {
             );
         }
 
-		void operator/=(T scalar) {
+        void operator/=(T scalar) {
             T inv_scalar = T(1) / scalar;
             m_Data[0] *= inv_scalar;
             m_Data[1] *= inv_scalar;
@@ -440,23 +440,23 @@ namespace engine {
             m_Data[15] *= inv_scalar;
         }
 
-		T& operator[](size_t idx) {
+        T& operator[](size_t idx) {
             return m_Data[idx];
         }
 
-		T operator[](size_t idx) const {
+        T operator[](size_t idx) const {
             return m_Data[idx];
         }
 
-		operator std::string() const {
+        operator std::string() const {
             return fmt::format("|{} {} {} {}|\n|{} {} {} {}|\n|{} {} {} {}|\n|{} {} {} {}|",
                 m_Data[0], m_Data[1], m_Data[2], m_Data[3],
                 m_Data[4], m_Data[5], m_Data[6], m_Data[7],
                 m_Data[8], m_Data[9], m_Data[10], m_Data[11],
                 m_Data[12], m_Data[13], m_Data[14], m_Data[15]
-	        );
+            );
         }
-		friend std::ostream& operator<<(std::ostream& os, const Mat4& mat) {
+        friend std::ostream& operator<<(std::ostream& os, const Mat4& mat) {
             os << fmt::format("|{} {} {} {}|\n|{} {} {} {}|\n|{} {} {} {}|\n|{} {} {} {}|",
                 mat[0], mat[1], mat[2], mat[3],
                 mat[4], mat[5], mat[6], mat[7],
@@ -465,7 +465,7 @@ namespace engine {
             );
             return os;
         }
-	};
+    };
 }
 #endif // !MAT4_H
 

@@ -3,16 +3,16 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 LICENSE: MIT
 */
 
+#include <util/Constants.hpp>
 #include <util/Log.hpp>
 #include <world/Player.hpp>
 #include <world/World.hpp>
-#include <util/Constants.hpp>
 
 engine::Player::Player() {
 
 }
 
-engine::Player::Player(Vec3<float> pos, float pitch, float yaw): m_Camera(pos, pitch, yaw) {
+engine::Player::Player(Vec3<float> pos, float pitch, float yaw) : m_Camera(pos, pitch, yaw) {
 
 }
 

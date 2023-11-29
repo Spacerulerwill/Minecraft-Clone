@@ -3,8 +3,8 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 LICENSE: MIT
 */
 
-#include <world/Skybox.hpp>
 #include <opengl/VertexBufferLayout.hpp>
+#include <world/Skybox.hpp>
 
 float engine::Skybox::m_SkyboxVertices[108] = {
     -1.0f,  1.0f, -1.0f,
@@ -50,7 +50,7 @@ float engine::Skybox::m_SkyboxVertices[108] = {
     1.0f, -1.0f,  1.0f
 };
 
-const char * engine::Skybox::m_SkyboxFaces[6] = {
+const char* engine::Skybox::m_SkyboxFaces[6] = {
     "res/textures/skybox/right.jpg",
     "res/textures/skybox/left.jpg",
     "res/textures/skybox/top.jpg",
@@ -60,10 +60,10 @@ const char * engine::Skybox::m_SkyboxFaces[6] = {
 };
 
 engine::Skybox::Skybox()
-{   
+{
     glActiveTexture(GL_TEXTURE0);
     m_Cubemap = Texture<GL_TEXTURE_CUBE_MAP>(m_SkyboxFaces);
-    
+
     // Setup Buffers
     VertexBufferLayout bufLayout;
     bufLayout.AddAttribute<float>(3);

@@ -10,28 +10,28 @@ License: MIT
 #include <opengl/VertexBufferLayout.hpp>
 
 namespace engine {
-	class VertexArray {
-	private:
-		GLuint m_ID = 0;
-	public:
-		VertexArray();
-        
-		~VertexArray();
+    class VertexArray {
+    private:
+        GLuint m_ID = 0;
+    public:
+        VertexArray();
 
-        VertexArray(const VertexArray &) = delete;
+        ~VertexArray();
+
+        VertexArray(const VertexArray&) = delete;
 
         VertexArray& operator=(const VertexArray&) = delete;
 
-        VertexArray(VertexArray &&other);
+        VertexArray(VertexArray&& other);
 
         VertexArray& operator=(VertexArray&& other);
 
-		GLuint GetID() { return m_ID; }
+        GLuint GetID() { return m_ID; }
 
-		void AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout);
-		void Bind() const;
-		void Unbind() const;
-	};
+        void AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout);
+        void Bind() const;
+        void Unbind() const;
+    };
 }
 
 #endif // !VERTEXARRAY_H

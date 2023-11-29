@@ -3,24 +3,24 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#include <util/Log.hpp>
-#include <glad/gl.h>
+#include <algorithm>
+#include <chrono>
 #include <core/Application.hpp>
 #include <core/Shader.hpp>
-#include <opengl/Texture.hpp>
+#include <filesystem>
+#include <glad/gl.h>
+#include <math/Math.hpp>
+#include <memory>
 #include <opengl/BufferObject.hpp>
+#include <opengl/Texture.hpp>
 #include <opengl/VertexArray.hpp>
 #include <opengl/VertexBufferLayout.hpp>
+#include <util/Exceptions.hpp>
+#include <util/IO.hpp>
+#include <util/Log.hpp>
 #include <world/Block.hpp>
 #include <world/chunk/Chunk.hpp>
 #include <world/World.hpp>
-#include <util/IO.hpp>
-#include <util/Exceptions.hpp>
-#include <math/Math.hpp>
-#include <algorithm>
-#include <filesystem>
-#include <memory>
-#include <chrono>
 
 // free floating callback functions
 namespace engine {
@@ -64,7 +64,8 @@ std::string engine::Application::MainMenu() {
             uintmax_t numFilesDeleted = std::filesystem::remove_all(fmt::format("worlds/{}", worldTodelete));
             if (numFilesDeleted == 0) {
                 LOG_ERROR(fmt::format("No world named {} found!", worldTodelete));
-            } else {
+            }
+            else {
                 LOG_ERROR(fmt::format("Deleted world {}", worldTodelete));
             }
             continue;
@@ -76,24 +77,24 @@ std::string engine::Application::MainMenu() {
     if (option == "l") {
         // Get the names of all the worlds available
         std::vector<std::string> worldOptions;
-        for(auto& p : std::filesystem::directory_iterator("worlds"))
+        for (auto& p : std::filesystem::directory_iterator("worlds"))
             if (p.is_directory())
                 worldOptions.push_back(p.path().filename().string());
         std::cout << "Select world: \n";
-        for(std::string& worldOption : worldOptions) {
+        for (std::string& worldOption : worldOptions) {
             std::cout << "* " << worldOption << "\n";
         }
         do {
             std::getline(std::cin, worldName);
         } while (!std::filesystem::is_directory(fmt::format("worlds/{}", worldName)));
-    } 
+    }
 
     if (option == "c") {
         while (true) {
             std::cout << "Enter world name: ";
             std::getline(std::cin, worldName);
 
-            if (worldName == ""){
+            if (worldName == "") {
                 LOG_ERROR("World name cannot be empty!");
                 continue;
             }
@@ -102,7 +103,8 @@ std::string engine::Application::MainMenu() {
 
             if (worldCreated) {
                 break;
-            } else {
+            }
+            else {
                 LOG_ERROR("World already exists!");
             }
         }
@@ -118,25 +120,26 @@ std::string engine::Application::MainMenu() {
         siv::PerlinNoise::seed_type seed;
         if (seedString == "") {
             seed = rand() % std::numeric_limits<siv::PerlinNoise::seed_type>().max();
-        } else {
+        }
+        else {
             std::hash<std::string> hasher;
             siv::PerlinNoise::seed_type seed = static_cast<siv::PerlinNoise::seed_type>(hasher(seedString));
         }
 
         // Create world data file with seed and last played
-        engine::WorldSave worldSave {
+        engine::WorldSave worldSave{
             .seed = seed,
         };
-    
+
         engine::WriteStructToDisk(fmt::format("worlds/{}/world.dat", worldName), worldSave);
 
         // Create player save data with their starting position and rotation
-        engine::PlayerSave playerSave {
+        engine::PlayerSave playerSave{
             .position = engine::Vec3<float>(0.0f, 1000.0f, 0.0f),
             .pitch = 0.0f,
             .yaw = -90.0f
         };
-        
+
         // Write player save data to file
         engine::WriteStructToDisk(fmt::format("worlds/{}/player.dat", worldName), playerSave);
     }
@@ -144,19 +147,19 @@ std::string engine::Application::MainMenu() {
 }
 
 engine::Application::Application() {
-    
+
 }
 
 void engine::Application::Run()
-{    
+{
     srand(time(NULL));
     std::filesystem::create_directory("worlds");
 
-     // Try and intialise GLFW
+    // Try and intialise GLFW
     if (!glfwInit()) {
         glfwTerminate();
-		throw std::runtime_error("Failed to intialise GLFW");
-	}
+        throw std::runtime_error("Failed to intialise GLFW");
+    }
 
     // Create our window
     m_Window = std::make_unique<Window>(this, SCREEN_WIDTH, SCREEN_HEIGHT, "Voxel Engine");
@@ -164,17 +167,17 @@ void engine::Application::Run()
 
     // Load OpenGL function pointers
     if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
-	{
-		throw std::runtime_error("Failed to intialise GLAD");
-	}
+    {
+        throw std::runtime_error("Failed to intialise GLAD");
+    }
 
     /*
-	OpenGl setting configuration. 
+    OpenGl setting configuration.
     We are enabling blend for alpha transparency blending and using the default blend function
-	We also enable culling faces as an optimisation using the default winding order.
+    We also enable culling faces as an optimisation using the default winding order.
     We enable multisample to reduce moire patterns on distant voxel geometry
-	*/
-    glEnable(GL_MULTISAMPLE);  
+    */
+    glEnable(GL_MULTISAMPLE);
     glEnable(GL_POLYGON_SMOOTH);
     glDisable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -194,13 +197,13 @@ void engine::Application::Run()
 
     // Create framebuffer object and quad
     p_MSAARenderer = new MSAARenderer(SCREEN_WIDTH, SCREEN_HEIGHT);
-    
+
     // Orthographic projection matrix maps normalised device coordinates to pixel screen space coordinates
     Mat4 ortho = orthographic(0.0f, SCREEN_HEIGHT, 0.0f, SCREEN_WIDTH, -1.0f, 100.0f);
-    
+
     // Load crosshair texture
     glActiveTexture(GL_TEXTURE1);
-    Tex2D crosshairTexture("res/textures/ui/crosshair.png"); 
+    Tex2D crosshairTexture("res/textures/ui/crosshair.png");
 
     // Create vertices, VBO and VAO for crosshair
     int crosshair_size = 32;
@@ -221,7 +224,7 @@ void engine::Application::Run()
     VertexBufferLayout bufferLayout2;
     bufferLayout2.AddAttribute<float>(4);
     VertexArray crosshairVAO;
-    crosshairVAO.AddBuffer(crosshairVBO, bufferLayout2);  
+    crosshairVAO.AddBuffer(crosshairVBO, bufferLayout2);
 
     // Load grass mask texture
     glActiveTexture(GL_TEXTURE2);
@@ -236,7 +239,7 @@ void engine::Application::Run()
 
     double lastTime = 0.0f;
     int currentAtlasIndex = 0;
-    
+
     while (!m_Window->ShouldClose()) {
         std::string worldName = MainMenu();
 
@@ -246,7 +249,8 @@ void engine::Application::Run()
 
         try {
             m_World = new World(worldName.c_str());
-        } catch (WorldCorruptException& e) {
+        }
+        catch (WorldCorruptException& e) {
             LOG_ERROR(e.what());
             continue;
         }
@@ -255,9 +259,9 @@ void engine::Application::Run()
 
         m_Window->SetVisible();
         m_PlayingGame = true;
-        
+
         // Main game loop
-        while (m_PlayingGame) { 
+        while (m_PlayingGame) {
 
             // Calculate delta time
             float currentFrame = static_cast<float>(glfwGetTime());
@@ -278,7 +282,7 @@ void engine::Application::Run()
             player.BlockRaycast(m_World);
 
             // are we rendering in wireframe mode?
-            if (m_Wireframe)    
+            if (m_Wireframe)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             else
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -289,13 +293,13 @@ void engine::Application::Run()
             glEnable(GL_DEPTH_TEST);
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            
+
             m_World->Draw(chunkShader, waterShader, customModelShader);
 
-            if(m_Wireframe)
+            if (m_Wireframe)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            
-            /* 
+
+            /*
             Draw our screen quad with the result of the msaa framebuffer
             */
             glDisable(GL_DEPTH_TEST);
@@ -323,9 +327,9 @@ void engine::Application::Run()
 
 void engine::Application::GLFWFramebufferResizeCallback(GLFWwindow* window, int width, int height)
 {
-	// On resize, we adjust glViewport and regenerate our framebuffer at the new resolution
+    // On resize, we adjust glViewport and regenerate our framebuffer at the new resolution
     glViewport(0, 0, width, height);
-	glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0);
     delete p_MSAARenderer;
     p_MSAARenderer = new MSAARenderer(width, height);
 }
@@ -366,80 +370,80 @@ void engine::Application::GLFWScrollCallback(GLFWwindow* window, double xoffset,
 void engine::Application::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
     switch (button) {
-        case GLFW_MOUSE_BUTTON_LEFT: {
-            if (action == GLFW_PRESS) {
-                const VoxelRaycastResult& raycastResult = m_World->GetPlayer().GetBlockRaycastResult();
-                Chunk* chunk = raycastResult.chunk;
-                if (chunk != nullptr) {
-                    chunk->SetBlock(AIR, raycastResult.blockPos);
-                    chunk->CreateMesh();
-                    chunk->BufferData();
-                }
+    case GLFW_MOUSE_BUTTON_LEFT: {
+        if (action == GLFW_PRESS) {
+            const VoxelRaycastResult& raycastResult = m_World->GetPlayer().GetBlockRaycastResult();
+            Chunk* chunk = raycastResult.chunk;
+            if (chunk != nullptr) {
+                chunk->SetBlock(AIR, raycastResult.blockPos);
+                chunk->CreateMesh();
+                chunk->BufferData();
             }
-            break;
         }
-        case GLFW_MOUSE_BUTTON_RIGHT: {
-            if (action == GLFW_PRESS) {
-                const VoxelRaycastResult& raycastResult = m_World->GetPlayer().GetBlockRaycastResult();
-                Chunk* chunk = raycastResult.chunk;
-                if (chunk != nullptr && raycastResult.blockHit != AIR) {
-                    BlockInt blockToPlaceOn = chunk->GetBlock(raycastResult.blockPos);
-                    if (blockToPlaceOn != AIR) {
-                        Vec3<int> blockPlacePosition = raycastResult.blockPos + raycastResult.normal;
+        break;
+    }
+    case GLFW_MOUSE_BUTTON_RIGHT: {
+        if (action == GLFW_PRESS) {
+            const VoxelRaycastResult& raycastResult = m_World->GetPlayer().GetBlockRaycastResult();
+            Chunk* chunk = raycastResult.chunk;
+            if (chunk != nullptr && raycastResult.blockHit != AIR) {
+                BlockInt blockToPlaceOn = chunk->GetBlock(raycastResult.blockPos);
+                if (blockToPlaceOn != AIR) {
+                    Vec3<int> blockPlacePosition = raycastResult.blockPos + raycastResult.normal;
 
-                        // chunk edge cases - if we place and the block will end up in another chunk
-                        if (blockPlacePosition.x == CS_P_MINUS_ONE) {
-                            return;
-                        }
+                    // chunk edge cases - if we place and the block will end up in another chunk
+                    if (blockPlacePosition.x == CS_P_MINUS_ONE) {
+                        return;
+                    }
 
-                        else if (blockPlacePosition.x == 0) {
-                            return;
-                        }
+                    else if (blockPlacePosition.x == 0) {
+                        return;
+                    }
 
-                        if (blockPlacePosition.y == CS_P_MINUS_ONE) {
-                            return;
-                        }
+                    if (blockPlacePosition.y == CS_P_MINUS_ONE) {
+                        return;
+                    }
 
-                        if (blockPlacePosition.y == 0) {
-                            return;
-                        }
+                    if (blockPlacePosition.y == 0) {
+                        return;
+                    }
 
-                        if (blockPlacePosition.z == CS_P_MINUS_ONE) {
-                            return;
-                        }   
+                    if (blockPlacePosition.z == CS_P_MINUS_ONE) {
+                        return;
+                    }
 
-                        else if (blockPlacePosition.z == 0) {
-                            return;
-                        }
+                    else if (blockPlacePosition.z == 0) {
+                        return;
+                    }
 
-                        BlockInt blockAtPlacePosition = chunk->GetBlock(blockPlacePosition);
-                        if (blockAtPlacePosition == AIR) {
-                            chunk->SetBlock(m_SelectedBlock, blockPlacePosition);
-                            chunk->CreateMesh();
-                            chunk->BufferData();
-                        }
+                    BlockInt blockAtPlacePosition = chunk->GetBlock(blockPlacePosition);
+                    if (blockAtPlacePosition == AIR) {
+                        chunk->SetBlock(m_SelectedBlock, blockPlacePosition);
+                        chunk->CreateMesh();
+                        chunk->BufferData();
                     }
                 }
             }
-            break;
         }
-        case GLFW_MOUSE_BUTTON_MIDDLE: {
-            const VoxelRaycastResult& raycastResult = m_World->GetPlayer().GetBlockRaycastResult();
-            if (raycastResult.blockHit != AIR) {
-                m_SelectedBlock = raycastResult.blockHit;
-            }
-            break;
-        }
+        break;
     }
-    
+    case GLFW_MOUSE_BUTTON_MIDDLE: {
+        const VoxelRaycastResult& raycastResult = m_World->GetPlayer().GetBlockRaycastResult();
+        if (raycastResult.blockHit != AIR) {
+            m_SelectedBlock = raycastResult.blockHit;
+        }
+        break;
+    }
+    }
+
 }
-       
+
 void engine::Application::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
         m_Wireframe = !m_Wireframe;
     if (key == GLFW_KEY_TAB && action == GLFW_PRESS) {
-        if (m_SelectedBlock == NUM_BLOCKS-1) {
+        if (m_SelectedBlock == NUM_BLOCKS - 1) {
             m_SelectedBlock = 1;
         }
         else {

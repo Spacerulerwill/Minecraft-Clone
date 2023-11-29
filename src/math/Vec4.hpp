@@ -14,30 +14,30 @@ License: MIT
 
 namespace engine {
     template<Arithmetic T>
-	struct Vec4 {
+    struct Vec4 {
 
-		T x;
-		T y;
-		T z;
-		T w;
+        T x;
+        T y;
+        T z;
+        T w;
 
-		Vec4() : x(T(1)), y(T(1)), z(T(1)), w(T(1)) {}
+        Vec4() : x(T(1)), y(T(1)), z(T(1)), w(T(1)) {}
 
-		Vec4(T v) : x(v), y(v), z(v), w(v) {}
+        Vec4(T v) : x(v), y(v), z(v), w(v) {}
 
-		Vec4(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) {}
+        Vec4(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) {}
 
-        template <typename Type2> Vec4(const Vec4<Type2> &other): x(other.x), y(other.y), z(other.z), w(other.w) {}
+        template <typename Type2> Vec4(const Vec4<Type2>& other) : x(other.x), y(other.y), z(other.z), w(other.w) {}
 
-		float length() const {
+        float length() const {
             return sqrt(x * x + y * y + z * z + w * w);
         }
 
-		static T dot(const Vec4& first, const Vec4& second) {
+        static T dot(const Vec4& first, const Vec4& second) {
             return first.x * second.x + first.y * second.y + first.z * second.z + first.w * second.w;
         }
 
-		static Vec4 normalised(const Vec4& vec) {
+        static Vec4 normalised(const Vec4& vec) {
             float len = vec.length();
             assert(len != 0.0f);
             T inv_length = T(1) / len;
@@ -45,7 +45,7 @@ namespace engine {
             return Vec4(vec.x * inv_length, vec.y * inv_length, vec.z * inv_length, vec.z * inv_length);
         }
 
-		void normalise() {
+        void normalise() {
             float len = length();
             assert(len != 0.0f);
             T inv_length = T(1) / len;
@@ -55,46 +55,46 @@ namespace engine {
             w *= inv_length;
         }
 
-		Vec4 operator+(const Vec4& other) const {
+        Vec4 operator+(const Vec4& other) const {
             return Vec4(x + other.x, y + other.y, z + other.z, w + other.w);
         }
 
-		void operator+=(const Vec4& other) {
+        void operator+=(const Vec4& other) {
             x += other.x;
             y += other.y;
             z += other.z;
             w += other.w;
         }
 
-		Vec4 operator-(const Vec4& other) const {
+        Vec4 operator-(const Vec4& other) const {
             return Vec4(x - other.x, y - other.y, z - other.z, w - other.w);
         }
 
-		void operator-=(const Vec4& other) {
+        void operator-=(const Vec4& other) {
             x -= other.x;
             y -= other.y;
             z -= other.z;
             w -= other.w;
         }
 
-		Vec4 operator*(T scalar) const {
-	        return Vec4(x * scalar, y * scalar, z * scalar, w * scalar);
+        Vec4 operator*(T scalar) const {
+            return Vec4(x * scalar, y * scalar, z * scalar, w * scalar);
         }
 
-		void operator*=(T scalar) {
+        void operator*=(T scalar) {
             x *= scalar;
             y *= scalar;
             z *= scalar;
             w *= scalar;
         }
 
-		Vec4 operator/(T scalar) const {
+        Vec4 operator/(T scalar) const {
             assert(scalar != T(0));
             T inverse_scalar = T(1) / scalar;
             return Vec4(x * inverse_scalar, y * inverse_scalar, z * inverse_scalar, w * inverse_scalar);
         }
 
-		void operator/=(T scalar) {
+        void operator/=(T scalar) {
             assert(scalar != T(0));
             T inverse_scalar = T(1) / scalar;
             x *= inverse_scalar;
@@ -103,23 +103,23 @@ namespace engine {
             w *= inverse_scalar;
         }
 
-		bool operator==(const Vec4& other) const {
+        bool operator==(const Vec4& other) const {
             return x == other.x && y == other.y && z == other.z && w == other.w;
         }
 
-		bool operator!=(const Vec4& other) const {
+        bool operator!=(const Vec4& other) const {
             return !(*this == other);
         }
-        
-		operator std::string() const {
+
+        operator std::string() const {
             return fmt::format("({}, {}, {}, {})", x, y, z, w);
         }
 
-		friend std::ostream& operator<<(std::ostream& os, const Vec4& vec) {
+        friend std::ostream& operator<<(std::ostream& os, const Vec4& vec) {
             os << fmt::format("({}, {}, {}, {})", vec.x, vec.y, vec.z, vec.w);
-	        return os;
+            return os;
         }
-	};
+    };
 };
 
 #endif // !VEC4_H

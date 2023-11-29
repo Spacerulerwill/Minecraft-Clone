@@ -29,7 +29,7 @@ namespace engine {
         float pitch;
         float yaw;
     };
-    
+
     /*
     A world contains:
     * An std::unordered_map of Vec2<int> to ChunkRegions

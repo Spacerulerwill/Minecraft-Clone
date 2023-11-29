@@ -4,9 +4,9 @@ License: MIT
 */
 
 #include "core/Shader.hpp"
+#include <fmt/format.h>
 #include <glad/gl.h>
 #include <util/Log.hpp>
-#include <fmt/format.h>
 
 engine::Shader::Shader(std::string filepath) : m_Filepath(filepath) {
     ShaderSources shaders = ParseShader(filepath);
@@ -85,16 +85,16 @@ GLuint engine::Shader::CreateShader(std::string& vertex_source, std::string& fra
 }
 
 void engine::Shader::GetShaderUniformLocations() {
-    
+
     GLint i;
     GLint count;
 
     GLint size;
-    GLenum type; 
+    GLenum type;
 
     const GLsizei bufSize = 100;
-    GLchar name[bufSize]; 
-    GLsizei length; 
+    GLchar name[bufSize];
+    GLsizei length;
 
     glGetProgramiv(u_ID, GL_ACTIVE_UNIFORMS, &count);
     for (i = 0; i < count; i++)
@@ -136,11 +136,11 @@ void engine::Shader::SetIVec2(const std::string& name, const Vec2<int>& vec) con
     glUniform2i(GetLocation(name), vec.x, vec.y);
 }
 
-void engine::Shader::SetVec2(const std::string& name, const Vec2<float>& vec) const{
+void engine::Shader::SetVec2(const std::string& name, const Vec2<float>& vec) const {
     glUniform2f(GetLocation(name), vec.x, vec.y);
 }
 
-void engine::Shader::SetFloat(const std::string& name, float x)  const{
+void engine::Shader::SetFloat(const std::string& name, float x)  const {
     glUniform1f(GetLocation(name), x);
 }
 
@@ -160,7 +160,8 @@ void engine::Shader::Unbind() const {
 GLint engine::Shader::GetLocation(std::string name) const {
     try {
         return m_UnformLocations.at(name);
-    } catch (const std::out_of_range& e) {
+    }
+    catch (const std::out_of_range& e) {
         LOG_WARNING(fmt::format("Location of {} not found!", name));
         return -1;
     }

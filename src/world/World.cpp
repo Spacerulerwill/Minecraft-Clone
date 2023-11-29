@@ -3,14 +3,14 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 LICENSE: MIT
 */
 
-#include <world/World.hpp>
-#include <GLFW/glfw3.h>
-#include <util/Log.hpp>
-#include <util/IO.hpp>
 #include <fmt/format.h>
+#include <GLFW/glfw3.h>
 #include <util/Exceptions.hpp>
-#include <world/Player.hpp>
+#include <util/IO.hpp>
 #include <util/Log.hpp>
+#include <util/Log.hpp>
+#include <world/Player.hpp>
+#include <world/World.hpp>
 
 engine::World::World(const char* worldName) : m_WorldName(worldName) {
     bool success;
@@ -26,7 +26,7 @@ engine::World::World(const char* worldName) : m_WorldName(worldName) {
         throw WorldCorruptException(fmt::format("Failed to read world data. File worlds/{}/player.data is corrupted or missing!", worldName));
     m_Player = Player(playerSave.position, playerSave.pitch, playerSave.yaw);
 
-    m_Noise.reseed(worldSave.seed);    
+    m_Noise.reseed(worldSave.seed);
 }
 
 engine::Player& engine::World::GetPlayer() {
@@ -41,7 +41,8 @@ engine::ChunkRegion* engine::World::GetRegion(Vec2<int> pos) const {
     auto find = m_ChunkRegions.find(pos);
     if (find == m_ChunkRegions.end()) {
         return nullptr;
-    } else {
+    }
+    else {
         return (*find).second;
     }
 
@@ -57,16 +58,16 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
     chunkShader.SetMat4("view", view);
     chunkShader.SetInt("tex_array", 0);
     chunkShader.SetInt("grass_mask", 2);
-    for(auto& it : m_ChunkRegions) {
+    for (auto& it : m_ChunkRegions) {
         it.second->DrawOpaque(chunkShader);
     }
-    
+
     glDisable(GL_CULL_FACE);
     customModelShader.Bind();
     customModelShader.SetMat4("projection", perspective);
     customModelShader.SetMat4("view", view);
     customModelShader.SetInt("tex_array", 0);
-    for(auto& it : m_ChunkRegions) {
+    for (auto& it : m_ChunkRegions) {
         it.second->DrawCustomModel(customModelShader);
     }
     glEnable(GL_CULL_FACE);
@@ -80,21 +81,21 @@ void engine::World::Draw(Shader& chunkShader, Shader& waterShader, Shader& custo
     waterShader.SetMat4("projection", perspective);
     waterShader.SetMat4("view", view);
     waterShader.SetInt("tex_array", 0);
-    for(auto& it : m_ChunkRegions) {
+    for (auto& it : m_ChunkRegions) {
         it.second->DrawWater(waterShader);
     }
-    glDisable(GL_BLEND); 
+    glDisable(GL_BLEND);
 }
 
 void engine::World::GenerateChunks() {
     Vec3<float> playerPos = m_Player.GetCamera().GetPosition();
-    
+
     Vec2<int> chunkRegionPos = Vec2<int>(static_cast<int>(playerPos.x) / CHUNK_REGION_BLOCK_SIZE, static_cast<int>(playerPos.z) / CHUNK_REGION_BLOCK_SIZE);
-    if (playerPos.x < 0) 
+    if (playerPos.x < 0)
         chunkRegionPos.x--;
     if (playerPos.z < 0)
-        chunkRegionPos.y--; 
-    
+        chunkRegionPos.y--;
+
     auto find = m_ChunkRegions.find(chunkRegionPos);
     if (find == m_ChunkRegions.end()) {
         std::ifstream rf(fmt::format("worlds/{}/regions/{}.{}.region", m_WorldName, chunkRegionPos.x, chunkRegionPos.y), std::ios::in | std::ios::binary);
@@ -112,7 +113,7 @@ void engine::World::GenerateChunks() {
                     for (size_t i = 0; i < size; i++) {
                         Chunk* chunk = stack->GetChunk(i);
                         chunk->Allocate();
-                        rf.read(reinterpret_cast<char*>(chunk->GetBlockDataPointer()), CS_P3 * sizeof(BlockInt));        
+                        rf.read(reinterpret_cast<char*>(chunk->GetBlockDataPointer()), CS_P3 * sizeof(BlockInt));
                     }
                 }
             }
@@ -130,21 +131,21 @@ void engine::World::GenerateChunks() {
 
 engine::World::~World() {
     // Save player position and view direction
-    PlayerSave playerSave {
+    PlayerSave playerSave{
         .position = m_Player.GetCamera().GetPosition(),
         .pitch = m_Player.GetCamera().GetPitch(),
         .yaw = m_Player.GetCamera().GetYaw()
     };
     WriteStructToDisk(fmt::format("worlds/{}/player.dat", m_WorldName), playerSave);
-    
+
     // Delete chunk and unload chunk regions
-    for (const auto & [ pos, region ] : m_ChunkRegions) {
-        m_RegionUnloadPool.push_task([region, this]{
+    for (const auto& [pos, region] : m_ChunkRegions) {
+        m_RegionUnloadPool.push_task([region, this] {
             region->UnloadToFile(m_WorldName);
-        });
+            });
     }
     m_RegionUnloadPool.wait_for_tasks();
-    for (const auto & [ pos, region ] : m_ChunkRegions) {
+    for (const auto& [pos, region] : m_ChunkRegions) {
         delete region;
     }
 }

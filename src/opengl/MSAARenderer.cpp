@@ -4,10 +4,10 @@ LICENSE: MIT
 */
 
 #include <opengl/MSAARenderer.hpp>
-#include <util/Log.hpp>
 #include <util/Constants.hpp>
+#include <util/Log.hpp>
 
-engine::MSAARenderer::MSAARenderer(GLsizei width, GLsizei height): width(width), height(height){
+engine::MSAARenderer::MSAARenderer(GLsizei width, GLsizei height) : width(width), height(height) {
     glGenFramebuffers(1, &msaaFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, msaaFBO);
 
@@ -54,20 +54,20 @@ engine::MSAARenderer::MSAARenderer(GLsizei width, GLsizei height): width(width),
         1.0f, 1.0f, 1.0f, 1.0f, // top right
         -1.0f, 1.0f, 0.0f, 1.0f // top left
     };
-    
+
     m_VBO.BufferData((const void*)quadVerts, sizeof(quadVerts), GL_STATIC_DRAW);
     VertexBufferLayout bufferLayout;
     bufferLayout.AddAttribute<float>(2);
-    bufferLayout.AddAttribute<float>(2); 
+    bufferLayout.AddAttribute<float>(2);
     m_VAO.AddBuffer(m_VBO, bufferLayout);
 }
 
 engine::MSAARenderer::~MSAARenderer() {
     glDeleteTextures(1, &screenTexture);
     glDeleteTextures(1, &textureColorBufferMultiSampled);
-	glDeleteFramebuffers(1, &msaaFBO);
+    glDeleteFramebuffers(1, &msaaFBO);
     glDeleteFramebuffers(1, &intermediateFBO);
-	glDeleteRenderbuffers(1, &rbo);
+    glDeleteRenderbuffers(1, &rbo);
 }
 
 void engine::MSAARenderer::BindMSAAFBO() const {

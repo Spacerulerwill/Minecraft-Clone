@@ -3,11 +3,11 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#include <util/Log.hpp>
-#include <math/VoxelRaycast.hpp>
-#include <world/World.hpp>
-#include <math.h>
 #include <assert.h>
+#include <math.h>
+#include <math/VoxelRaycast.hpp>
+#include <util/Log.hpp>
+#include <world/World.hpp>
 
 namespace engine {
     VoxelRaycastResult GenerateVoxelRaycastResult(World* world, Vec3<int> normal, Vec3<int> globalBlockPos) {
@@ -15,21 +15,23 @@ namespace engine {
         Vec2<int> regionPos;
 
         if (globalBlockPos.x < 0) {
-            regionPos.x = ((globalBlockPos.x+1)/CHUNK_REGION_BLOCK_SIZE) - 1;
-        } else {
+            regionPos.x = ((globalBlockPos.x + 1) / CHUNK_REGION_BLOCK_SIZE) - 1;
+        }
+        else {
             regionPos.x = globalBlockPos.x / CHUNK_REGION_BLOCK_SIZE;
         }
 
         if (globalBlockPos.z < 0) {
-            regionPos.y = ((globalBlockPos.z+1)/CHUNK_REGION_BLOCK_SIZE) - 1;
-        } else {    
+            regionPos.y = ((globalBlockPos.z + 1) / CHUNK_REGION_BLOCK_SIZE) - 1;
+        }
+        else {
             regionPos.y = globalBlockPos.z / CHUNK_REGION_BLOCK_SIZE;
         }
 
         ChunkRegion* region = world->GetRegion(regionPos);
 
         if (region == nullptr) {
-            return VoxelRaycastResult {};
+            return VoxelRaycastResult{};
         }
 
         // Chunk position
@@ -46,7 +48,7 @@ namespace engine {
         if (globalBlockPos.z < 0) {
             chunkPos.z--;
         }
-        
+
         // Block position in chunk
         Vec3<int> blockHitPos;
 
@@ -54,13 +56,15 @@ namespace engine {
 
         if (globalBlockPos.x >= 0) {
             blockHitPos.x = 1 + abs(globalBlockPos.x) % CS;
-        } else {
+        }
+        else {
             blockHitPos.x = CS_P_MINUS_ONE - (1 + (abs(globalBlockPos.x) - 1) % CS);
         }
 
         if (globalBlockPos.z >= 0) {
             blockHitPos.z = 1 + abs(globalBlockPos.z) % CS;
-        } else {
+        }
+        else {
             blockHitPos.z = CS_P_MINUS_ONE - (1 + (abs(globalBlockPos.z) - 1) % CS);
         }
 
@@ -73,7 +77,8 @@ namespace engine {
                 normal,
                 AIR
             };
-        } else {
+        }
+        else {
             BlockInt blockHit = chunk->GetBlock(blockHitPos);
             return VoxelRaycastResult{
                 chunk,
@@ -100,26 +105,26 @@ namespace engine {
         Vec3<float> end = start + direction * distance;
 
         Vec3<int> step = Vec3<int>(
-            direction.x > 0 ? 1 : (direction.x < 0 ? - 1 : 0),
-            direction.y > 0 ? 1 : (direction.y < 0 ? - 1 : 0),
-            direction.z > 0 ? 1 : (direction.z < 0 ? - 1 : 0)
+            direction.x > 0 ? 1 : (direction.x < 0 ? -1 : 0),
+            direction.y > 0 ? 1 : (direction.y < 0 ? -1 : 0),
+            direction.z > 0 ? 1 : (direction.z < 0 ? -1 : 0)
         );
 
         Vec3<int> voxel = Vec3<int>(
             std::floor(start.x),
             std::floor(start.y),
             std::floor(start.z)
-        ); 
+        );
 
         Vec3<int> normal(0);
 
-        if (step.x != 0) tDeltaX = fmin(step.x / (end.x - start.x), std::numeric_limits<float>::max()); else tDeltaX =  std::numeric_limits<float>::max();
+        if (step.x != 0) tDeltaX = fmin(step.x / (end.x - start.x), std::numeric_limits<float>::max()); else tDeltaX = std::numeric_limits<float>::max();
         if (step.x > 0) tMaxX = tDeltaX * fract1(start.x); else tMaxX = tDeltaX * fract0(start.x);
 
-        if (step.y != 0) tDeltaY = fmin(step.y / (end.y- start.y), std::numeric_limits<float>::max()); else tDeltaY =  std::numeric_limits<float>::max();
+        if (step.y != 0) tDeltaY = fmin(step.y / (end.y - start.y), std::numeric_limits<float>::max()); else tDeltaY = std::numeric_limits<float>::max();
         if (step.y > 0) tMaxY = tDeltaY * fract1(start.y); else tMaxY = tDeltaY * fract0(start.y);
 
-        if (step.z != 0) tDeltaZ = fmin(step.z / (end.z - start.z), std::numeric_limits<float>::max()); else tDeltaZ =  std::numeric_limits<float>::max();
+        if (step.z != 0) tDeltaZ = fmin(step.z / (end.z - start.z), std::numeric_limits<float>::max()); else tDeltaZ = std::numeric_limits<float>::max();
         if (step.z > 0) tMaxZ = tDeltaZ * fract1(start.z); else tMaxZ = tDeltaZ * fract0(start.z);
 
         // process first voxel
@@ -138,21 +143,24 @@ namespace engine {
                     normal.x = -step.x;
                     normal.y = 0;
                     normal.z = 0;
-                } else {
+                }
+                else {
                     voxel.z += step.z;
                     tMaxZ += tDeltaZ;
                     normal.x = 0;
                     normal.y = 0;
                     normal.z = -step.z;
                 }
-            } else {
+            }
+            else {
                 if (tMaxY < tMaxZ) {
                     voxel.y += step.y;
                     tMaxY += tDeltaY;
                     normal.x = 0;
                     normal.y = -step.y;
                     normal.z = 0;
-                } else {
+                }
+                else {
                     voxel.z += step.z;
                     tMaxZ += tDeltaZ;
                     normal.x = 0;
@@ -164,7 +172,8 @@ namespace engine {
                 // process last voxel
                 VoxelRaycastResult res = GenerateVoxelRaycastResult(world, normal, voxel);
                 return res;
-            } else {
+            }
+            else {
                 // process intermediate voxels
                 VoxelRaycastResult res = GenerateVoxelRaycastResult(world, normal, voxel);
                 if (res.blockHit != AIR) {

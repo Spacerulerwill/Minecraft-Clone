@@ -24,7 +24,7 @@ namespace engine {
         * 3 bits for normal direction (0-8) (only needing 0-5)
         Total 21/32 bits used
         */
-		uint32_t data1;
+        uint32_t data1;
         /*
         6 bits for x texture coordinate (0-63)
         6 bits for y texture coordinate (0-63)
@@ -34,13 +34,13 @@ namespace engine {
         1 bit for if the block type is foliage
         Total 24/32 bits used
         */
-		uint32_t data2;
-	};
+        uint32_t data2;
+    };
 
     /*
     The vertex data for vertex for a block with a custom model.
     Position coordinates are stored as integers representing 16ths.
-    This means that custom model blocks can be no bigger than 1 cube voxel 
+    This means that custom model blocks can be no bigger than 1 cube voxel
     and that the vertices can only be in multiples of 16th's, correspending
     to the pixel tile size.
     Total used 49/64 bits.
@@ -53,14 +53,14 @@ namespace engine {
         Total 30/32 bits used
         */
         uint32_t data1;
-         /*
-        * 5 bits for x coordinate (0-31) (only needing 0-16)
-        * 5 bits for y coordinate (0-31) (only needing 0-16)
-        * 8 bits for z coordinate (0-255)
-        * 1 bit for if the block type is foliage
-        Total 19/32 bits used
-        */
-		uint32_t data2;
+        /*
+       * 5 bits for x coordinate (0-31) (only needing 0-16)
+       * 5 bits for y coordinate (0-31) (only needing 0-16)
+       * 8 bits for z coordinate (0-255)
+       * 1 bit for if the block type is foliage
+       Total 19/32 bits used
+       */
+        uint32_t data2;
     };
 
 
@@ -81,7 +81,7 @@ namespace engine {
     inline CubeChunkVertex GetCubeBlockVertex(uint32_t x, uint32_t y, uint32_t z, uint32_t norm, uint32_t texX, uint32_t texY, uint32_t type, uint32_t ambientOcclusion, bool isGrass, bool isFoliage) {
         return {
             (norm << 18) | ((z - 1) << 12) | ((y - 1) << 6) | (x - 1),
-            (isFoliage << 23) | (isGrass << 22) | (ambientOcclusion << 20 ) | (type << 12) | ((texY) << 6)| (texX)
+            (isFoliage << 23) | (isGrass << 22) | (ambientOcclusion << 20) | (type << 12) | ((texY) << 6) | (texX)
         };
     }
 
@@ -90,7 +90,7 @@ namespace engine {
     */
     inline CustomModelChunkVertex GetCustomModelBlockVertex(uint32_t x, uint32_t y, uint32_t z, uint32_t texX, uint32_t texY, uint32_t type, bool isFoliage) {
         return {
-            ((z) << 20)| ((y) << 10) | (x),
+            ((z) << 20) | ((y) << 10) | (x),
             (isFoliage << 18) | (type << 10) | (texY << 5) | (texX)
         };
     }

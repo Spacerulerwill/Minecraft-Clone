@@ -3,11 +3,11 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 LICENSE: MIT
 */
 
-#include <world/chunk/ChunkStack.hpp>
 #include <util/Constants.hpp>
+#include <world/chunk/ChunkStack.hpp>
 
 
-engine::ChunkStack::ChunkStack(Vec2<int> pos): m_Pos(pos) {
+engine::ChunkStack::ChunkStack(Vec2<int> pos) : m_Pos(pos) {
     for (int y = 0; y < DEFAULT_CHUNK_STACK_HEIGHT; y++) {
         m_Chunks.emplace_back(Vec3<int>(m_Pos.x, y, m_Pos.y), false);
     }
@@ -62,24 +62,25 @@ void engine::ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin, std::mt
 
     for (int x = 1; x < CS_P_MINUS_ONE; x++) {
         for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-            float heightMultiplayer = perlin.octave2D_01((m_Pos.x * CS + x) * 0.0025 , (m_Pos.y * CS + z) * 0.0025, 4, 0.5);
+            float heightMultiplayer = perlin.octave2D_01((m_Pos.x * CS + x) * 0.0025, (m_Pos.y * CS + z) * 0.0025, 4, 0.5);
             int height = MIN_WORLD_GEN_HEIGHT + (heightMultiplayer * MAX_MINUS_MIN_WORLD_GEN_HEIGHT);
 
-            for (int i = 0; i < height-4; i++){
+            for (int i = 0; i < height - 4; i++) {
                 SetBlock(STONE, Vec3<int>(x, i, z));
             }
 
-            for (int i = height-4; i < height-1; i++) {
+            for (int i = height - 4; i < height - 1; i++) {
                 SetBlock(DIRT, Vec3<int>(x, i, z));
             }
 
             if (height < WATER_LEVEL) {
-                for (int i = height-1; i < WATER_LEVEL; i++) {
-                    SetBlock(WATER, Vec3<int>(x, i , z));
+                for (int i = height - 1; i < WATER_LEVEL; i++) {
+                    SetBlock(WATER, Vec3<int>(x, i, z));
                 }
-            } else {
-                SetBlock(GRASS, Vec3<int>(x, height-1, z));
-            
+            }
+            else {
+                SetBlock(GRASS, Vec3<int>(x, height - 1, z));
+
                 int randInt = distrib(gen);
                 if (height <= MAX_WORLD_GEN_HEIGHT) {
                     if (randInt < 20) {
@@ -88,7 +89,7 @@ void engine::ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin, std::mt
                     else if (randInt < 28) {
                         SetBlock(ROSE, Vec3<int>(x, height, z));
 
-                    } 
+                    }
                     else if (randInt < 30) {
                         SetBlock(PINK_TULIP, Vec3<int>(x, height, z));
                     }
@@ -108,12 +109,13 @@ engine::BlockInt engine::ChunkStack::GetBlock(Vec3<int> pos) const {
 }
 
 engine::Chunk* engine::ChunkStack::GetChunk(int y) {
-    if (y >= m_Chunks.size()){
+    if (y >= m_Chunks.size()) {
         return nullptr;
-    } else {
+    }
+    else {
         return &m_Chunks.at(y);
     }
-} 
+}
 
 /*
 MIT License

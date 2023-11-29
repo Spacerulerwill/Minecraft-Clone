@@ -14,64 +14,64 @@ LICENSE: MIT
 namespace engine {
     template <GLenum buffer>
     class BufferObject {
-        private:
-            GLuint m_ID = 0;
-            GLsizeiptr m_Count = 0;
-        public:
-            BufferObject() requires BUFFER_REQUIREMENT {
-                glGenBuffers(1, &m_ID);
-            }
+    private:
+        GLuint m_ID = 0;
+        GLsizeiptr m_Count = 0;
+    public:
+        BufferObject() requires BUFFER_REQUIREMENT {
+            glGenBuffers(1, &m_ID);
+        }
 
-            BufferObject(const GLvoid* data, GLsizeiptr count, GLenum usage) requires BUFFER_REQUIREMENT {
-                glGenBuffers(1, &m_ID);
-                BufferData(data, count, usage);
-            }
+        BufferObject(const GLvoid* data, GLsizeiptr count, GLenum usage) requires BUFFER_REQUIREMENT {
+            glGenBuffers(1, &m_ID);
+            BufferData(data, count, usage);
+        }
 
-            ~BufferObject() {
+        ~BufferObject() {
+            glDeleteBuffers(1, &m_ID);
+        }
+
+        BufferObject(const BufferObject&) = delete;
+
+        BufferObject& operator=(const BufferObject&) = delete;
+
+        BufferObject(BufferObject&& other) : m_ID(other.m_ID), m_Count(other.m_Count)
+        {
+            other.m_ID = 0;
+        }
+
+        BufferObject& operator=(BufferObject&& other)
+        {
+            if (this != &other)
+            {
                 glDeleteBuffers(1, &m_ID);
+                std::swap(m_ID, other.m_ID);
+                m_Count = std::move(other.m_Count);
             }
+            return *this;
+        }
 
-            BufferObject(const BufferObject &) = delete;
+        void BufferData(const GLvoid* data, GLsizeiptr size, GLenum usage) const {
+            glBindBuffer(buffer, m_ID);
+            glBufferData(buffer, size, data, usage);
+        }
 
-            BufferObject& operator=(const BufferObject&) = delete;
+        void BufferSubData(const GLvoid* data, GLintptr offset, GLsizeiptr size) const {
+            glBindBuffer(buffer, m_ID);
+            glBufferSubData(buffer, offset, size, data);
+        }
 
-            BufferObject(BufferObject &&other) : m_ID(other.m_ID), m_Count(other.m_Count)
-            {
-                other.m_ID = 0;
-            }
+        void Bind() const {
+            glBindBuffer(buffer, m_ID);
+        }
 
-            BufferObject& operator=(BufferObject&& other)
-            {
-                if(this != &other)
-                {
-                    glDeleteBuffers(1, &m_ID);
-                    std::swap(m_ID, other.m_ID);
-                    m_Count = std::move(other.m_Count);
-                }
-                return *this;
-            }
+        void Unbind() const {
+            glBindBuffer(buffer, 0);
+        }
 
-            void BufferData(const GLvoid* data, GLsizeiptr size, GLenum usage) const {
-                glBindBuffer(buffer, m_ID);
-                glBufferData(buffer, size, data, usage);
-            }
-
-            void BufferSubData(const GLvoid* data, GLintptr offset, GLsizeiptr size) const {
-                glBindBuffer(buffer, m_ID);
-                glBufferSubData(buffer, offset, size, data);
-            }
-
-            void Bind() const {
-                glBindBuffer(buffer, m_ID);
-            }
-
-            void Unbind() const {
-                glBindBuffer(buffer, 0);
-            }
-            
-            GLsizeiptr GetCount() const {
-                return m_Count;
-            }
+        GLsizeiptr GetCount() const {
+            return m_Count;
+        }
     };
 
     using VertexBuffer = BufferObject<GL_ARRAY_BUFFER>;

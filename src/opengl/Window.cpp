@@ -3,29 +3,29 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#include <opengl/Window.hpp>
 #include <core/Application.hpp>
+#include <opengl/Window.hpp>
 #include <stdexcept>
 
 
 engine::Window::Window(Application* app, unsigned int width, unsigned int height, const char* name) {
-     // Create our window, and add its callbacks
+    // Create our window, and add its callbacks
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
 #ifdef __APPLE__
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-	p_Window = glfwCreateWindow(width, height, name, NULL, NULL);
+    p_Window = glfwCreateWindow(width, height, name, NULL, NULL);
 
-	if (p_Window == NULL)
-	{
-		glfwTerminate();
-		throw std::runtime_error("Failed to create GLFW Window");
-	}
+    if (p_Window == NULL)
+    {
+        glfwTerminate();
+        throw std::runtime_error("Failed to create GLFW Window");
+    }
 
     glfwSetWindowSizeCallback(p_Window, framebuffer_size_callback);
     glfwSetCursorPosCallback(p_Window, mouse_move_callback);
@@ -33,7 +33,7 @@ engine::Window::Window(Application* app, unsigned int width, unsigned int height
     glfwSetScrollCallback(p_Window, scroll_callback);
     glfwSetKeyCallback(p_Window, key_callback);
     glfwSetWindowUserPointer(p_Window, reinterpret_cast<void*>(app));
-	glfwMakeContextCurrent(p_Window);
+    glfwMakeContextCurrent(p_Window);
 
     // Set input mode to cursor disabled so use can't move mouse out of window
     glfwSetInputMode(p_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);

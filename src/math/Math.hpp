@@ -11,17 +11,17 @@ License: MIT
 #include <math/Mat4.hpp>
 
 namespace engine {
-	constexpr float PI = 3.14159265358979323846f;
-	constexpr float PI_OVER_180 = PI / 180.0f;
-	constexpr float ONE_EIGHTY_OVER_PI = 180.0f / PI;
+    constexpr float PI = 3.14159265358979323846f;
+    constexpr float PI_OVER_180 = PI / 180.0f;
+    constexpr float ONE_EIGHTY_OVER_PI = 180.0f / PI;
 
-	inline float radians(float theta) {
-		return theta * PI_OVER_180;
-	}
+    inline float radians(float theta) {
+        return theta * PI_OVER_180;
+    }
 
-	inline float degrees(float theta) {
-		return theta * ONE_EIGHTY_OVER_PI;
-	}
+    inline float degrees(float theta) {
+        return theta * ONE_EIGHTY_OVER_PI;
+    }
 
     inline Mat4<float> translationRemoved(const Mat4<float>& mat)
     {
@@ -54,8 +54,8 @@ namespace engine {
     }
 
     inline Mat4<float> rotate(const Vec3<float>& axis, float theta)
-    {  
-        
+    {
+
         return Mat4<float>(
             cos(theta) + axis.x * axis.x * (1 - cos(theta)), axis.x * axis.y * (1 - cos(theta)) - axis.z * sin(theta), axis.x * axis.z * (1 - cos(theta)) + axis.y * sin(theta), 0,
             axis.y * axis.x * (1 - cos(theta)) + axis.z * sin(theta), cos(theta) + axis.y * axis.y * (1 - cos(theta)), axis.y * axis.z * (1 - cos(theta)) - axis.x * sin(theta), 0,
@@ -81,7 +81,7 @@ namespace engine {
         return Mat4(
             2.0f / (right - left), 0.0f, 0.0f, -((right + left) / (right - left)),
             0.0f, 2.0f / (top - bottom), 0.0f, -((top + bottom) / (top - bottom)),
-            0.0f, 0.0f, -2.0f/(_far - _near), -((_far+_near)/(_far-_near)),
+            0.0f, 0.0f, -2.0f / (_far - _near), -((_far + _near) / (_far - _near)),
             0.0f, 0.0f, 0.0f, 1.0f
         );
     }

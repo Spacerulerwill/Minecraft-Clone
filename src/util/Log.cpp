@@ -3,17 +3,17 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#include <util/Log.hpp>
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <util/Log.hpp>
 
 std::shared_ptr<spdlog::logger> engine::Log::s_Logger;
 
 void engine::Log::Init() {
-	spdlog::set_pattern("%^[%T] %n: %v%$");
-	s_Logger = spdlog::stdout_color_mt("Voxel Engine");
-	s_Logger->set_level(spdlog::level::trace);
+    spdlog::set_pattern("%^[%T] %n: %v%$");
+    s_Logger = spdlog::stdout_color_mt("Voxel Engine");
+    s_Logger->set_level(spdlog::level::trace);
 
-	LOG_INFO("Logger initialised");
+    LOG_INFO("Logger initialised");
 }
 
 /*

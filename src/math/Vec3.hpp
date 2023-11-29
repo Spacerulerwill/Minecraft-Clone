@@ -15,29 +15,29 @@ License: MIT
 
 namespace engine {
     template<Arithmetic T>
-	struct Vec3 {
+    struct Vec3 {
 
-		T x;
-		T y;
-		T z;
+        T x;
+        T y;
+        T z;
 
-		Vec3() : x(T(0)), y(T(0)), z(T(0)) {}
+        Vec3() : x(T(0)), y(T(0)), z(T(0)) {}
 
-		Vec3(T v) : x(v), y(v), z(v) {}
+        Vec3(T v) : x(v), y(v), z(v) {}
 
-		Vec3(T x, T y, T z) : x(x), y(y), z(z) {}
-        
-        template <typename Type2> Vec3(const Vec3<Type2> &other): x(other.x), y(other.y), z(other.z) {}
+        Vec3(T x, T y, T z) : x(x), y(y), z(z) {}
 
-		float length() const {
+        template <typename Type2> Vec3(const Vec3<Type2>& other) : x(other.x), y(other.y), z(other.z) {}
+
+        float length() const {
             return sqrt(x * x + y * y + z * z);
         }
 
-	    static T dot(const Vec3& first, const Vec3& second) {
+        static T dot(const Vec3& first, const Vec3& second) {
             return first.x * second.x + first.y * second.y + first.z * second.z;
         }
 
-		static Vec3 cross(const Vec3& first, const Vec3& second) {
+        static Vec3 cross(const Vec3& first, const Vec3& second) {
             return Vec3(
                 first.y * second.z - first.z * second.y,
                 first.z * second.x - first.x * second.z,
@@ -45,14 +45,14 @@ namespace engine {
             );
         }
 
-		static Vec3 normalised(const Vec3& vec) {
+        static Vec3 normalised(const Vec3& vec) {
             float len = vec.length();
             assert(len != 0.0f);
             T inv_length = T(1) / len;
             return Vec3(vec.x * inv_length, vec.y * inv_length, vec.z * inv_length);
         }
 
-		void normalise() {
+        void normalise() {
             float len = length();
             assert(len != 0.0f);
             T inv_length = T(1) / len;
@@ -69,42 +69,42 @@ namespace engine {
             );
         }
 
-		Vec3 operator+(const Vec3& other) const {
+        Vec3 operator+(const Vec3& other) const {
             return Vec3(x + other.x, y + other.y, z + other.z);
         }
 
-		void operator+=(const Vec3& other) {
+        void operator+=(const Vec3& other) {
             x += other.x;
             y += other.y;
             z += other.z;
         }
 
-		Vec3 operator-(const Vec3& other) const {
+        Vec3 operator-(const Vec3& other) const {
             return Vec3(x - other.x, y - other.y, z - other.z);
         }
 
-		void operator-=(const Vec3& other) {
+        void operator-=(const Vec3& other) {
             x -= other.x;
             y -= other.y;
             z -= other.z;
         }
 
-		Vec3 operator*(T scalar) const {
+        Vec3 operator*(T scalar) const {
             return Vec3(x * scalar, y * scalar, z * scalar);
         }
 
-		void operator*=(T scalar) {
+        void operator*=(T scalar) {
             x *= scalar;
             y *= scalar;
             z *= scalar;
         }
 
-		Vec3 operator/(T scalar) {
+        Vec3 operator/(T scalar) {
             assert(scalar != T(0));
             return Vec3(x / scalar, y / scalar, z / scalar);
         }
 
-		void operator/=(T scalar) {
+        void operator/=(T scalar) {
             assert(scalar != T(0));
             T inverse_scalar = T(1) / scalar;
             x *= inverse_scalar;
@@ -112,14 +112,14 @@ namespace engine {
             z *= inverse_scalar;
         }
 
-		bool operator==(const Vec3& other) const {
+        bool operator==(const Vec3& other) const {
             return x == other.x && y == other.y && z == other.z;
         }
 
-		bool operator!=(const Vec3& other) const {
+        bool operator!=(const Vec3& other) const {
             return !(*this == other);
         }
-        
+
         Vec3 operator%(T num) const requires (std::is_integral_v<T>) {
             return Vec3(
                 x % num,
@@ -129,28 +129,28 @@ namespace engine {
         }
 
         void operator%=(T num) requires (std::is_integral_v<T>) {
-           x %= num;
-           y %= num;
-           z %= num;
+            x %= num;
+            y %= num;
+            z %= num;
         }
 
-		operator std::string() const {
+        operator std::string() const {
             return fmt::format("({}, {}, {})", x, y, z);
         }
 
-		friend std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
+        friend std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
             os << fmt::format("({}, {}, {})", vec.x, vec.y, vec.z);
-	        return os;
+            return os;
         }
-	};
+    };
 }
 
 namespace std {
-	template<engine::Arithmetic T> struct hash<engine::Vec3<T>> {
-		std::size_t operator()(engine::Vec3<T> const& vec) const noexcept {		
-			return (((int)vec.x * 73856093) ^ ((int)vec.y * 19349663) ^ ((int)vec.z * 83492791)) % 3; // or use boost::hash_combine (see Discussion) https://en.cppreference.com/w/Talk:cpp/utility/hash
-		}
-	};
+    template<engine::Arithmetic T> struct hash<engine::Vec3<T>> {
+        std::size_t operator()(engine::Vec3<T> const& vec) const noexcept {
+            return (((int)vec.x * 73856093) ^ ((int)vec.y * 19349663) ^ ((int)vec.z * 83492791)) % 3; // or use boost::hash_combine (see Discussion) https://en.cppreference.com/w/Talk:cpp/utility/hash
+        }
+    };
 }
 
 #endif // !VEC3_H

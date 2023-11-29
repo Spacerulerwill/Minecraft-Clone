@@ -34,14 +34,14 @@ namespace engine {
         BS::thread_pool m_TerrainGenPool;
         BS::thread_pool m_ChunkMergePool;
         BS::thread_pool m_ChunkMeshPool;
-        
-        /* A concurrent queue to store chunks that need buffering 
+
+        /* A concurrent queue to store chunks that need buffering
         AFTER they have been terrain generatied, merged and meshed.
         */
         moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
 
         // A temporary storage space to store chunks when bulk dequeuing from m_ChunkBufferQueue
-        Chunk* m_ChunkBufferQueueDequeueResult[MAX_BUFFER_PER_FRAME] {};
+        Chunk* m_ChunkBufferQueueDequeueResult[MAX_BUFFER_PER_FRAME]{};
     public:
         // Flags indiciating the state of the chunk generation process
         bool startedTerrainGeneration = false;
@@ -58,23 +58,23 @@ namespace engine {
 
         /*
         Dequeues at most MAX_BUFFER_PER_FRAME chunks from m_ChunkBufferQueue and sends their data
-        to the GPU for drawing. 
-        */ 
+        to the GPU for drawing.
+        */
         void BufferChunksPerFrame();
 
         // Saves the region as binary data
         void UnloadToFile(const char* worldName) const;
-        
+
         /*
         Drawing functions for the 3 different components of the chunk mesh.
         They iterate over the chunk stacks in the region and call their respective identically named functions
         */
         void DrawOpaque(Shader& opaqueShader);
         void DrawWater(Shader& waterShader);
-        void DrawCustomModel(Shader& customModelShader);   
+        void DrawCustomModel(Shader& customModelShader);
 
         // Get a chunk from the region using its region local chunk position
-        Chunk* GetChunk(Vec3<int> pos); 
+        Chunk* GetChunk(Vec3<int> pos);
 
         // Get a chunk stack from the region using its region local chunk stack position
         ChunkStack* GetChunkStack(Vec2<int> pos);

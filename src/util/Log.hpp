@@ -12,36 +12,36 @@ License: MIT
 #define DEBUG_MODE
 
 namespace engine {
-	class Log {
-	public:
+    class Log {
+    public:
         // Initialise the logger singleton. Must be called before use.
-		static void Init();
-		inline static std::shared_ptr<spdlog::logger>& GetLogger() { return s_Logger; }
+        static void Init();
+        inline static std::shared_ptr<spdlog::logger>& GetLogger() { return s_Logger; }
 
-		Log(const Log& arg) = delete; // Copy constructor
-		Log(const Log&& arg) = delete;  // Move constructor
-		Log& operator=(const Log& arg) = delete; // Assignment operator
-		Log& operator=(const Log&& arg) = delete; // Move operator
-	private:
-		static std::shared_ptr<spdlog::logger> s_Logger;
-	};
+        Log(const Log& arg) = delete; // Copy constructor
+        Log(const Log&& arg) = delete;  // Move constructor
+        Log& operator=(const Log& arg) = delete; // Assignment operator
+        Log& operator=(const Log&& arg) = delete; // Move operator
+    private:
+        static std::shared_ptr<spdlog::logger> s_Logger;
+    };
 
 };
 #endif // !LOG_H
 
 // Logging macros
 #ifdef DEBUG_MODE
-	#define LOG_CRITICAL(...)    engine::Log::GetLogger()->critical(__VA_ARGS__)
-	#define LOG_ERROR(...)		engine::Log::GetLogger()->error(__VA_ARGS__)
-	#define LOG_WARNING(...)		engine::Log::GetLogger()->warn(__VA_ARGS__)
-	#define LOG_INFO(...)		engine::Log::GetLogger()->info(__VA_ARGS__)
-	#define LOG_TRACE(...)		engine::Log::GetLogger()->trace(__VA_ARGS__)
+#define LOG_CRITICAL(...)    engine::Log::GetLogger()->critical(__VA_ARGS__)
+#define LOG_ERROR(...)		engine::Log::GetLogger()->error(__VA_ARGS__)
+#define LOG_WARNING(...)		engine::Log::GetLogger()->warn(__VA_ARGS__)
+#define LOG_INFO(...)		engine::Log::GetLogger()->info(__VA_ARGS__)
+#define LOG_TRACE(...)		engine::Log::GetLogger()->trace(__VA_ARGS__)
 #else
-	#define LOG_CRITICAL 
-	#define LOG_ERROR 
-	#define LOG_WARNING 
-	#define LOG_INFO 
-	#define LOG_TRACE 
+#define LOG_CRITICAL 
+#define LOG_ERROR 
+#define LOG_WARNING 
+#define LOG_INFO 
+#define LOG_TRACE 
 #endif // DEBUG_MODE
 
 /*

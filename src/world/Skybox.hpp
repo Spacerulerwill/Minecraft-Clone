@@ -14,8 +14,8 @@ LICENSE: MIT
 #include <opengl/Texture.hpp>
 
 namespace engine {
-	class Skybox {
-	private:
+    class Skybox {
+    private:
         static float m_SkyboxVertices[108];
         static const char* m_SkyboxFaces[6];
 
@@ -24,11 +24,11 @@ namespace engine {
         Shader m_Shader = Shader("res/shaders/skybox.shader");
         Cubemap m_Cubemap;
 
-	public:
+    public:
         Skybox();
-		void Draw(const Mat4<float>& projection, const Mat4<float>& view);
+        void Draw(const Mat4<float>& projection, const Mat4<float>& view);
         Shader& GetShader();
-	};
+    };
 }
 
 #endif // !SKYBOX_H

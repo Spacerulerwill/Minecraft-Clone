@@ -35,7 +35,7 @@ namespace engine {
         GLuint u_ID;
         std::string m_Filepath;
         std::unordered_map<std::string, int> m_UnformLocations;
-        
+
         ShaderSources ParseShader(const std::string& filepath);
         GLuint CompileShader(GLenum type, std::string& source);
         GLuint CreateShader(std::string& vertex_source, std::string& fragmement_source);

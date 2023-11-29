@@ -28,13 +28,13 @@ namespace engine {
         using iterator = std::vector<Chunk>::iterator;
         using const_iterator = std::vector<Chunk>::const_iterator;
         ChunkStack(Vec2<int> pos);
-        
+
         // Get the world space chunk region position
         Vec2<int> GetPos() const;
 
         /*
         Drawing functions for the 3 components of a chunk mesh.
-        They iterate over the chunks in the chunk stack and call 
+        They iterate over the chunks in the chunk stack and call
         their respective drawing functions of the same name.
         */
         void DrawOpaque(Shader& opaqueShader);
@@ -45,11 +45,11 @@ namespace engine {
         void SetBlock(BlockInt block, Vec3<int> pos);
 
         // Get a block from the chunk using chunk stack local block coordinates
-        BlockInt GetBlock(Vec3<int> pos) const; 
+        BlockInt GetBlock(Vec3<int> pos) const;
 
         // Get a chunk from the chunkstack using its vertical position
         Chunk* GetChunk(int y);
-        
+
         // Generate the terrain for the chunks in this chunkstack using perlin noise
         void GenerateTerrain(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
 

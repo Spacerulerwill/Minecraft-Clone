@@ -16,7 +16,7 @@ namespace engine {
     class Player {
     private:
         Camera m_Camera;
-        VoxelRaycastResult m_VoxelRaycastResult {};
+        VoxelRaycastResult m_VoxelRaycastResult{};
     public:
         Player();
         Player(Vec3<float> position, float pitch, float yaw);

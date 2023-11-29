@@ -3,20 +3,20 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
+#include <algorithm>
+#include <assert.h>
 #include <core/Camera.hpp>
 #include <glad/gl.h>
-#include <assert.h>
-#include <algorithm>
 
 engine::Camera::Camera() {
     UpdateCameraVectors();
 }
 
-engine::Camera::Camera(engine::Vec3<float> pos): m_Position(pos) {
+engine::Camera::Camera(engine::Vec3<float> pos) : m_Position(pos) {
     UpdateCameraVectors();
 }
 
-engine::Camera::Camera(engine::Vec3<float> pos, float pitch, float yaw): m_Position(pos), m_Yaw(yaw), m_Pitch(pitch) {
+engine::Camera::Camera(engine::Vec3<float> pos, float pitch, float yaw) : m_Position(pos), m_Yaw(yaw), m_Pitch(pitch) {
     UpdateCameraVectors();
 }
 
@@ -74,7 +74,7 @@ void engine::Camera::ProcessKeyboard(CameraMovement direction, float deltaTime)
 {
     float velocity = m_MovementSpeed * deltaTime;
     Vec3<float> directionMultiplier;
-       
+
     if (direction == FORWARD)
         directionMultiplier = m_Front;
     if (direction == BACKWARD)
@@ -112,7 +112,7 @@ void engine::Camera::ProcessMouseMovement(float xpos, float ypos)
 }
 
 void engine::Camera::ProcessMouseScroll(float yoffset)
-{   
+{
     SetFOV(m_FOV - (yoffset) * 2);
     if (m_FOV < 1.0f)
         SetFOV(1.0f);

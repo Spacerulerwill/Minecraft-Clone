@@ -19,56 +19,56 @@ namespace engine {
         RIGHT
     };
     class Camera {
-        public:
-            Camera();
-            Camera(Vec3<float> pos);
-            Camera(Vec3<float> pos, float pitch, float yaw);
+    public:
+        Camera();
+        Camera(Vec3<float> pos);
+        Camera(Vec3<float> pos, float pitch, float yaw);
 
-            Mat4<float> GetViewMatrix() const;
-            Mat4<float> GetPerspectiveMatrix() const;
+        Mat4<float> GetViewMatrix() const;
+        Mat4<float> GetPerspectiveMatrix() const;
 
-            void SetFOV(float FOV);
-            float GetFOV() const;
+        void SetFOV(float FOV);
+        float GetFOV() const;
 
-            void SetPitch(float pitch);
-            float GetPitch() const;
+        void SetPitch(float pitch);
+        float GetPitch() const;
 
-            void SetYaw(float yaw);
-            float GetYaw() const;
+        void SetYaw(float yaw);
+        float GetYaw() const;
 
-            void SetMovementSpeed(float speed);
+        void SetMovementSpeed(float speed);
 
-            Vec3<float> GetPosition() const;
-            Vec3<float> GetDirection() const;
+        Vec3<float> GetPosition() const;
+        Vec3<float> GetDirection() const;
 
-            void ProcessKeyboard(CameraMovement direction, float deltaTime);
-            void ProcessMouseMovement(float xpos, float ypos);
-            void ProcessMouseScroll(float yoffset);
-        private:
-            bool m_FirstMouse = true;
-            float m_LastMouseX = 0.0f;
-		    float m_LastMouseY = 0.0f;
+        void ProcessKeyboard(CameraMovement direction, float deltaTime);
+        void ProcessMouseMovement(float xpos, float ypos);
+        void ProcessMouseScroll(float yoffset);
+    private:
+        bool m_FirstMouse = true;
+        float m_LastMouseX = 0.0f;
+        float m_LastMouseY = 0.0f;
 
-            Vec3<float> m_Position = Vec3<float>(0.0f, 0.0f, 0.0f);
-            Vec3<float> m_Front;
-            Vec3<float> m_Up;
-            Vec3<float> m_Right;
-            Vec3<float> m_WorldUp = Vec3<float>(0.0f, 1.0f, 0.0f);
+        Vec3<float> m_Position = Vec3<float>(0.0f, 0.0f, 0.0f);
+        Vec3<float> m_Front;
+        Vec3<float> m_Up;
+        Vec3<float> m_Right;
+        Vec3<float> m_WorldUp = Vec3<float>(0.0f, 1.0f, 0.0f);
 
-            // camera options
-            float m_MovementSpeed = 2.5f;
-            float m_MouseSensitivity = 0.1f;
-            float m_Aspect = 16.0f / 9.0f;
-            float m_Near = 0.1f;
-            float m_Far = 5000.0f;
-            float m_FOV = 45.0f;
-            float m_Pitch = 0.0f;
-            float m_Yaw = -90.0f;
+        // camera options
+        float m_MovementSpeed = 2.5f;
+        float m_MouseSensitivity = 0.1f;
+        float m_Aspect = 16.0f / 9.0f;
+        float m_Near = 0.1f;
+        float m_Far = 5000.0f;
+        float m_FOV = 45.0f;
+        float m_Pitch = 0.0f;
+        float m_Yaw = -90.0f;
 
-            // Perspective Matrix
-            Mat4<float> m_PerspectiveMatrix = perspective(radians(m_FOV), m_Aspect, m_Near, m_Far);
+        // Perspective Matrix
+        Mat4<float> m_PerspectiveMatrix = perspective(radians(m_FOV), m_Aspect, m_Near, m_Far);
 
-            void UpdateCameraVectors();
+        void UpdateCameraVectors();
     };
 }
 

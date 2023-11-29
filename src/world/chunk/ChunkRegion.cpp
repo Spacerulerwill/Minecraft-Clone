@@ -3,17 +3,17 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 LICENSE: MIT
 */
 
-#include <world/chunk/ChunkRegion.hpp>
-#include <util/Log.hpp>
 #include <mutex>
+#include <util/Log.hpp>
+#include <world/chunk/ChunkRegion.hpp>
 
-engine::ChunkRegion::ChunkRegion(Vec2<int> pos): m_Pos(pos) {
+engine::ChunkRegion::ChunkRegion(Vec2<int> pos) : m_Pos(pos) {
     BS::thread_pool pool;
 
     m_ChunkStacks.reserve(CHUNK_REGION_SIZE_SQUARED);
     for (int x = 0; x < CHUNK_REGION_SIZE; x++) {
         for (int z = 0; z < CHUNK_REGION_SIZE; z++) {
-            m_ChunkStacks.emplace_back(Vec2<int>((pos.x * CHUNK_REGION_SIZE) + x,(pos.y * CHUNK_REGION_SIZE) + z));
+            m_ChunkStacks.emplace_back(Vec2<int>((pos.x * CHUNK_REGION_SIZE) + x, (pos.y * CHUNK_REGION_SIZE) + z));
         }
     }
 }
@@ -22,7 +22,7 @@ engine::Vec2<int> engine::ChunkRegion::GetPos() const {
     return m_Pos;
 }
 
-void engine::ChunkRegion::DrawOpaque(Shader& opaqueShader){
+void engine::ChunkRegion::DrawOpaque(Shader& opaqueShader) {
     for (ChunkStack& chunkStack : m_ChunkStacks) {
         chunkStack.DrawOpaque(opaqueShader);
     }
@@ -63,13 +63,14 @@ engine::ChunkStack* engine::ChunkRegion::GetChunkStack(Vec2<int> pos) {
 void engine::ChunkRegion::GenerateChunks(const char* worldName, const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib) {
     if (!startedTerrainGeneration) {
         for (ChunkStack& chunkStack : m_ChunkStacks) {
-            m_TerrainGenPool.push_task([&chunkStack, &perlin, &gen, &distrib]{
+            m_TerrainGenPool.push_task([&chunkStack, &perlin, &gen, &distrib] {
                 chunkStack.GenerateTerrain(perlin, gen, distrib);
-            });
+                });
         }
         startedTerrainGeneration = true;
         return;
-    } else if (m_TerrainGenPool.get_tasks_total() != 0) {
+    }
+    else if (m_TerrainGenPool.get_tasks_total() != 0) {
         return;
     }
 
@@ -79,34 +80,35 @@ void engine::ChunkRegion::GenerateChunks(const char* worldName, const siv::Perli
                 ChunkStack* stack = &m_ChunkStacks.at(ChunkStackIndex(x, z));
                 for (int y = 0; y < stack->size(); y++) {
                     Chunk* chunk = stack->GetChunk(y);
-                    m_ChunkMergePool.push_task([chunk, this]{
-                        chunk->CopyNeighborData(this);                    
-                    });
+                    m_ChunkMergePool.push_task([chunk, this] {
+                        chunk->CopyNeighborData(this);
+                        });
                 }
             }
         }
         startedChunkMerging = true;
         return;
-    } else if (m_ChunkMergePool.get_tasks_total() != 0){
+    }
+    else if (m_ChunkMergePool.get_tasks_total() != 0) {
         return;
     }
-    
+
     if (!startedChunkMeshing) {
         for (ChunkStack& chunkStack : m_ChunkStacks) {
             for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
-                m_ChunkMeshPool.push_task([it, this]{
+                m_ChunkMeshPool.push_task([it, this] {
                     (*it).CreateMesh();
                     m_ChunkBufferQueue.enqueue(&(*it));
-                });
+                    });
             }
         }
         startedChunkMeshing = true;
-    } 
+    }
 }
 
 void engine::ChunkRegion::BufferChunksPerFrame() {
     std::size_t dequeued = m_ChunkBufferQueue.try_dequeue_bulk(m_ChunkBufferQueueDequeueResult, MAX_BUFFER_PER_FRAME);
-    for (size_t i = 0; i < dequeued; i++){
+    for (size_t i = 0; i < dequeued; i++) {
         m_ChunkBufferQueueDequeueResult[i]->BufferData();
     }
 }
@@ -116,8 +118,8 @@ void engine::ChunkRegion::UnloadToFile(const char* worldName) const {
     if (!wf) {
         LOG_ERROR(fmt::format("Failed to unload chunk region {}. File creation error!", std::string(m_Pos)));
     }
-    
-    for (auto& stack: m_ChunkStacks) {
+
+    for (auto& stack : m_ChunkStacks) {
         size_t size = stack.size();
         wf.write(reinterpret_cast<char*>(&size), sizeof(size_t));
         for (auto it = stack.cbegin(); it != stack.cend(); ++it) {

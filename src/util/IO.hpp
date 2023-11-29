@@ -13,7 +13,7 @@ LICENSE: MIT
 namespace engine {
     /*
     Write a struct's data to a binary file on secondary storage.
-    NOTE: The struct must be ISO C complaint and not contain 
+    NOTE: The struct must be ISO C complaint and not contain
     pointers. The full data a pointer points too must be saved instead
     otherwise the pointer will be potentially dangling when you next load it
     */
@@ -21,7 +21,7 @@ namespace engine {
     bool WriteStructToDisk(const std::string& file_name, T& data)
     {
         std::ofstream out;
-        out.open(file_name,std::ios::binary | std::ios::trunc);
+        out.open(file_name, std::ios::binary | std::ios::trunc);
         if (out.fail())
             return false;
         out.write(reinterpret_cast<char*>(&data), sizeof(T));
@@ -36,7 +36,7 @@ namespace engine {
     bool ReadStructFromDisk(const std::string& file_name, T& data)
     {
         std::ifstream in;
-        in.open(file_name,std::ios::binary);
+        in.open(file_name, std::ios::binary);
         if (in.fail())
             return false;
         in.read(reinterpret_cast<char*>(&data), sizeof(T));
@@ -48,7 +48,7 @@ namespace engine {
     inline size_t NumberOfFoldersInDirectory(std::filesystem::path path)
     {
         using std::filesystem::directory_iterator;
-        using fp = bool (*)( const std::filesystem::path&);
+        using fp = bool (*)(const std::filesystem::path&);
         return std::count_if(directory_iterator(path), directory_iterator{}, (fp)std::filesystem::is_directory);
     }
 }
