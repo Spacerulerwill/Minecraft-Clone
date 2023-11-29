@@ -36,7 +36,7 @@ namespace engine {
         Vec3<int> chunkPos(
             (globalBlockPos.x / CS) - regionPos.x * CHUNK_REGION_SIZE,
             globalBlockPos.y / CS,
-            chunkPos.z = (globalBlockPos.z / CS) - regionPos.y * CHUNK_REGION_SIZE
+            (globalBlockPos.z / CS) - regionPos.y * CHUNK_REGION_SIZE
         );
 
         if (globalBlockPos.x < 0) {
@@ -100,9 +100,9 @@ namespace engine {
         Vec3<float> end = start + direction * distance;
 
         Vec3<int> step = Vec3<int>(
-            direction.x > 0 ? : (direction.x < 0 ? - 1 : 0),
-            direction.y > 0 ? : (direction.y < 0 ? - 1 : 0),
-            direction.z > 0 ? : (direction.z < 0 ? - 1 : 0)
+            direction.x > 0 ? 1 : (direction.x < 0 ? - 1 : 0),
+            direction.y > 0 ? 1 : (direction.y < 0 ? - 1 : 0),
+            direction.z > 0 ? 1 : (direction.z < 0 ? - 1 : 0)
         );
 
         Vec3<int> voxel = Vec3<int>(

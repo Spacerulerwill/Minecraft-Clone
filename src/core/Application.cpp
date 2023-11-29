@@ -78,7 +78,7 @@ std::string engine::Application::MainMenu() {
         std::vector<std::string> worldOptions;
         for(auto& p : std::filesystem::directory_iterator("worlds"))
             if (p.is_directory())
-                worldOptions.push_back(p.path().filename());
+                worldOptions.push_back(p.path().filename().string());
         std::cout << "Select world: \n";
         for(std::string& worldOption : worldOptions) {
             std::cout << "* " << worldOption << "\n";
