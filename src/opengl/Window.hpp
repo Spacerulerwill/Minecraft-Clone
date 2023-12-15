@@ -3,40 +3,37 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#ifndef WINDOW_HPP
-#define WINDOW_HPP
+#ifndef WINDOW_H
+#define WINDOW_H
 
-#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
-namespace engine {
-    class Application;
+class Game;
 
-    class Window {
-    private:
-        GLFWwindow* p_Window = nullptr;
-    public:
-        Window(Application* app, unsigned int width, unsigned int height, const char* title);
-        ~Window();
-        void Bind() const;
-        void Unbind() const;
-        void SetShouldClose(int value);
-        bool ShouldClose() const;
-        void SetHidden();
-        void SetVisible();
-        void SwapBuffers();
-        bool IsKeyPressed(int key) const;
-        GLFWwindow* GetWindow() const;
-    };
-
-    void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-    void mouse_move_callback(GLFWwindow* window, double xposIn, double yposIn);
-    void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-    void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-    void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+class Window {
+private:
+    GLFWwindow* p_Window = nullptr;
+public:
+    Window(Game* app, int width, int height, const char* title);
+    ~Window();
+    void Bind() const;
+    void Unbind() const;
+    void SetShouldClose(int value);
+    bool ShouldClose() const;
+    void SetHidden();
+    void SetVisible();
+    void SwapBuffers();
+    bool IsKeyPressed(int key) const;
+    GLFWwindow* GetWindow() const;
 };
 
-#endif // !WINDOW_HPP
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_move_callback(GLFWwindow* window, double xposIn, double yposIn);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+
+#endif // !WINDOW_H
 
 /*
 MIT License

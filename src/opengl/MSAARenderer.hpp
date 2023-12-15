@@ -7,37 +7,37 @@ LICENSE: MIT
 #define FRAMEBUFFER_H
 
 #include <glad/gl.h>
-#include <core/Shader.hpp>
+#include <opengl/Shader.hpp>
 #include <opengl/BufferObject.hpp>
 #include <opengl/VertexArray.hpp>
 
-namespace engine {
-    /*
-    MSAARenderer is an interface for rendering the screen to a texture with MSAA,
-    allowing for a post processing shader on the resultant texture.
-    */
-    class MSAARenderer {
-    public:
-        MSAARenderer(GLsizei width, GLsizei height);
-        ~MSAARenderer();
+/*
+MSAARenderer is an interface for rendering the screen to a texture with MSAA,
+allowing for a post processing shader on the resultant texture.
+*/
+class MSAARenderer {
+public:
+    MSAARenderer(GLsizei width, GLsizei height);
+    ~MSAARenderer();
 
-        // Bind the MSAA framebuffer object for rendering
-        void BindMSAAFBO() const;
+    // Bind the MSAA framebuffer object for rendering
+    void BindMSAAFBO() const;
 
-        // Blit the MSAA FBO to the intermediate FBO, and draw that intermediate FBO onto a quad with a post process shader
-        void Draw(const Shader& postprocessShader) const;
-    private:
-        VertexBuffer m_VBO;
-        VertexArray m_VAO;
-        GLsizei width = 0;
-        GLsizei height = 0;
-        GLuint msaaFBO = 0;
-        GLuint textureColorBufferMultiSampled = 0;
-        GLuint rbo = 0;
-        GLuint intermediateFBO = 0;
-        GLuint screenTexture;
-    };
-}
+    // Blit the MSAA FBO to the intermediate FBO, and draw that intermediate FBO onto a quad with a post process shader
+    void Draw(const Shader& postprocessShader) const;
+
+    static const unsigned int MSAA_SAMPLES = 16;
+private:
+    VertexBuffer m_VBO;
+    VertexArray m_VAO;
+    GLsizei width{};
+    GLsizei height{};
+    GLuint msaaFBO{};
+    GLuint textureColorBufferMultiSampled{};
+    GLuint rbo{};
+    GLuint intermediateFBO{};
+    GLuint screenTexture{};
+};
 
 #endif // !FRAMEBUFFER_H
 

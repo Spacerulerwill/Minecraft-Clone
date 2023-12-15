@@ -3,27 +3,47 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#ifndef VOXELRAYCAST_HPP
-#define VOXELRAYCAST_HPP
+#ifndef MATRIX_H
+#define MATRIX_H
 
-#include <world/Block.hpp>
-#include <math/Vec3.hpp>
-#include <world/chunk/Chunk.hpp>
+#include <glad/gl.h>
+#include <array>
+#include <util/Concepts.hpp>
+#include <math/Vector.hpp>
 
-namespace engine {
-    class World;
+template <Arithmetic T, std::size_t size>
+struct Matrix {
+    std::array<T, size* size> elems{};
 
-    struct VoxelRaycastResult {
-        Chunk* chunk;
-        Vec3<int> blockPos;
-        Vec3<int> normal;
-        BlockInt blockHit;
-    };
+    // Matrix operations
+    static Matrix<T, size> identity();
 
-    VoxelRaycastResult VoxelRaycast(World* world, const Vec3<float>& start, const Vec3<float>& direction, int distance);
-}
+    // Arithmetic operations
+    Matrix<T, size> operator*(const Matrix<T, size>& other) const;
+    void operator*=(const Matrix<T, size>& other);
 
-#endif // !VOXELRAYCAST_HPP
+    // Data access
+    T& operator[](std::size_t idx);
+    T operator[](std::size_t idx) const;
+
+    const T* GetPointer() const;
+    operator std::string();
+};
+
+using Mat2 = Matrix<GLfloat, 2>;
+using Mat3 = Matrix<GLfloat, 3>;
+using Mat4 = Matrix<GLfloat, 4>;
+
+// Matrix transfomrations
+Mat4 translationRemoved(const Mat4& mat);
+Mat4 translate(const Vec3& vec);
+Mat4 scale(const Vec3& vec);
+Mat4 rotate(const Vec3& axis, float theta);
+Mat4 perspective(float fov, float aspect, float near_dist, float far_dist);
+Mat4 orthographic(float bottom, float top, float left, float right, float _near, float _far);
+Mat4 lookAt(const Vec3& eye, const Vec3& center, const Vec3& up);
+
+#endif // !MATRIX_H
 
 /*
 MIT License

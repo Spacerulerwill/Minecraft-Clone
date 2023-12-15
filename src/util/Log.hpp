@@ -6,43 +6,30 @@ License: MIT
 #ifndef LOG_H
 #define LOG_H
 
-#include <spdlog/spdlog.h>
 #include <memory>
+#include <spdlog/spdlog.h>          
 
-#define DEBUG_MODE
+class Log {
+public:
+    static void Init();
+    static void Shutdown();
+    inline static std::shared_ptr<spdlog::logger>& GetLogger() { return sLogger; }
 
-namespace engine {
-    class Log {
-    public:
-        // Initialise the logger singleton. Must be called before use.
-        static void Init();
-        inline static std::shared_ptr<spdlog::logger>& GetLogger() { return s_Logger; }
-
-        Log(const Log& arg) = delete; // Copy constructor
-        Log(const Log&& arg) = delete;  // Move constructor
-        Log& operator=(const Log& arg) = delete; // Assignment operator
-        Log& operator=(const Log&& arg) = delete; // Move operator
-    private:
-        static std::shared_ptr<spdlog::logger> s_Logger;
-    };
-
+    Log(const Log& arg) = delete;
+    Log(const Log&& arg) = delete;
+    Log& operator=(const Log& arg) = delete;
+    Log& operator=(const Log&& arg) = delete;
+private:
+    static std::shared_ptr<spdlog::logger> sLogger;
 };
-#endif // !LOG_H
 
-// Logging macros
-#ifdef DEBUG_MODE
-#define LOG_CRITICAL(...)    engine::Log::GetLogger()->critical(__VA_ARGS__)
-#define LOG_ERROR(...)		engine::Log::GetLogger()->error(__VA_ARGS__)
-#define LOG_WARNING(...)		engine::Log::GetLogger()->warn(__VA_ARGS__)
-#define LOG_INFO(...)		engine::Log::GetLogger()->info(__VA_ARGS__)
-#define LOG_TRACE(...)		engine::Log::GetLogger()->trace(__VA_ARGS__)
-#else
-#define LOG_CRITICAL 
-#define LOG_ERROR 
-#define LOG_WARNING 
-#define LOG_INFO 
-#define LOG_TRACE 
-#endif // DEBUG_MODE
+#define LOG_CRITICAL(...)       Log::GetLogger()->critical(__VA_ARGS__)
+#define LOG_ERROR(...)		    Log::GetLogger()->error(__VA_ARGS__)
+#define LOG_WARNING(...)		Log::GetLogger()->warn(__VA_ARGS__)
+#define LOG_INFO(...)		    Log::GetLogger()->info(__VA_ARGS__)
+#define LOG_TRACE(...)	    	Log::GetLogger()->trace(__VA_ARGS__)
+
+#endif // !LOG_H
 
 /*
 MIT License

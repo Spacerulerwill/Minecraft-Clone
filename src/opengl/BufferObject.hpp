@@ -1,85 +1,38 @@
 /*
 Copyright (C) 2023 William Redding - All Rights Reserved
-LICENSE: MIT
+License: MIT
 */
 
-#ifndef BUFFEROBJECT_H
-#define BUFFEROBJECT_H
+#ifndef BUFFER_OBJECT_H
+#define BUFFER_OBJECT_H
 
 #include <glad/gl.h>
-#include <util/Log.hpp>
 
-#define BUFFER_REQUIREMENT (buffer == GL_ARRAY_BUFFER || buffer == GL_ELEMENT_ARRAY_BUFFER) 
+template <GLenum type>
+class BufferObject {
+private:
+    GLuint uID = 0;
+    GLsizeiptr mCount = 0;
+public:
+    BufferObject();
+    BufferObject(const GLvoid* data, GLsizeiptr size, GLenum usage);
+    ~BufferObject();
+    BufferObject(const BufferObject&) = delete;
+    BufferObject& operator=(const BufferObject&) = delete;
+    BufferObject(BufferObject&&) noexcept;
+    BufferObject& operator=(BufferObject&&) noexcept;
+    void BufferData(const GLvoid* data, GLsizeiptr size, GLenum usage);
+    void BufferSubData(const GLvoid* data, GLintptr offset, GLsizeiptr size);
+    void Bind() const;
+    void Unbind() const;
+    GLsizeiptr GetCount() const;
+};
 
-namespace engine {
-    template <GLenum buffer>
-    class BufferObject {
-    private:
-        GLuint m_ID = 0;
-        GLsizeiptr m_Count = 0;
-    public:
-        BufferObject() requires BUFFER_REQUIREMENT {
-            glGenBuffers(1, &m_ID);
-        }
+using VertexBuffer = BufferObject<GL_ARRAY_BUFFER>;
+using ElementBuffer = BufferObject<GL_ELEMENT_ARRAY_BUFFER>;
 
-        BufferObject(const GLvoid* data, GLsizeiptr count, GLenum usage) requires BUFFER_REQUIREMENT {
-            glGenBuffers(1, &m_ID);
-            BufferData(data, count, usage);
-        }
+#endif // !BUFFER_OBJECT_H
 
-        ~BufferObject() {
-            glDeleteBuffers(1, &m_ID);
-        }
-
-        BufferObject(const BufferObject&) = delete;
-
-        BufferObject& operator=(const BufferObject&) = delete;
-
-        BufferObject(BufferObject&& other) : m_ID(other.m_ID), m_Count(other.m_Count)
-        {
-            other.m_ID = 0;
-        }
-
-        BufferObject& operator=(BufferObject&& other)
-        {
-            if (this != &other)
-            {
-                glDeleteBuffers(1, &m_ID);
-                std::swap(m_ID, other.m_ID);
-                m_Count = std::move(other.m_Count);
-            }
-            return *this;
-        }
-
-        void BufferData(const GLvoid* data, GLsizeiptr size, GLenum usage) const {
-            glBindBuffer(buffer, m_ID);
-            glBufferData(buffer, size, data, usage);
-        }
-
-        void BufferSubData(const GLvoid* data, GLintptr offset, GLsizeiptr size) const {
-            glBindBuffer(buffer, m_ID);
-            glBufferSubData(buffer, offset, size, data);
-        }
-
-        void Bind() const {
-            glBindBuffer(buffer, m_ID);
-        }
-
-        void Unbind() const {
-            glBindBuffer(buffer, 0);
-        }
-
-        GLsizeiptr GetCount() const {
-            return m_Count;
-        }
-    };
-
-    using VertexBuffer = BufferObject<GL_ARRAY_BUFFER>;
-    using ElementBuffer = BufferObject<GL_ELEMENT_ARRAY_BUFFER>;
-    using IndirectBuffer = BufferObject<GL_DRAW_INDIRECT_BUFFER>;
-}
-
-#endif // !BUFFEROBJECT_H
 
 /*
 MIT License

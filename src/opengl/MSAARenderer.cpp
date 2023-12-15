@@ -4,10 +4,9 @@ LICENSE: MIT
 */
 
 #include <opengl/MSAARenderer.hpp>
-#include <util/Constants.hpp>
 #include <util/Log.hpp>
 
-engine::MSAARenderer::MSAARenderer(GLsizei width, GLsizei height) : width(width), height(height) {
+MSAARenderer::MSAARenderer(GLsizei width, GLsizei height) : width(width), height(height) {
     glGenFramebuffers(1, &msaaFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, msaaFBO);
 
@@ -62,7 +61,7 @@ engine::MSAARenderer::MSAARenderer(GLsizei width, GLsizei height) : width(width)
     m_VAO.AddBuffer(m_VBO, bufferLayout);
 }
 
-engine::MSAARenderer::~MSAARenderer() {
+MSAARenderer::~MSAARenderer() {
     glDeleteTextures(1, &screenTexture);
     glDeleteTextures(1, &textureColorBufferMultiSampled);
     glDeleteFramebuffers(1, &msaaFBO);
@@ -70,11 +69,11 @@ engine::MSAARenderer::~MSAARenderer() {
     glDeleteRenderbuffers(1, &rbo);
 }
 
-void engine::MSAARenderer::BindMSAAFBO() const {
+void MSAARenderer::BindMSAAFBO() const {
     glBindFramebuffer(GL_FRAMEBUFFER, msaaFBO);
 }
 
-void engine::MSAARenderer::Draw(const Shader& postprocessShader) const {
+void MSAARenderer::Draw(const Shader& postprocessShader) const {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, msaaFBO);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediateFBO);
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);

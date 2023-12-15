@@ -3,62 +3,62 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#include "glad/gl.h"
+#include <glad/gl.h>
 #include <opengl/VertexArray.hpp>
-#include <util/Log.hpp>
+#include <utility>
 
-engine::VertexArray::VertexArray()
+VertexArray::VertexArray()
 {
-    glGenVertexArrays(1, &m_ID);
+    glGenVertexArrays(1, &uID);
 }
 
-engine::VertexArray::~VertexArray()
+VertexArray::~VertexArray()
 {
-    glDeleteVertexArrays(1, &m_ID);
+    glDeleteVertexArrays(1, &uID);
 }
 
-engine::VertexArray::VertexArray(VertexArray&& other) : m_ID(other.m_ID)
+VertexArray::VertexArray(VertexArray&& other) noexcept : uID(other.uID)
 {
-    other.m_ID = 0;
+    other.uID = 0;
 }
 
-engine::VertexArray& engine::VertexArray::operator=(VertexArray&& other)
+VertexArray& VertexArray::operator=(VertexArray&& other) noexcept
 {
     if (this != &other)
     {
-        glDeleteVertexArrays(1, &m_ID);
-        std::swap(m_ID, other.m_ID);
+        glDeleteVertexArrays(1, &uID);
+        uID = std::exchange(other.uID, 0);
     }
     return *this;
 }
 
-void engine::VertexArray::AddBuffer(const engine::VertexBuffer& vb, const engine::VertexBufferLayout& layout)
+void VertexArray::AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout)
 {
     Bind();
     vb.Bind();
     std::vector<VertexBufferLayoutElement> elements = layout.GetElements();
     uintptr_t offset = 0;
-    for (int i = 0; i < elements.size(); i++) {
+    for (std::size_t i = 0; i < elements.size(); i++) {
         const VertexBufferLayoutElement element = elements[i];
-        glEnableVertexAttribArray(i);
+        glEnableVertexAttribArray(static_cast<GLuint>(i));
 
         if (element.type == GL_UNSIGNED_INT || element.type == GL_INT) {
-            glVertexAttribIPointer(i, element.count, element.type, layout.GetStride(), (const void*)(offset));
+            glVertexAttribIPointer(static_cast<GLuint>(i), element.count, element.type, layout.GetStride(), (const void*)(offset));
         }
         else {
-            glVertexAttribPointer(i, element.count, element.type, element.normalized, layout.GetStride(), (const void*)(offset));
+            glVertexAttribPointer(static_cast<GLuint>(i), element.count, element.type, element.normalized, layout.GetStride(), (const void*)(offset));
         }
         offset += element.count * VertexBufferLayoutElement::GetSize(element.type);
     }
 }
 
-void engine::VertexArray::Bind() const
+void VertexArray::Bind() const
 {
-    glBindVertexArray(m_ID);
+    glBindVertexArray(uID);
 
 }
 
-void engine::VertexArray::Unbind() const
+void VertexArray::Unbind() const
 {
     glBindVertexArray(0);
 }

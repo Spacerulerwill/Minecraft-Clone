@@ -3,117 +3,71 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 LICENSE: MIT
 */
 
-#include <util/Constants.hpp>
+#include <world/chunk/Constants.hpp>
 #include <world/chunk/ChunkStack.hpp>
+#include <util/Log.hpp>
 
-
-engine::ChunkStack::ChunkStack(Vec2<int> pos) : m_Pos(pos) {
+ChunkStack::ChunkStack(iVec2 pos) : mPos(pos)
+{
     for (int y = 0; y < DEFAULT_CHUNK_STACK_HEIGHT; y++) {
-        m_Chunks.emplace_back(Vec3<int>(m_Pos.x, y, m_Pos.y), false);
+        mChunks.emplace_back(iVec3{ pos[0], y, pos[1] });
     }
 }
 
-engine::Vec2<int> engine::ChunkStack::GetPos() const {
-    return m_Pos;
+ChunkStack::iterator ChunkStack::begin() {
+    return mChunks.begin();
 }
 
-engine::ChunkStack::iterator engine::ChunkStack::begin() {
-    return m_Chunks.begin();
+ChunkStack::iterator ChunkStack::end() {
+    return mChunks.end();
 }
 
-engine::ChunkStack::iterator engine::ChunkStack::end() {
-    return m_Chunks.end();
+ChunkStack::const_iterator ChunkStack::cbegin() const {
+    return mChunks.cbegin();
 }
 
-engine::ChunkStack::const_iterator engine::ChunkStack::cbegin() const {
-    return m_Chunks.cbegin();
+ChunkStack::const_iterator ChunkStack::cend() const {
+    return mChunks.cend();
 }
 
-engine::ChunkStack::const_iterator engine::ChunkStack::cend() const {
-    return m_Chunks.cend();
+size_t ChunkStack::size() const {
+    return mChunks.size();
 }
 
-size_t engine::ChunkStack::size() const {
-    return m_Chunks.size();
-}
-
-void engine::ChunkStack::DrawOpaque(Shader& opaqueShader) {
-    for (Chunk& chunk : m_Chunks) {
-        chunk.DrawOpaque(opaqueShader);
-    }
-}
-
-void engine::ChunkStack::DrawWater(Shader& waterShader) {
-    for (Chunk& chunk : m_Chunks) {
-        chunk.DrawWater(waterShader);
-    }
-}
-
-void engine::ChunkStack::DrawCustomModel(Shader& customModelShader) {
-    for (Chunk& chunk : m_Chunks) {
-        chunk.DrawCustomModelBlocks(customModelShader);
-    }
-}
-
-void engine::ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib) {
-    for (int y = 0; y < DEFAULT_CHUNK_STACK_HEIGHT; y++) {
-        m_Chunks.at(y).Allocate();
-    }
-
+void ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin) {
     for (int x = 1; x < CS_P_MINUS_ONE; x++) {
         for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-            float heightMultiplayer = perlin.octave2D_01((m_Pos.x * CS + x) * 0.0025, (m_Pos.y * CS + z) * 0.0025, 4, 0.5);
+            float heightMultiplayer = perlin.octave2D_01((mPos[0] * CS + x) * 0.0025, (mPos[1] * CS + z) * 0.0025, 4, 0.5);
             int height = MIN_WORLD_GEN_HEIGHT + (heightMultiplayer * MAX_MINUS_MIN_WORLD_GEN_HEIGHT);
 
-            for (int i = 0; i < height - 4; i++) {
-                SetBlock(STONE, Vec3<int>(x, i, z));
+            for (int y = 0; y < height; y++) {
+                SetBlock(1, iVec3{ x, y, z });
             }
-
-            for (int i = height - 4; i < height - 1; i++) {
-                SetBlock(DIRT, Vec3<int>(x, i, z));
-            }
-
-            if (height < WATER_LEVEL) {
-                for (int i = height - 1; i < WATER_LEVEL; i++) {
-                    SetBlock(WATER, Vec3<int>(x, i, z));
-                }
-            }
-            else {
-                SetBlock(GRASS, Vec3<int>(x, height - 1, z));
-
-                int randInt = distrib(gen);
-                if (height <= MAX_WORLD_GEN_HEIGHT) {
-                    if (randInt < 20) {
-                        SetBlock(TALL_GRASS, Vec3<int>(x, height, z));
-                    }
-                    else if (randInt < 28) {
-                        SetBlock(ROSE, Vec3<int>(x, height, z));
-
-                    }
-                    else if (randInt < 30) {
-                        SetBlock(PINK_TULIP, Vec3<int>(x, height, z));
-                    }
-                }
-            }
-            SetBlock(BEDROCK, Vec3<int>(x, 0, z));
         }
     }
 }
 
-void engine::ChunkStack::SetBlock(BlockInt block, Vec3<int> pos) {
-    m_Chunks.at(pos.y / CS).SetBlock(block, Vec3<int>(pos.x, 1 + pos.y % CS, pos.z));
+void ChunkStack::SetBlock(BlockID block, iVec3 pos) {
+    mChunks.at(pos[1] / CS).SetBlock(block, iVec3{ pos[0], 1 + pos[1] % CS, pos[2] });
 }
 
-engine::BlockInt engine::ChunkStack::GetBlock(Vec3<int> pos) const {
-    return m_Chunks.at(pos.y / CS).GetBlock(Vec3<int>(pos.x, 1 + pos.y % CS, pos.z));
+BlockID ChunkStack::GetBlock(iVec3 pos) const {
+    return mChunks.at(pos[1] / CS).GetBlock(iVec3{ pos[0], 1 + pos[1] % CS, pos[2] });
 }
 
-engine::Chunk* engine::ChunkStack::GetChunk(int y) {
-    if (y >= m_Chunks.size()) {
+Chunk* ChunkStack::GetChunk(int y) {
+    if (y >= mChunks.size()) {
         return nullptr;
     }
     else {
-        return &m_Chunks.at(y);
+        return &mChunks.at(y);
+    }
+}
+
+void ChunkStack::Draw(Shader& shader)
+{
+    for (auto& chunk : mChunks) {
+        chunk.Draw(shader);
     }
 }
 

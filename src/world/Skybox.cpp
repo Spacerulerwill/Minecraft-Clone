@@ -6,7 +6,7 @@ LICENSE: MIT
 #include <opengl/VertexBufferLayout.hpp>
 #include <world/Skybox.hpp>
 
-float engine::Skybox::m_SkyboxVertices[108] = {
+float Skybox::sSkyboxVertices[108] = {
     -1.0f,  1.0f, -1.0f,
     -1.0f, -1.0f, -1.0f,
     1.0f, -1.0f, -1.0f,
@@ -50,7 +50,7 @@ float engine::Skybox::m_SkyboxVertices[108] = {
     1.0f, -1.0f,  1.0f
 };
 
-const char* engine::Skybox::m_SkyboxFaces[6] = {
+std::array<std::string, 6> Skybox::sSkyboxFaces = {
     "res/textures/skybox/right.jpg",
     "res/textures/skybox/left.jpg",
     "res/textures/skybox/top.jpg",
@@ -59,30 +59,25 @@ const char* engine::Skybox::m_SkyboxFaces[6] = {
     "res/textures/skybox/back.jpg"
 };
 
-engine::Skybox::Skybox()
+Skybox::Skybox()
 {
     glActiveTexture(GL_TEXTURE0);
-    m_Cubemap = Texture<GL_TEXTURE_CUBE_MAP>(m_SkyboxFaces);
+    mCubemap = Cubemap(sSkyboxFaces);
 
     // Setup Buffers
     VertexBufferLayout bufLayout;
     bufLayout.AddAttribute<float>(3);
-    m_VBO.BufferData(m_SkyboxVertices, sizeof(m_SkyboxVertices), GL_STATIC_DRAW);
-    m_VAO.AddBuffer(m_VBO, bufLayout);
+    mVBO.BufferData(sSkyboxVertices, sizeof(sSkyboxVertices), GL_STATIC_DRAW);
+    mVAO.AddBuffer(mVBO, bufLayout);
 }
 
-void engine::Skybox::Draw(const Mat4<float>& projection, const Mat4<float>& view) {
-    m_Shader.Bind();
-    m_VAO.Bind();
-    m_Shader.SetInt("skybox", 0);
-    m_Shader.SetMat4("projection", projection);
-    m_Shader.SetMat4("view", view);
+void Skybox::Draw(const Mat4& projection, const Mat4& view) {
+    mShader.Bind();
+    mVAO.Bind();
+    mShader.SetInt("skybox", 0);
+    mShader.SetMat4("projection", projection);
+    mShader.SetMat4("view", view);
     glDrawArrays(GL_TRIANGLES, 0, 36);
-}
-
-engine::Shader& engine::Skybox::GetShader()
-{
-    return m_Shader;
 }
 
 /*

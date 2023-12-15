@@ -1,156 +1,51 @@
 /*
 Copyright (C) 2023 William Redding - All Rights Reserved
-LICENSE: MIT
+License: MIT
 */
 
-#include <cstring>
-#include <fstream>
-#include <GLFW/glfw3.h>
-#include <math/Math.hpp>
-#include <opengl/VertexBufferLayout.hpp>
-#include <util/Log.hpp>
 #include <world/chunk/Chunk.hpp>
+#include <world/chunk/Constants.hpp>
 #include <world/chunk/ChunkRegion.hpp>
+#include <util/Log.hpp>
 
-void engine::Chunk::AddVertexBufferAttributes() {
-    VertexBufferLayout bufLayout;
-    bufLayout.AddAttribute<unsigned int>(2);
-    m_VAO.AddBuffer(m_VBO, bufLayout);
-    m_WaterVAO.AddBuffer(m_WaterVBO, bufLayout);
-    m_CustomModelVAO.AddBuffer(m_CustomModelVBO, bufLayout);
-}
-
-void engine::Chunk::Allocate() {
-    m_Voxels = new BlockInt[CS_P3]{};
-}
-
-void engine::Chunk::SetupModelMatrix(Vec3<int> chunkPos) {
-    m_Model = m_Model * translate(Vec3<float>(static_cast<float>(chunkPos.x * CS), static_cast<float>(chunkPos.y * CS), static_cast<float>(chunkPos.z * CS)));
-}
-
-engine::Chunk::Chunk(Vec3<int> chunkPos, bool allocate) : m_Pos(chunkPos.x, chunkPos.y, chunkPos.z)
+Chunk::Chunk(iVec3 pos) : mPos(pos)
 {
-    SetupModelMatrix(m_Pos);
-    AddVertexBufferAttributes();
-    if (allocate) {
-        Allocate();
-    }
+    // Setup buffers
+    VertexBufferLayout bufferLayout;
+    bufferLayout.AddAttribute<unsigned int>(1);
+    mVAO.AddBuffer(mVBO, bufferLayout);
+
+    // Translate to its chunk position
+    mModel *= translate(Vec3{
+        static_cast<float>(pos[0] * CS),
+        static_cast<float>(pos[1] * CS),
+        static_cast<float>(pos[2] * CS)
+        });
 }
 
-engine::Chunk::~Chunk() {
-    delete[] m_Voxels;
-}
-
-engine::Chunk::Chunk(Chunk&& other) : m_Pos(std::move(other.m_Pos)), m_Model(std::move(other.m_Model)),
-m_VBO(std::move(other.m_VBO)), m_VAO(std::move(other.m_VAO)), m_Vertices(std::move(other.m_Vertices)), m_VertexCount(std::move(other.m_VertexCount)),
-m_WaterVBO(std::move(other.m_WaterVBO)), m_WaterVAO(std::move(other.m_WaterVAO)), m_WaterVertices(std::move(other.m_WaterVertices)), m_WaterVertexCount(std::move(other.m_WaterVertexCount)),
-m_CustomModelVBO(std::move(other.m_CustomModelVBO)), m_CustomModelVAO(std::move(other.m_CustomModelVAO)), m_CustomModelVertices(std::move(other.m_CustomModelVertices)), m_CustomModelVertexCount(std::move(other.m_CustomModelVertexCount))
+void Chunk::CopyNeighbourChunkEdgeBlocks(ChunkRegion* region)
 {
-    delete[] m_Voxels;
-    m_Voxels = std::move(other.m_Voxels);
-    other.m_Voxels = nullptr;
-}
-
-void engine::Chunk::CreateMesh()
-{
-    m_Vertices.clear();
-    m_Vertices.reserve(CS_P3 * 3);
-    m_VertexCount = 0;
-
-    m_WaterVertices.clear();
-    m_WaterVertices.reserve(CS_P3 * 3);
-    m_WaterVertexCount = 0;
-
-    m_CustomModelVertices.clear();
-    m_CustomModelVertices.reserve(CS_P3 * 3);
-    m_CustomModelVertexCount = 0;
-
-    GreedyTranslucent(m_Vertices, m_WaterVertices, m_Voxels);
-    GreedyOpaque(m_Vertices, m_Voxels);
-    MeshCustomModelBlocks(m_CustomModelVertices, m_Voxels);
-
-    m_VertexCount = m_Vertices.size();
-    m_WaterVertexCount = m_WaterVertices.size();
-    m_CustomModelVertexCount = m_CustomModelVertices.size();
-}
-
-void engine::Chunk::BufferData()
-{
-    if (m_VertexCount > 0) {
-        m_VBO.BufferData(m_Vertices.data(), m_VertexCount * sizeof(CubeChunkVertex), GL_STATIC_DRAW);
-        std::vector<CubeChunkVertex>().swap(m_Vertices);
+    iVec3 localChunkPos = mPos % CHUNK_REGION_SIZE;
+    if (localChunkPos[0] < 0) {
+        localChunkPos[0] = CHUNK_REGION_SIZE - (localChunkPos[0] * -1);
     }
-
-    if (m_WaterVertexCount > 0) {
-        m_WaterVBO.BufferData(m_WaterVertices.data(), m_WaterVertexCount * sizeof(CubeChunkVertex), GL_STATIC_DRAW);
-        std::vector<CubeChunkVertex>().swap(m_WaterVertices);
+    if (localChunkPos[1] < 0) {
+        localChunkPos[1] = CHUNK_REGION_SIZE - (localChunkPos[1] * -1);
     }
-
-    if (m_CustomModelVertexCount > 0) {
-        m_CustomModelVBO.BufferData(m_CustomModelVertices.data(), m_CustomModelVertexCount * sizeof(CustomModelChunkVertex), GL_STATIC_DRAW);
-        std::vector<CustomModelChunkVertex>().swap(m_CustomModelVertices);
+    if (localChunkPos[2] < 0) {
+        localChunkPos[2] = CHUNK_REGION_SIZE - (localChunkPos[2] * -1);
     }
-
-    buffered = true;
-}
-
-engine::Vec3<int> engine::Chunk::GetPos() const {
-    return m_Pos;
-}
-
-engine::BlockInt* engine::Chunk::GetBlockDataPointer() const {
-    return &m_Voxels[0];
-}
-
-void engine::Chunk::DrawOpaque(Shader& shader)
-{
-    if (m_VertexCount > 0 && buffered) {
-        m_VAO.Bind();
-        shader.SetMat4("model", m_Model);
-        glDrawArrays(GL_TRIANGLES, 0, m_VertexCount);
-    }
-}
-
-void engine::Chunk::DrawWater(Shader& shader)
-{
-    if (m_WaterVertexCount > 0 && buffered) {
-        m_WaterVAO.Bind();
-        shader.SetMat4("model", m_Model);
-        glDrawArrays(GL_TRIANGLES, 0, m_WaterVertexCount);
-    }
-}
-
-void engine::Chunk::DrawCustomModelBlocks(Shader& shader)
-{
-    if (m_CustomModelVertexCount > 0 && buffered) {
-        m_CustomModelVAO.Bind();
-        shader.SetMat4("model", m_Model);
-        glDrawArrays(GL_TRIANGLES, 0, m_CustomModelVertexCount);
-    }
-}
-
-void engine::Chunk::CopyNeighborData(ChunkRegion* region) {
-    Vec3<int> localChunkPos = m_Pos % CHUNK_REGION_SIZE;
-    if (localChunkPos.x < 0) {
-        localChunkPos.x = CHUNK_REGION_SIZE - (localChunkPos.x * -1);
-    }
-    if (localChunkPos.y < 0) {
-        localChunkPos.y = CHUNK_REGION_SIZE - (localChunkPos.y * -1);
-    }
-    if (localChunkPos.z < 0) {
-        localChunkPos.z = CHUNK_REGION_SIZE - (localChunkPos.z * -1);
-    }
-    Chunk* belowChunk = region->GetChunk(localChunkPos + Vec3<int>(0, -1, 0));
-    Chunk* aboveChunk = region->GetChunk(localChunkPos + Vec3<int>(0, 1, 0));
-    Chunk* leftChunk = region->GetChunk(localChunkPos + Vec3<int>(-1, 0, 0));
-    Chunk* rightChunk = region->GetChunk(localChunkPos + Vec3<int>(1, 0, 0));
-    Chunk* frontChunk = region->GetChunk(localChunkPos + Vec3<int>(0, 0, -1));
-    Chunk* backChunk = region->GetChunk(localChunkPos + Vec3<int>(0, 0, 1));
+    Chunk* belowChunk = region->GetChunk(localChunkPos + iVec3{ 0, -1, 0 });
+    Chunk* aboveChunk = region->GetChunk(localChunkPos + iVec3{ 0, 1, 0 });
+    Chunk* leftChunk = region->GetChunk(localChunkPos + iVec3{ -1, 0, 0 });
+    Chunk* rightChunk = region->GetChunk(localChunkPos + iVec3{ 1, 0, 0 });
+    Chunk* frontChunk = region->GetChunk(localChunkPos + iVec3{ 0, 0, -1 });
+    Chunk* backChunk = region->GetChunk(localChunkPos + iVec3{ 0, 0, 1 });
 
     if (belowChunk != nullptr) {
         for (int x = 1; x < CS_P_MINUS_ONE; x++) {
             for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-                SetBlock(belowChunk->GetBlock(Vec3<int>(x, CS, z)), Vec3<int>(x, 0, z));
+                SetBlock(belowChunk->GetBlock(iVec3{ x, CS, z }), iVec3{ x, 0, z });
             }
         }
     }
@@ -158,7 +53,7 @@ void engine::Chunk::CopyNeighborData(ChunkRegion* region) {
     if (aboveChunk != nullptr) {
         for (int x = 1; x < CS_P_MINUS_ONE; x++) {
             for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-                SetBlock(aboveChunk->GetBlock(Vec3<int>(x, 1, z)), Vec3<int>(x, CS_P_MINUS_ONE, z));
+                SetBlock(aboveChunk->GetBlock(iVec3{ x, 1, z }), iVec3{ x, CS_P_MINUS_ONE, z });
             }
         }
     }
@@ -166,7 +61,7 @@ void engine::Chunk::CopyNeighborData(ChunkRegion* region) {
     if (leftChunk != nullptr) {
         for (int y = 1; y < CS_P_MINUS_ONE; y++) {
             for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-                SetBlock(leftChunk->GetBlock(Vec3<int>(CS, y, z)), Vec3<int>(0, y, z));
+                SetBlock(leftChunk->GetBlock(iVec3{ CS, y, z }), iVec3{ 0, y, z });
             }
         }
     }
@@ -174,7 +69,7 @@ void engine::Chunk::CopyNeighborData(ChunkRegion* region) {
     if (rightChunk != nullptr) {
         for (int y = 1; y < CS_P_MINUS_ONE; y++) {
             for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-                SetBlock(rightChunk->GetBlock(Vec3<int>(1, y, z)), Vec3<int>(CS_P_MINUS_ONE, y, z));
+                SetBlock(rightChunk->GetBlock(iVec3{ 1, y, z }), iVec3{ CS_P_MINUS_ONE, y, z });
             }
         }
     }
@@ -182,7 +77,7 @@ void engine::Chunk::CopyNeighborData(ChunkRegion* region) {
     if (frontChunk != nullptr) {
         for (int x = 1; x < CS_P_MINUS_ONE; x++) {
             for (int y = 1; y < CS_P_MINUS_ONE; y++) {
-                SetBlock(frontChunk->GetBlock(Vec3<int>(x, y, CS)), Vec3<int>(x, y, 0));
+                SetBlock(frontChunk->GetBlock(iVec3{ x, y, CS }), iVec3{ x, y, 0 });
             }
         }
     }
@@ -190,12 +85,47 @@ void engine::Chunk::CopyNeighborData(ChunkRegion* region) {
     if (backChunk != nullptr) {
         for (int x = 1; x < CS_P_MINUS_ONE; x++) {
             for (int y = 1; y < CS_P_MINUS_ONE; y++) {
-                SetBlock(backChunk->GetBlock(Vec3<int>(x, y, 1)), Vec3<int>(x, y, CS_P_MINUS_ONE));
+                SetBlock(backChunk->GetBlock(iVec3{ x, y, 1 }), iVec3{ x, y, CS_P_MINUS_ONE });
             }
         }
     }
 }
 
+void Chunk::CreateMesh() {
+    // Erase previous data
+    std::vector<ChunkMesher::ChunkVertex>().swap(mVertices);
+    mVertices.reserve(CS_P3 * 3);
+    mVertexCount = 0;
+
+    // Mesh
+    mVertices = ChunkMesher::BinaryGreedyMesh(mBlocks);
+}
+
+void Chunk::BufferData()
+{
+    if (mVertices.size() > 0) {
+        mVBO.BufferData(mVertices.data(), mVertices.size() * sizeof(ChunkMesher::ChunkVertex), GL_STATIC_DRAW);
+        mVertexCount = mVertices.size();
+        std::vector<ChunkMesher::ChunkVertex>().swap(mVertices);
+    }
+}
+
+void Chunk::Draw(Shader& shader)
+{
+    mVAO.Bind();
+    shader.SetMat4("model", mModel);
+    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mVertexCount));
+}
+
+BlockID Chunk::GetBlock(iVec3 pos) const
+{
+    return mBlocks[VoxelIndex(pos)];
+}
+
+void Chunk::SetBlock(BlockID block, iVec3 pos)
+{
+    mBlocks[VoxelIndex(pos)] = block;
+}
 
 /*
 MIT License

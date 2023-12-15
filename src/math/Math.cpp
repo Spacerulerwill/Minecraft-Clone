@@ -1,41 +1,18 @@
 /*
 Copyright (C) 2023 William Redding - All Rights Reserved
-LICENSE: MIT
+License: MIT
 */
 
-#include <util/Constants.hpp>
-#include <util/Log.hpp>
-#include <world/Player.hpp>
-#include <world/World.hpp>
+#include <math/Math.hpp>
 
-engine::Player::Player() {
-
+float radians(float theta)
+{
+    return theta * PI_OVER_180;
 }
 
-engine::Player::Player(Vec3<float> pos, float pitch, float yaw) : m_Camera(pos, pitch, yaw) {
-
-}
-
-engine::Camera& engine::Player::GetCamera() {
-    return m_Camera;
-}
-
-engine::Vec3<int> engine::Player::GetChunkPosition() const {
-    Vec3<int> cameraPos = m_Camera.GetPosition();
-    Vec3<int> chunkPos = cameraPos / CS;
-    if (cameraPos.x < 0)
-        chunkPos.x--;
-    if (cameraPos.z < 0)
-        chunkPos.z--;
-    return chunkPos;
-}
-
-void engine::Player::BlockRaycast(World* world) {
-    m_VoxelRaycastResult = VoxelRaycast(world, m_Camera.GetPosition(), m_Camera.GetDirection(), 15);
-}
-
-const engine::VoxelRaycastResult& engine::Player::GetBlockRaycastResult() const {
-    return m_VoxelRaycastResult;
+float degrees(float theta)
+{
+    return theta * ONE_EIGHTY_OVER_PI;
 }
 
 /*

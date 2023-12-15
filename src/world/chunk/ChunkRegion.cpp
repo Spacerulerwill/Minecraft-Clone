@@ -1,139 +1,106 @@
 /*
 Copyright (C) 2023 William Redding - All Rights Reserved
-LICENSE: MIT
+License: MIT
 */
 
-#include <mutex>
-#include <util/Log.hpp>
 #include <world/chunk/ChunkRegion.hpp>
 
-engine::ChunkRegion::ChunkRegion(Vec2<int> pos) : m_Pos(pos) {
-    BS::thread_pool pool;
-
-    m_ChunkStacks.reserve(CHUNK_REGION_SIZE_SQUARED);
+ChunkRegion::ChunkRegion(iVec2 pos) : mPos(pos)
+{
+    mChunkStacks.reserve(CHUNK_REGION_SIZE_SQUARED);
     for (int x = 0; x < CHUNK_REGION_SIZE; x++) {
         for (int z = 0; z < CHUNK_REGION_SIZE; z++) {
-            m_ChunkStacks.emplace_back(Vec2<int>((pos.x * CHUNK_REGION_SIZE) + x, (pos.y * CHUNK_REGION_SIZE) + z));
+            mChunkStacks.emplace_back(iVec2{ (pos[0] * CHUNK_REGION_SIZE) + x, (pos[1] * CHUNK_REGION_SIZE) + z });
         }
     }
 }
 
-engine::Vec2<int> engine::ChunkRegion::GetPos() const {
-    return m_Pos;
-}
-
-void engine::ChunkRegion::DrawOpaque(Shader& opaqueShader) {
-    for (ChunkStack& chunkStack : m_ChunkStacks) {
-        chunkStack.DrawOpaque(opaqueShader);
-    }
-}
-
-void engine::ChunkRegion::DrawWater(Shader& waterShader) {
-    for (ChunkStack& chunkStack : m_ChunkStacks) {
-        chunkStack.DrawWater(waterShader);
-    }
-}
-
-void engine::ChunkRegion::DrawCustomModel(Shader& customModelShader) {
-    for (ChunkStack& chunkStack : m_ChunkStacks) {
-        chunkStack.DrawCustomModel(customModelShader);
-    }
-}
-
-engine::Chunk* engine::ChunkRegion::GetChunk(Vec3<int> pos) {
-    ChunkStack* stack = GetChunkStack(Vec2<int>(pos.x, pos.z));
-    if (stack != nullptr) {
-        return stack->GetChunk(pos.y);
-    }
-    else {
-        return nullptr;
-    }
-}
-
-engine::ChunkStack* engine::ChunkRegion::GetChunkStack(Vec2<int> pos) {
-    if (pos.x < 0 || pos.x >= CHUNK_REGION_SIZE || pos.y < 0 || pos.y >= CHUNK_REGION_SIZE) {
-        return nullptr;
-    }
-    else {
-        int chunkStackIndex = ChunkStackIndex(pos.x, pos.y);
-        return &m_ChunkStacks.at(chunkStackIndex);
-    }
-}
-
-void engine::ChunkRegion::GenerateChunks(const char* worldName, const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib) {
-    if (!startedTerrainGeneration) {
-        for (ChunkStack& chunkStack : m_ChunkStacks) {
-            m_TerrainGenPool.push_task([&chunkStack, &perlin, &gen, &distrib] {
-                chunkStack.GenerateTerrain(perlin, gen, distrib);
+void ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin)
+{
+    if (!mHasStartedTerrainGeneration) {
+        for (ChunkStack& chunkStack : mChunkStacks) {
+            mTerrainGenerationPool.push_task([&chunkStack, &perlin] {
+                chunkStack.GenerateTerrain(perlin);
                 });
         }
-        startedTerrainGeneration = true;
+        mHasStartedTerrainGeneration = true;
         return;
     }
-    else if (m_TerrainGenPool.get_tasks_total() != 0) {
+    else if (mTerrainGenerationPool.get_tasks_total() != 0) {
         return;
     }
 
-    if (!startedChunkMerging) {
+    if (!mHasStartedChunkMerging) {
         for (int x = 0; x < CHUNK_REGION_SIZE; x++) {
             for (int z = 0; z < CHUNK_REGION_SIZE; z++) {
-                ChunkStack* stack = &m_ChunkStacks.at(ChunkStackIndex(x, z));
+                ChunkStack* stack = GetChunkStack(iVec2{ x,z });
                 for (int y = 0; y < stack->size(); y++) {
                     Chunk* chunk = stack->GetChunk(y);
-                    m_ChunkMergePool.push_task([chunk, this] {
-                        chunk->CopyNeighborData(this);
+                    mChunkMergePool.push_task([chunk, this] {
+                        chunk->CopyNeighbourChunkEdgeBlocks(this);
                         });
                 }
             }
         }
-        startedChunkMerging = true;
+        mHasStartedChunkMerging = true;
         return;
     }
-    else if (m_ChunkMergePool.get_tasks_total() != 0) {
+    else if (mChunkMergePool.get_tasks_total() != 0) {
         return;
     }
 
-    if (!startedChunkMeshing) {
-        for (ChunkStack& chunkStack : m_ChunkStacks) {
+    if (!mHasStartedChunkMeshing) {
+        for (ChunkStack& chunkStack : mChunkStacks) {
             for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
-                m_ChunkMeshPool.push_task([it, this] {
+                mChunkMeshPool.push_task([it, this] {
                     (*it).CreateMesh();
-                    m_ChunkBufferQueue.enqueue(&(*it));
+                    mChunkBufferQueue.enqueue(&(*it));
                     });
             }
         }
-        startedChunkMeshing = true;
+        mHasStartedChunkMeshing = true;
     }
 }
 
-void engine::ChunkRegion::BufferChunksPerFrame() {
-    std::size_t dequeued = m_ChunkBufferQueue.try_dequeue_bulk(m_ChunkBufferQueueDequeueResult, MAX_BUFFER_PER_FRAME);
+void ChunkRegion::Draw(Shader& shader)
+{
+    for (auto& chunkStack : mChunkStacks) {
+        chunkStack.Draw(shader);
+    }
+}
+
+void ChunkRegion::BufferChunks()
+{
+    std::size_t dequeued = mChunkBufferQueue.try_dequeue_bulk(mChunkBufferDequeResult.begin(), mChunkBufferDequeResult.size());
     for (size_t i = 0; i < dequeued; i++) {
-        m_ChunkBufferQueueDequeueResult[i]->BufferData();
+        mChunkBufferDequeResult[i]->BufferData();
     }
 }
 
-void engine::ChunkRegion::UnloadToFile(const char* worldName) const {
-    std::ofstream wf(fmt::format("worlds/{}/regions/{}.{}.region", worldName, m_Pos.x, m_Pos.y), std::ios::out | std::ios::binary | std::ios::trunc);
-    if (!wf) {
-        LOG_ERROR(fmt::format("Failed to unload chunk region {}. File creation error!", std::string(m_Pos)));
+Chunk* ChunkRegion::GetChunk(iVec3 pos) {
+    ChunkStack* stack = GetChunkStack(iVec2{ pos[0], pos[2]
+        });
+    if (stack != nullptr) {
+        return stack->GetChunk(pos[1]);
     }
-
-    for (auto& stack : m_ChunkStacks) {
-        size_t size = stack.size();
-        wf.write(reinterpret_cast<char*>(&size), sizeof(size_t));
-        for (auto it = stack.cbegin(); it != stack.cend(); ++it) {
-            wf.write(reinterpret_cast<char*>((*it).GetBlockDataPointer()), CS_P3 * sizeof(BlockInt));
-        }
-    }
-    wf.close();
-    if (!wf.good()) {
-        LOG_ERROR(fmt::format("Failed to unload chunk region {}. File writing error!", std::string(m_Pos)));
+    else {
+        return nullptr;
     }
 }
+
+ChunkStack* ChunkRegion::GetChunkStack(iVec2 pos) {
+    if (pos[0] < 0 || pos[0] >= CHUNK_REGION_SIZE || pos[1] < 0 || pos[1] >= CHUNK_REGION_SIZE) {
+        return nullptr;
+    }
+    else {
+        int chunkStackIndex = ChunkStackIndex(pos[0], pos[1]);
+        return &mChunkStacks.at(chunkStackIndex);
+    }
+}
+
 
 /*
-MIT Licese
+MIT License
 
 Copyright (c) 2023 William Redding
 

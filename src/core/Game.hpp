@@ -3,29 +3,43 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#ifndef WORLD_H
-#define WORLD_H
+#ifndef GAME_H
+#define GAME_H
 
-#include <world/Skybox.hpp>
-#include <world/chunk/ChunkRegion.hpp>
-#include <opengl/Shader.hpp>
+#include <GLFW/glfw3.h>
+#include <memory>
+#include <opengl/Window.hpp>
+#include <opengl/MSAARenderer.hpp>
 #include <core/Camera.hpp>
-#include <PerlinNoise.hpp>
-#include <unordered_map>
+#include <world/World.hpp>
 
-class World {
+constexpr int SCREEN_WIDTH = 1280;
+constexpr int SCREEN_HEIGHT = 720;
+
+class Game {
 private:
-    Skybox mSkybox;
-    Shader chunkShader = Shader("res/shaders/chunk.shader");
-    siv::PerlinNoise mPerlin = siv::PerlinNoise(0);
-    std::unordered_map<iVec2, ChunkRegion> mChunkRegionMap;
+    Window mWindow = Window(this, SCREEN_WIDTH, SCREEN_HEIGHT, "Craft++");
+    std::unique_ptr<MSAARenderer> pMSAARenderer = nullptr;
+    std::unique_ptr<World> pWorld = nullptr;
+    void ProcessKeyInput();
+    float mDeltaTime = 0.0f;
+    float mLastFrame = 0.0f;
+    bool mIsWireFrame = false;
 public:
-    Camera mCamera = Camera(Vec3{ 0.0f, 700.0f, 0.0f });
-    void Draw();
-    void GenerateChunkRegions();
+    Game() = default;
+    Game(const Game&) = delete;
+    Game(Game&&) = delete;
+    Game& operator=(const Game&) = delete;
+    Game& operator=(const Game&&) = delete;
+    void GLFWMouseMoveCallback(GLFWwindow* window, float xposIn, float yposIn);
+    void GLFWScrollCallback(GLFWwindow* window, float xoffset, float yoffset);
+    void GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    void GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+    void GLFWFramebufferResizeCallback(GLFWwindow* window, int width, int height);
+    void Run();
 };
 
-#endif // !WORLD_H
+#endif // !GAME_H
 
 /*
 MIT License

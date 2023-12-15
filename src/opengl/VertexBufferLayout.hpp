@@ -3,51 +3,44 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#ifndef VERTEXBUFFERLAYOUT_H
-#define VERTEXBUFFERLAYOUT_H
+#ifndef VERTEX_BUFFERLAYOUT_H
+#define VERTEX_BUFFERLAYOUT_H
 
-#include <util/Log.hpp>
 #include <glad/gl.h>
 #include <vector>
 
-namespace engine {
-    struct VertexBufferLayoutElement {
-        unsigned int type;
-        unsigned int count;
-        GLuint normalized;
+struct VertexBufferLayoutElement {
+    unsigned int type;
+    unsigned int count;
+    GLboolean normalized;
 
-        static unsigned int GetSize(GLenum type) {
-            switch (type)
-            {
-            case GL_FLOAT:
-            case GL_INT:
-            case GL_UNSIGNED_INT:
-                return 4;
-                break;
-            case GL_UNSIGNED_BYTE:
-                return 1;
-                break;
-            }
-            return 0;
+    static unsigned int GetSize(GLenum type) {
+        switch (type)
+        {
+        case GL_FLOAT:
+        case GL_INT:
+        case GL_UNSIGNED_INT:
+            return 4;
+        case GL_UNSIGNED_BYTE:
+            return 1;
         }
-    };
+        return 0;
+    }
+};
 
-    class VertexBufferLayout {
-    public:
-        VertexBufferLayout();
+class VertexBufferLayout {
+public:
+    template <typename T>
+    void AddAttribute(unsigned int count);
 
-        template <typename T>
-        void AddAttribute(unsigned int count);
+    std::vector<VertexBufferLayoutElement> GetElements() const;
+    unsigned int GetStride() const;
+private:
+    unsigned int uStride{};
+    std::vector<VertexBufferLayoutElement> mElements{};
+};
 
-        std::vector<VertexBufferLayoutElement> GetElements() const;
-        unsigned int GetStride() const;
-    private:
-        unsigned int m_Stride;
-        std::vector<VertexBufferLayoutElement> m_Elements;
-    };
-}
-
-#endif // !VERTEXBUFFERLAYOUT_H
+#endif // !VERTEX_BUFFERLAYOUT_H
 
 /*
 MIT License

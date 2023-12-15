@@ -3,23 +3,46 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#include "core/Shader.hpp"
-#include <fmt/format.h>
+#include <opengl/Shader.hpp>
+#include <math/Matrix.hpp>
+#include <math/Vector.hpp>
 #include <glad/gl.h>
 #include <util/Log.hpp>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <vector>
+#
 
-engine::Shader::Shader(std::string filepath) : m_Filepath(filepath) {
+Shader::Shader(std::string filepath) : mFilepath(filepath) {
     ShaderSources shaders = ParseShader(filepath);
-    u_ID = CreateShader(shaders.Vertex, shaders.Fragment);
+    uID = CreateShader(shaders.Vertex, shaders.Fragment);
     GetShaderUniformLocations();
 }
 
-engine::ShaderSources engine::Shader::ParseShader(const std::string& filepath) {
+Shader::Shader(Shader&& other) noexcept : uID(other.uID), mFilepath(std::move(other.mFilepath)), mUniformLocations(std::move(other.mUniformLocations))
+{
+    other.uID = 0;
+    other.mFilepath = {};
+    other.mUniformLocations = {};
+}
+
+Shader& Shader::operator=(Shader&& other) noexcept
+{
+    if (this != &other) {
+        glDeleteShader(uID);
+        uID = std::exchange(other.uID, 0);
+        mFilepath = std::exchange(other.mFilepath, {});
+        mUniformLocations = std::exchange(other.mUniformLocations, {});
+    }
+    return *this;
+}
+ShaderSources Shader::ParseShader(const std::string& filepath) {
 
     std::ifstream stream(filepath);
 
     if (stream.fail()) {
-        LOG_ERROR(fmt::format("Shader file at location {} not found", filepath));
+        LOG_ERROR("Shader file at location {} not found", filepath);
     }
 
     std::string line;
@@ -34,18 +57,18 @@ engine::ShaderSources engine::Shader::ParseShader(const std::string& filepath) {
                 type = ShaderType::FRAGMENT;
             }
         }
-        else {
-            ss[(int)type] << line << "\n";
+        else if (type != ShaderType::NONE) {
+            ss[static_cast<int>(type)] << line << "\n";
         }
     }
 
     return {
-        ss[(int)ShaderType::VERTEX].str(),
-        ss[(int)ShaderType::FRAGMENT].str()
+        ss[static_cast<int>(ShaderType::VERTEX)].str(),
+        ss[static_cast<int>(ShaderType::FRAGMENT)].str()
     };
 }
 
-GLuint engine::Shader::CompileShader(GLenum type, std::string& source) {
+GLuint Shader::CompileShader(GLenum type, std::string& source) {
     GLuint id = glCreateShader(type);
     const char* sourceStr = source.c_str();
     glShaderSource(id, 1, &sourceStr, nullptr);
@@ -56,17 +79,16 @@ GLuint engine::Shader::CompileShader(GLenum type, std::string& source) {
     if (result == GL_FALSE) {
         GLsizei length;
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-        GLchar* msg = new GLchar[length];
-        glGetShaderInfoLog(id, length, &length, msg);
-        LOG_ERROR(fmt::format("Failed to compile {} shader\n{}", (type == GL_VERTEX_SHADER ? "vertex" : "fragment"), msg));
+        std::vector<char> infoLog(length);
+        glGetShaderInfoLog(id, length, &length, infoLog.data());
+        LOG_ERROR("Failed to compisle {} shader\n{}", type == GL_VERTEX_SHADER ? "vertex" : "fragment", infoLog.data());
         glDeleteShader(id);
-        delete[] msg;
         return 0;
     }
     return id;
 }
 
-GLuint engine::Shader::CreateShader(std::string& vertex_source, std::string& fragmement_source) {
+GLuint Shader::CreateShader(std::string& vertex_source, std::string& fragmement_source) {
 
     GLuint program = glCreateProgram();
     GLuint vs = CompileShader(GL_VERTEX_SHADER, vertex_source);
@@ -84,8 +106,7 @@ GLuint engine::Shader::CreateShader(std::string& vertex_source, std::string& fra
     return program;
 }
 
-void engine::Shader::GetShaderUniformLocations() {
-
+void Shader::GetShaderUniformLocations() {
     GLint i;
     GLint count;
 
@@ -96,79 +117,81 @@ void engine::Shader::GetShaderUniformLocations() {
     GLchar name[bufSize];
     GLsizei length;
 
-    glGetProgramiv(u_ID, GL_ACTIVE_UNIFORMS, &count);
+    glGetProgramiv(uID, GL_ACTIVE_UNIFORMS, &count);
     for (i = 0; i < count; i++)
     {
-        glGetActiveUniform(u_ID, static_cast<GLuint>(i), bufSize, &length, &size, &type, name);
-        m_UnformLocations[name] = i;
+        glGetActiveUniform(uID, static_cast<GLuint>(i), bufSize, &length, &size, &type, name);
+        mUniformLocations[name] = i;
     }
 }
 
-void engine::Shader::SetMat4(const std::string& name, const Mat4<float>& mat) const {
+void Shader::SetMat4(const std::string& name, const Mat4& mat) {
     glUniformMatrix4fv(GetLocation(name), 1, GL_TRUE, mat.GetPointer());
 }
 
-void engine::Shader::SetMat3(const std::string& name, const Mat3<float>& mat) const {
+void Shader::SetMat3(const std::string& name, const Mat3& mat) {
     glUniformMatrix3fv(GetLocation(name), 1, GL_TRUE, mat.GetPointer());
 }
 
-void engine::Shader::SetMat2(const std::string& name, const Mat2<float>& mat) const {
+void Shader::SetMat2(const std::string& name, const Mat2& mat) {
     glUniformMatrix2fv(GetLocation(name), 1, GL_TRUE, mat.GetPointer());
 }
 
-void engine::Shader::SetVec4(const std::string& name, const Vec4<float>& vec) const {
-    glUniform4f(GetLocation(name), vec.x, vec.y, vec.z, vec.w);
+void Shader::SetiVec4(const std::string& name, const iVec4& vec) {
+    glUniform4iv(GetLocation(name), 1, vec.GetPointer());
 }
 
-void engine::Shader::SetIVec4(const std::string& name, const Vec4<int>& vec) const {
-    glUniform4i(GetLocation(name), vec.x, vec.y, vec.z, vec.w);
+void Shader::SetiVec3(const std::string& name, const iVec3& vec) {
+    glUniform3iv(GetLocation(name), 1, vec.GetPointer());
 }
 
-void engine::Shader::SetIVec3(const std::string& name, const Vec3<int>& vec) const {
-    glUniform3i(GetLocation(name), vec.x, vec.y, vec.z);
+void Shader::SetiVec2(const std::string& name, const iVec2& vec) {
+    glUniform2iv(GetLocation(name), 1, vec.GetPointer());
 }
 
-void engine::Shader::SetVec3(const std::string& name, const Vec3<float>& vec) const {
-    glUniform3f(GetLocation(name), vec.x, vec.y, vec.z);
+void Shader::SetVec4(const std::string& name, const Vec4& vec) {
+    glUniform4fv(GetLocation(name), 1, vec.GetPointer());
 }
 
-void engine::Shader::SetIVec2(const std::string& name, const Vec2<int>& vec) const {
-    glUniform2i(GetLocation(name), vec.x, vec.y);
+void Shader::SetVec3(const std::string& name, const Vec3& vec) {
+    glUniform3fv(GetLocation(name), 1, vec.GetPointer());
 }
 
-void engine::Shader::SetVec2(const std::string& name, const Vec2<float>& vec) const {
-    glUniform2f(GetLocation(name), vec.x, vec.y);
+
+void Shader::SetVec2(const std::string& name, const Vec2& vec) {
+    glUniform2fv(GetLocation(name), 1, vec.GetPointer());
 }
 
-void engine::Shader::SetFloat(const std::string& name, float x)  const {
+void Shader::SetFloat(const std::string& name, GLfloat x) {
     glUniform1f(GetLocation(name), x);
 }
 
-void engine::Shader::SetInt(const std::string& name, int val) const
+void Shader::SetInt(const std::string& name, GLint val)
 {
     glUniform1i(GetLocation(name), val);
 }
 
-void engine::Shader::Bind() const {
-    glUseProgram(u_ID);
+void Shader::Bind() const {
+    glUseProgram(uID);
 }
 
-void engine::Shader::Unbind() const {
+void Shader::Unbind() const {
     glUseProgram(0);
 }
 
-GLint engine::Shader::GetLocation(std::string name) const {
+GLint Shader::GetLocation(std::string name) const {
     try {
-        return m_UnformLocations.at(name);
+        return mUniformLocations.at(name);
     }
-    catch (const std::out_of_range& e) {
+    catch (const std::out_of_range&) {
         LOG_WARNING(fmt::format("Location of {} not found!", name));
         return -1;
     }
 }
 
-engine::Shader::~Shader() {
-    glDeleteProgram(u_ID);
+
+Shader::~Shader() {
+    glDeleteProgram(uID);
 }
 
 /*

@@ -8,10 +8,8 @@ License: MIT
 
 #include <concepts>
 
-namespace engine {
-    template<typename T>
-    concept Arithmetic = std::integral<T> || std::floating_point<T>;
-}
+template<typename T>
+concept Arithmetic = std::integral<T> || std::floating_point<T>;
 
 #endif // !CONCEPTS_H
 

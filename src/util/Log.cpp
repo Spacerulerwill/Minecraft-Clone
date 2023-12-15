@@ -3,17 +3,25 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
+#include <memory>
+#include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <util/Log.hpp>
 
-std::shared_ptr<spdlog::logger> engine::Log::s_Logger;
+std::shared_ptr<spdlog::logger> Log::sLogger;
 
-void engine::Log::Init() {
+void Log::Init() {
     spdlog::set_pattern("%^[%T] %n: %v%$");
-    s_Logger = spdlog::stdout_color_mt("Voxel Engine");
-    s_Logger->set_level(spdlog::level::trace);
+    sLogger = spdlog::stdout_color_mt("Craft++");
+    sLogger->set_level(spdlog::level::trace);
 
-    LOG_INFO("Logger initialised");
+    LOG_INFO("Logger initialised!");
+}
+
+void Log::Shutdown()
+{
+    LOG_INFO("Shutting down logger...");
+    spdlog::shutdown();
 }
 
 /*

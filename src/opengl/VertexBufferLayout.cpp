@@ -5,41 +5,35 @@ License: MIT
 
 #include <opengl/VertexBufferLayout.hpp>
 
-engine::VertexBufferLayout::VertexBufferLayout() :m_Stride(0)
+template <>
+void VertexBufferLayout::AddAttribute<float>(unsigned int count)
 {
-
+    mElements.push_back({ GL_FLOAT, count, GL_FALSE });
+    uStride += VertexBufferLayoutElement::GetSize(GL_FLOAT) * count;
 }
 
 template <>
-void engine::VertexBufferLayout::AddAttribute<float>(unsigned int count)
+void VertexBufferLayout::AddAttribute<unsigned int>(unsigned int count)
 {
-    m_Elements.push_back({ GL_FLOAT, count, GL_FALSE });
-    m_Stride += VertexBufferLayoutElement::GetSize(GL_FLOAT) * count;
+    mElements.push_back({ GL_UNSIGNED_INT, count, GL_FALSE });
+    uStride += VertexBufferLayoutElement::GetSize(GL_UNSIGNED_INT) * count;
 }
 
 template <>
-void engine::VertexBufferLayout::AddAttribute<unsigned int>(unsigned int count)
+void VertexBufferLayout::AddAttribute<int>(unsigned int count)
 {
-    m_Elements.push_back({ GL_UNSIGNED_INT, count, GL_FALSE });
-    m_Stride += VertexBufferLayoutElement::GetSize(GL_UNSIGNED_INT) * count;
+    mElements.push_back({ GL_INT, count, GL_FALSE });
+    uStride += VertexBufferLayoutElement::GetSize(GL_INT) * count;
 }
 
-template <>
-void engine::VertexBufferLayout::AddAttribute<int>(unsigned int count)
+std::vector<VertexBufferLayoutElement> VertexBufferLayout::GetElements() const
 {
-    m_Elements.push_back({ GL_INT, count, GL_FALSE });
-    m_Stride += VertexBufferLayoutElement::GetSize(GL_INT) * count;
+    return mElements;
 }
 
-
-std::vector<engine::VertexBufferLayoutElement> engine::VertexBufferLayout::GetElements() const
+unsigned int VertexBufferLayout::GetStride() const
 {
-    return m_Elements;
-}
-
-unsigned int engine::VertexBufferLayout::GetStride() const
-{
-    return m_Stride;
+    return uStride;
 }
 
 /*

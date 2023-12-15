@@ -1,87 +1,47 @@
 /*
 Copyright (C) 2023 William Redding - All Rights Reserved
-LICENSE: MIT
+License: MIT
 */
 
-#ifndef CHUNKREGION_HPP
-#define CHUNKREGION_HPP
+#ifndef CHUNK_REGION_H
+#define CHUNK_REGION_H
 
-#include <vector>
-#include <util/Constants.hpp>
-#include <world/chunk/Chunk.hpp>
 #include <world/chunk/ChunkStack.hpp>
-#include <core/Shader.hpp>
+#include <world/chunk/Chunk.hpp>
+#include <opengl/Shader.hpp>
 #include <PerlinNoise.hpp>
 #include <concurrentqueue.h>
 #include <BS_thread_pool.hpp>
-#include <chrono>
+#include <math/Vector.hpp>
+#include <vector>
+#include <array>
 
-namespace engine {
-    // Calculate the index of a ChunkStack in a ChunkRegion
-    inline int ChunkStackIndex(int x, int z) {
-        return z + (x << CHUNK_REGION_SIZE_EXP);
-    }
-
-    /*
-    Chunk regions are 2D section of chunk stacks.
-    */
-    class ChunkRegion {
-    private:
-        Vec2<int> m_Pos;
-        std::vector<ChunkStack> m_ChunkStacks;
-
-        // Thread pools to speed up generation tasks
-        BS::thread_pool m_TerrainGenPool;
-        BS::thread_pool m_ChunkMergePool;
-        BS::thread_pool m_ChunkMeshPool;
-
-        /* A concurrent queue to store chunks that need buffering
-        AFTER they have been terrain generatied, merged and meshed.
-        */
-        moodycamel::ConcurrentQueue<Chunk*> m_ChunkBufferQueue;
-
-        // A temporary storage space to store chunks when bulk dequeuing from m_ChunkBufferQueue
-        Chunk* m_ChunkBufferQueueDequeueResult[MAX_BUFFER_PER_FRAME]{};
-    public:
-        // Flags indiciating the state of the chunk generation process
-        bool startedTerrainGeneration = false;
-        bool startedChunkMerging = false;
-        bool startedChunkMeshing = false;
-
-        ChunkRegion(Vec2<int> pos);
-
-        // Get the world space chunk region position
-        Vec2<int> GetPos() const;
-
-        // Generate chunks, tries to progress through the chunk generation pipeline
-        void GenerateChunks(const char* worldName, const siv::PerlinNoise& perlin, std::mt19937& gen, std::uniform_int_distribution<>& distrib);
-
-        /*
-        Dequeues at most MAX_BUFFER_PER_FRAME chunks from m_ChunkBufferQueue and sends their data
-        to the GPU for drawing.
-        */
-        void BufferChunksPerFrame();
-
-        // Saves the region as binary data
-        void UnloadToFile(const char* worldName) const;
-
-        /*
-        Drawing functions for the 3 different components of the chunk mesh.
-        They iterate over the chunk stacks in the region and call their respective identically named functions
-        */
-        void DrawOpaque(Shader& opaqueShader);
-        void DrawWater(Shader& waterShader);
-        void DrawCustomModel(Shader& customModelShader);
-
-        // Get a chunk from the region using its region local chunk position
-        Chunk* GetChunk(Vec3<int> pos);
-
-        // Get a chunk stack from the region using its region local chunk stack position
-        ChunkStack* GetChunkStack(Vec2<int> pos);
-    };
+inline int ChunkStackIndex(int x, int z) {
+    return z + (x << CHUNK_REGION_SIZE_EXP);
 }
 
-#endif // !CHUNKREGION_HPP
+class ChunkRegion {
+private:
+    iVec2 mPos;
+    std::vector<ChunkStack> mChunkStacks;
+    moodycamel::ConcurrentQueue<Chunk*> mChunkBufferQueue;
+    std::array<Chunk*, CHUNK_BUFFER_PER_FRAME> mChunkBufferDequeResult{};
+    BS::thread_pool mTerrainGenerationPool;
+    BS::thread_pool mChunkMergePool;
+    BS::thread_pool mChunkMeshPool;
+    bool mHasStartedTerrainGeneration = false;
+    bool mHasStartedChunkMerging = false;
+    bool mHasStartedChunkMeshing = false;
+public:
+    ChunkRegion(iVec2 pos);
+    void GenerateChunks(const siv::PerlinNoise& perlin);
+    void Draw(Shader& shader);
+    void BufferChunks();
+    Chunk* GetChunk(iVec3 pos);
+    ChunkStack* GetChunkStack(iVec2 pos);
+};
+
+#endif // !CHUNK_REGION_H
 
 /*
 MIT License

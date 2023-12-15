@@ -4,134 +4,137 @@ License: MIT
 */
 
 #include <algorithm>
-#include <assert.h>
 #include <core/Camera.hpp>
 #include <glad/gl.h>
+#include <util/Log.hpp>
 
-engine::Camera::Camera() {
+const float Camera::MAX_FOV = 90.0f;
+const float Camera::MIN_FOV = 1.0f;
+
+Camera::Camera() {
     UpdateCameraVectors();
 }
 
-engine::Camera::Camera(engine::Vec3<float> pos) : m_Position(pos) {
+Camera::Camera(Vec3 pos) : mPosition(pos) {
     UpdateCameraVectors();
 }
 
-engine::Camera::Camera(engine::Vec3<float> pos, float pitch, float yaw) : m_Position(pos), m_Yaw(yaw), m_Pitch(pitch) {
+Camera::Camera(Vec3 pos, float pitch, float yaw) : mPosition(pos), mYaw(yaw), mPitch(pitch) {
     UpdateCameraVectors();
 }
 
-engine::Mat4<float> engine::Camera::GetViewMatrix() const {
-    return lookAt(m_Position, m_Position + m_Front, m_Up);
+Mat4 Camera::GetViewMatrix() const {
+    return lookAt(mPosition, mPosition + mFront, mUp);
 }
 
-engine::Mat4<float> engine::Camera::GetPerspectiveMatrix() const {
-    return m_PerspectiveMatrix;
+Mat4 Camera::GetPerspectiveMatrix() const {
+    return mPerspectiveMatrix;
 }
 
-void engine::Camera::SetFOV(float FOV) {
-    assert(FOV > 0.0f);
-    if (m_FOV != FOV) {
-        m_PerspectiveMatrix = perspective(radians(FOV), m_Aspect, m_Near, m_Far);
+void Camera::SetFOV(float FOV) {
+    if (mFOV != FOV) {
+        FOV = std::clamp(FOV, MIN_FOV, MAX_FOV);
+        mPerspectiveMatrix = perspective(radians(FOV), mAspect, mNear, mFar);
     }
-    m_FOV = FOV;
+    mFOV = FOV;
 }
 
-float engine::Camera::GetFOV() const {
-    return m_FOV;
+float Camera::GetFOV() const {
+    return mFOV;
 }
 
-void engine::Camera::SetPitch(float pitch) {
+void Camera::SetPitch(float pitch) {
     assert(pitch > -180.0f && pitch < 180.0f);
-    m_Pitch = pitch;
+    mPitch = pitch;
 }
 
-float engine::Camera::GetPitch() const {
-    return m_Pitch;
+float Camera::GetPitch() const {
+    return mPitch;
 }
 
-void engine::Camera::SetYaw(float yaw) {
+void Camera::SetYaw(float yaw) {
     assert(yaw > -180.0f && yaw < 180.0f);
-    m_Yaw = yaw;
+    mYaw = yaw;
 }
 
-float engine::Camera::GetYaw() const {
-    return m_Yaw;
+float Camera::GetYaw() const {
+    return mYaw;
 }
 
-void engine::Camera::SetMovementSpeed(float speed) {
-    m_MovementSpeed = speed;
+void Camera::SetMovementSpeed(float speed) {
+    mMovementSpeed = speed;
 }
 
-engine::Vec3<float> engine::Camera::GetPosition() const {
-    return m_Position;
+Vec3 Camera::GetPosition() const {
+    return mPosition;
 }
 
-engine::Vec3<float> engine::Camera::GetDirection() const {
-    return m_Front;
+Vec3 Camera::GetDirection() const {
+    return mFront;
 }
 
-void engine::Camera::ProcessKeyboard(CameraMovement direction, float deltaTime)
+void Camera::ProcessKeyboard(CameraMovement direction, float deltaTime)
 {
-    float velocity = m_MovementSpeed * deltaTime;
-    Vec3<float> directionMultiplier;
+    float velocity = mMovementSpeed * deltaTime;
+    Vec3 directionMultiplier;
 
-    if (direction == FORWARD)
-        directionMultiplier = m_Front;
-    if (direction == BACKWARD)
-        directionMultiplier = m_Front * -1;
-    if (direction == LEFT)
-        directionMultiplier = m_Right * -1;
-    if (direction == RIGHT)
-        directionMultiplier = m_Right;
-
-    m_Position += directionMultiplier * velocity;
-}
-
-void engine::Camera::ProcessMouseMovement(float xpos, float ypos)
-{
-    if (m_FirstMouse) // initially set to true
-    {
-        m_LastMouseX = xpos;
-        m_LastMouseY = ypos;
-        m_FirstMouse = false;
+    if (direction == FORWARD) {
+        directionMultiplier = mFront;
+    }
+    if (direction == BACKWARD) {
+        directionMultiplier = mFront * -1;
+    }
+    if (direction == LEFT) {
+        directionMultiplier = mRight * -1;
+    }
+    if (direction == RIGHT) {
+        directionMultiplier = mRight;
     }
 
-    float xoffset = xpos - m_LastMouseX;
-    float yoffset = m_LastMouseY - ypos; // reversed since y-coordinates go from bottom to top
+    mPosition += directionMultiplier * velocity;
+}
 
-    m_LastMouseX = xpos;
-    m_LastMouseY = ypos;
+void Camera::ProcessMouseMovement(float xpos, float ypos)
+{
+    if (mIsFirstMouse) // initially set to true
+    {
+        mLastMouseX = xpos;
+        mLastMouseY = ypos;
+        mIsFirstMouse = false;
+    }
 
-    xoffset *= m_MouseSensitivity;
-    yoffset *= m_MouseSensitivity;
+    float xoffset = xpos - mLastMouseX;
+    float yoffset = mLastMouseY - ypos; // reversed since y-coordinates go from bottom to top
 
-    m_Pitch = std::clamp(m_Pitch + yoffset, -89.0f, 89.0f);
-    m_Yaw = fmod((m_Yaw + xoffset), 360);
+    mLastMouseX = xpos;
+    mLastMouseY = ypos;
+
+    xoffset *= mMouseSensitivity;
+    yoffset *= mMouseSensitivity;
+
+    mPitch = std::clamp(mPitch + yoffset, -90.0f, 90.0f);
+    mYaw = static_cast<float>(fmod((mYaw + xoffset), 360));
 
     UpdateCameraVectors();
 }
 
-void engine::Camera::ProcessMouseScroll(float yoffset)
+void Camera::ProcessMouseScroll(float yoffset)
 {
-    SetFOV(m_FOV - (yoffset) * 2);
-    if (m_FOV < 1.0f)
-        SetFOV(1.0f);
-    if (m_FOV > 90.0f)
-        SetFOV(90.0f);
+    SetFOV(mFOV - (yoffset) * 2);
 }
 
-void engine::Camera::UpdateCameraVectors()
+void Camera::UpdateCameraVectors()
 {
     // Calculate new front vector
-    Vec3<float> front;
-    front.x = cos(radians(m_Yaw)) * cos(radians(m_Pitch));
-    front.y = sin(radians(m_Pitch));
-    front.z = sin(radians(m_Yaw)) * cos(radians(m_Pitch));
-    m_Front = Vec3<float>::normalised(front);
+    Vec3 front;
+    front[0] = static_cast<float>(cos(radians(mYaw)) * cos(radians(mPitch)));
+    front[1] = static_cast<float>(sin(radians(mPitch)));
+    front[2] = static_cast<float>(sin(radians(mYaw)) * cos(radians(mPitch)));
+    mFront = front.normalized();
 
-    // Calculate up and right vectors
-    m_Right = Vec3<float>::normalised(Vec3<float>::cross(m_Front, m_WorldUp));
-    m_Up = Vec3<float>::normalised(Vec3<float>::cross(m_Right, m_Front));
+    // Calculate up and right 
+    mRight = (mFront.cross(mWorldUp)).normalized();
+    mUp = (mRight.cross(mFront)).normalized();
 }
 
 /*

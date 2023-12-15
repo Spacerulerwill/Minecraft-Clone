@@ -3,38 +3,30 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#ifndef VERTEXARRAY_H
-#define VERTEXARRAY_H
+#ifndef VERTEX_ARRAY_H
+#define VERTEX_ARRAY_H
 
+#include <glad/gl.h>
 #include <opengl/BufferObject.hpp>
 #include <opengl/VertexBufferLayout.hpp>
 
-namespace engine {
-    class VertexArray {
-    private:
-        GLuint m_ID = 0;
-    public:
-        VertexArray();
+class VertexArray {
+private:
+    GLuint uID = 0;
+public:
+    VertexArray();
+    ~VertexArray();
+    VertexArray(const VertexArray&) = delete;
+    VertexArray& operator=(const VertexArray&) = delete;
+    VertexArray(VertexArray&& other) noexcept;
+    VertexArray& operator=(VertexArray&& other) noexcept;
 
-        ~VertexArray();
+    void AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout);
+    void Bind() const;
+    void Unbind() const;
+};
 
-        VertexArray(const VertexArray&) = delete;
-
-        VertexArray& operator=(const VertexArray&) = delete;
-
-        VertexArray(VertexArray&& other);
-
-        VertexArray& operator=(VertexArray&& other);
-
-        GLuint GetID() { return m_ID; }
-
-        void AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout);
-        void Bind() const;
-        void Unbind() const;
-    };
-}
-
-#endif // !VERTEXARRAY_H
+#endif // !VERTEX_ARRAY_H
 
 /*
 MIT License
