@@ -1,2 +1,2 @@
 include/** linguist-vendored
-src/gl.c linguist-vendored
+lib/gl.c linguist-vendored
