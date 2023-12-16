@@ -26,10 +26,7 @@ private:
     iVec2 mPos;
     std::vector<ChunkStack> mChunkStacks;
     std::array<Chunk*, CHUNK_BUFFER_PER_FRAME> mChunkBufferDequeResult{};
-<<<<<<< HEAD
     moodycamel::ConcurrentQueue<Chunk*> mChunkBufferQueue;
-=======
->>>>>>> tmp
     BS::thread_pool mTaskPool;
     bool mHasStartedTerrainGeneration = false;
     bool mHasStartedChunkMerging = false;

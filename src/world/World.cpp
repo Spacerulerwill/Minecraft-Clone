@@ -31,6 +31,7 @@ void World::GenerateChunkRegions()
     iVec2 playerRegionPosInt = { static_cast<int>(floor(playerRegionPosFloat[0])), static_cast<int>(floor(playerRegionPosFloat[2])) };
 
     // Unload out of render distance regions
+    /*
     for (auto it = mChunkRegionMap.begin(); it != mChunkRegionMap.end();)
     {
         ChunkRegion* region = &(it->second);
@@ -52,9 +53,10 @@ void World::GenerateChunkRegions()
         {
             ++it;
         }
-    }
+    }*/
 
     auto findResult = mChunkRegionMap.find(playerRegionPosInt);
+    ChunkRegion* region = nullptr;
     if (findResult == mChunkRegionMap.end()) {
         auto emplaceResult = mChunkRegionMap.emplace(playerRegionPosInt, playerRegionPosInt);
         region = &emplaceResult.first->second;
