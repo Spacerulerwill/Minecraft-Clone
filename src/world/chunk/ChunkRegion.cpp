@@ -20,6 +20,10 @@ iVec2 ChunkRegion::GetPosition() const
     return mPos;
 }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> tmp
 void ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin)
 {
     if (!mHasStartedTerrainGeneration) {
@@ -121,6 +125,10 @@ void ChunkRegion::PrepareForDeletion()
     // Mark as ready for deletion
     readyForDeletion = true;
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> tmp
 
 /*
 MIT License

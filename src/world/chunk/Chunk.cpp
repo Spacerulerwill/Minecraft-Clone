@@ -96,6 +96,10 @@ void Chunk::AllocateMemory()
     mBlocks.resize(CS_P3);
 }
 
+void Chunk::ReleaseMemory()
+{
+    std::vector<BlockID>().swap(mBlocks);
+}
 void Chunk::CreateMesh() {
     // Erase previous data
     std::vector<ChunkMesher::ChunkVertex>().swap(mVertices);

@@ -53,8 +53,7 @@ void World::GenerateChunkRegions()
             ++it;
         }
     }
-    // Create new regions around player
-    ChunkRegion* region;
+
     auto findResult = mChunkRegionMap.find(playerRegionPosInt);
     if (findResult == mChunkRegionMap.end()) {
         auto emplaceResult = mChunkRegionMap.emplace(playerRegionPosInt, playerRegionPosInt);
