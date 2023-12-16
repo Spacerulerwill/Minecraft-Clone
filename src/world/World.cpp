@@ -30,8 +30,29 @@ void World::GenerateChunkRegions()
     Vec3 playerRegionPosFloat = playerPos / CHUNK_REGION_BLOCK_SIZE;
     iVec2 playerRegionPosInt = { static_cast<int>(floor(playerRegionPosFloat[0])), static_cast<int>(floor(playerRegionPosFloat[2])) };
 
-    auto findResult = mChunkRegionMap.find(playerRegionPosInt);
+    // Unload out of render distance regions
+    for (auto it = mChunkRegionMap.begin(); it != mChunkRegionMap.end();)
+    {
+        ChunkRegion* region = &(it->second);
+        if (region->GetPosition() != playerRegionPosInt) {
+            if (region->readyForDeletion) {
+                it = mChunkRegionMap.erase(it);
+            }
+            else {
+                mRegionUnloadPool.push_task([region] {
+                    region->PrepareForDeletion();
+                    });
+                ++it;
+            }
+        }
+        else
+        {
+            ++it;
+        }
+    }
+    // Create new regions around player
     ChunkRegion* region;
+    auto findResult = mChunkRegionMap.find(playerRegionPosInt);
     if (findResult == mChunkRegionMap.end()) {
         auto emplaceResult = mChunkRegionMap.emplace(playerRegionPosInt, playerRegionPosInt);
         region = &emplaceResult.first->second;

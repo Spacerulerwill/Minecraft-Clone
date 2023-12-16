@@ -29,7 +29,6 @@ public:
     BlockID GetBlock(iVec3 pos) const;
     Chunk* GetChunk(int y);
 private:
-
     iVec2 mPos{};
     std::vector<Chunk> mChunks;
 };

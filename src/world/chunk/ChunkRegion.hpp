@@ -15,6 +15,7 @@ License: MIT
 #include <math/Vector.hpp>
 #include <vector>
 #include <array>
+#include <atomic>
 
 inline int ChunkStackIndex(int x, int z) {
     return z + (x << CHUNK_REGION_SIZE_EXP);
@@ -24,8 +25,8 @@ class ChunkRegion {
 private:
     iVec2 mPos;
     std::vector<ChunkStack> mChunkStacks;
-    moodycamel::ConcurrentQueue<Chunk*> mChunkBufferQueue;
     std::array<Chunk*, CHUNK_BUFFER_PER_FRAME> mChunkBufferDequeResult{};
+    moodycamel::ConcurrentQueue<Chunk*> mChunkBufferQueue;
     BS::thread_pool mTerrainGenerationPool;
     BS::thread_pool mChunkMergePool;
     BS::thread_pool mChunkMeshPool;
@@ -34,11 +35,14 @@ private:
     bool mHasStartedChunkMeshing = false;
 public:
     ChunkRegion(iVec2 pos);
+    iVec2 GetPosition() const;
     void GenerateChunks(const siv::PerlinNoise& perlin);
     void Draw(Shader& shader);
     void BufferChunks();
     Chunk* GetChunk(iVec3 pos);
     ChunkStack* GetChunkStack(iVec2 pos);
+    void PrepareForDeletion();
+    std::atomic<bool> readyForDeletion = false;
 };
 
 #endif // !CHUNK_REGION_H

@@ -15,6 +15,11 @@ ChunkRegion::ChunkRegion(iVec2 pos) : mPos(pos)
     }
 }
 
+iVec2 ChunkRegion::GetPosition() const
+{
+    return mPos;
+}
+
 void ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin)
 {
     if (!mHasStartedTerrainGeneration) {
@@ -98,6 +103,29 @@ ChunkStack* ChunkRegion::GetChunkStack(iVec2 pos) {
     }
 }
 
+void ChunkRegion::PrepareForDeletion()
+{
+    // Purge any tasks in the queue
+    mTerrainGenerationPool.purge();
+    mChunkMergePool.purge();
+    mChunkMeshPool.wait_for_tasks();
+
+    // Wait for any tasks already processing
+    mTerrainGenerationPool.wait_for_tasks();
+    mChunkMergePool.wait_for_tasks();
+    mChunkMeshPool.wait_for_tasks();
+
+    moodycamel::ConcurrentQueue<Chunk*>().swap(mChunkBufferQueue);
+
+    // Deallocate memory for each chunk
+    for (auto& stack : mChunkStacks) {
+        for (auto it = stack.begin(); it != stack.end(); ++it) {
+            it->ReleaseMemory();
+        }
+    }
+    // Mark as ready for deletion
+    readyForDeletion = true;
+}
 
 /*
 MIT License

@@ -9,9 +9,11 @@ License: MIT
 #include <world/Skybox.hpp>
 #include <world/chunk/ChunkRegion.hpp>
 #include <opengl/Shader.hpp>
+#include <opengl/Texture.hpp>
 #include <core/Camera.hpp>
 #include <PerlinNoise.hpp>
 #include <unordered_map>
+#include <BS_thread_pool.hpp>
 
 class World {
 private:
@@ -19,6 +21,7 @@ private:
     Shader chunkShader = Shader("res/shaders/chunk.shader");
     siv::PerlinNoise mPerlin = siv::PerlinNoise(0);
     std::unordered_map<iVec2, ChunkRegion> mChunkRegionMap;
+    BS::thread_pool mRegionUnloadPool;
 public:
     Camera mCamera = Camera(Vec3{ 0.0f, 700.0f, 0.0f });
     void Draw();

@@ -106,6 +106,11 @@ void Chunk::CreateMesh() {
     mVertices = ChunkMesher::BinaryGreedyMesh(mBlocks);
 }
 
+void Chunk::ReleaseMemory()
+{
+    std::vector<BlockID>().swap(mBlocks);
+}
+
 void Chunk::BufferData()
 {
     if (mVertices.size() > 0) {
