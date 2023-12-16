@@ -35,6 +35,7 @@ private:
 public:
     Chunk(iVec3 pos);
     void AllocateMemory();
+    void ReleaseMemory();
     void CopyNeighbourChunkEdgeBlocks(ChunkRegion* region);
     void CreateMesh();
     void BufferData();

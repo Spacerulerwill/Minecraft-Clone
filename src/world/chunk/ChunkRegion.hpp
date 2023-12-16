@@ -26,19 +26,21 @@ private:
     std::vector<ChunkStack> mChunkStacks;
     moodycamel::ConcurrentQueue<Chunk*> mChunkBufferQueue;
     std::array<Chunk*, CHUNK_BUFFER_PER_FRAME> mChunkBufferDequeResult{};
-    BS::thread_pool mTerrainGenerationPool;
-    BS::thread_pool mChunkMergePool;
-    BS::thread_pool mChunkMeshPool;
+    BS::thread_pool mTaskPool;
     bool mHasStartedTerrainGeneration = false;
     bool mHasStartedChunkMerging = false;
     bool mHasStartedChunkMeshing = false;
 public:
     ChunkRegion(iVec2 pos);
+    iVec2 GetPosition() const;
     void GenerateChunks(const siv::PerlinNoise& perlin);
     void Draw(Shader& shader);
     void BufferChunks();
     Chunk* GetChunk(iVec3 pos);
     ChunkStack* GetChunkStack(iVec2 pos);
+    void PrepareForDeletion();
+    std::atomic<bool> startedDeletion = false;
+    std::atomic<bool> readyForDeletion = false;
 };
 
 #endif // !CHUNK_REGION_H
