@@ -54,14 +54,10 @@ add_executable(${PROJECT_NAME}
 
 add_subdirectory(submodules/glfw)
 add_subdirectory(submodules/spdlog)
-add_subdirectory(submodules/fmt)
-add_subdirectory(submodules/yaml-cpp)
 
 target_include_directories(${PROJECT_NAME} 
     SYSTEM PRIVATE submodules/glfw/include
     SYSTEM PRIVATE submodules/spdlog/include
-    SYSTEM PRIVATE submodules/fmt/include
-    SYSTEM PRIVATE submodules/yaml-cpp/include
     SYSTEM PRIVATE include
     PUBLIC src
 )
@@ -69,15 +65,11 @@ target_include_directories(${PROJECT_NAME}
 target_link_directories(${PROJECT_NAME}
     PRIVATE submodules/glfw/src
     PRIVATE submodules/spdlog/src
-    PRIVATE submodules/fmt/src
-    PRIVATE submodules/yaml-cpp/src
 )
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC spdlog
     PUBLIC glfw
-    PUBLIC fmt
-    PUBLIC yaml-cpp
 )
 
 add_compile_definitions(GLFW_INCLUDE_NONE)

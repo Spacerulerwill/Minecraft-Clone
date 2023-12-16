@@ -8,7 +8,6 @@ License: MIT
 #include <world/Skybox.hpp>
 #include <math/Matrix.hpp>
 #include <glad/gl.h>
-#include <util/Log.hpp>
 #include <stdexcept>
 
 void Game::Run() {

@@ -6,7 +6,6 @@ LICENSE: MIT
 #include <world/chunk/Constants.hpp>
 #include <world/chunk/ChunkStack.hpp>
 #include <world/Block.hpp>
-#include <util/Log.hpp>
 
 ChunkStack::ChunkStack(iVec2 pos) : mPos(pos)
 {

@@ -6,9 +6,10 @@ License: MIT
 #ifndef MATH_HPP
 #define MATH_HPP
 
-constexpr float PI = 3.14159265358979323846f;
-constexpr float PI_OVER_180 = PI / 180.0f;
-constexpr float ONE_EIGHTY_OVER_PI = 180.0f / PI;
+#include <numbers>
+
+constexpr float PI_OVER_180 = static_cast<float>(std::numbers::pi) / 180.0f;
+constexpr float ONE_EIGHTY_OVER_PI = 180.0f / static_cast<float>(std::numbers::pi);
 
 float radians(float theta);
 float degrees(float theta);

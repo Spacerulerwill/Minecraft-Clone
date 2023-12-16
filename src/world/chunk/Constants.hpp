@@ -7,9 +7,7 @@ License: MIT
 #ifndef CHUNK_CONSTANTS_H
 #define CHUNK_CONSTANTS_H
 
-#include <cstdint>
-
-// Chunk size exponents (used for bit shifts when calculating array index to find block at x,y,z)
+// Chunk size exponents (used for bit shifts when calculating array index to find block at (x,y,z)
 constexpr int CHUNK_SIZE_EXP = 6;
 constexpr int CHUNK_SIZE_EXP_X2 = CHUNK_SIZE_EXP * 2;
 
