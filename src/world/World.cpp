@@ -38,10 +38,13 @@ void World::GenerateChunkRegions()
             if (region->readyForDeletion) {
                 it = mChunkRegionMap.erase(it);
             }
-            else {
+            else if (!region->startedDeletion) {
                 mRegionUnloadPool.push_task([region] {
                     region->PrepareForDeletion();
                     });
+                ++it;
+            }
+            else {
                 ++it;
             }
         }

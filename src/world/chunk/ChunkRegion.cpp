@@ -24,14 +24,14 @@ void ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin)
 {
     if (!mHasStartedTerrainGeneration) {
         for (ChunkStack& chunkStack : mChunkStacks) {
-            mTerrainGenerationPool.push_task([&chunkStack, &perlin] {
+            mTaskPool.push_task([&chunkStack, &perlin] {
                 chunkStack.GenerateTerrain(perlin);
                 });
         }
         mHasStartedTerrainGeneration = true;
         return;
     }
-    else if (mTerrainGenerationPool.get_tasks_total() != 0) {
+    else if (mTaskPool.get_tasks_total() != 0) {
         return;
     }
 
@@ -41,7 +41,7 @@ void ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin)
                 ChunkStack* stack = GetChunkStack(iVec2{ x,z });
                 for (int y = 0; y < stack->size(); y++) {
                     Chunk* chunk = stack->GetChunk(y);
-                    mChunkMergePool.push_task([chunk, this] {
+                    mTaskPool.push_task([chunk, this] {
                         chunk->CopyNeighbourChunkEdgeBlocks(this);
                         });
                 }
@@ -50,14 +50,14 @@ void ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin)
         mHasStartedChunkMerging = true;
         return;
     }
-    else if (mChunkMergePool.get_tasks_total() != 0) {
+    else if (mTaskPool.get_tasks_total() != 0) {
         return;
     }
 
     if (!mHasStartedChunkMeshing) {
         for (ChunkStack& chunkStack : mChunkStacks) {
             for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
-                mChunkMeshPool.push_task([it, this] {
+                mTaskPool.push_task([it, this] {
                     (*it).CreateMesh();
                     mChunkBufferQueue.enqueue(&(*it));
                     });
@@ -105,18 +105,13 @@ ChunkStack* ChunkRegion::GetChunkStack(iVec2 pos) {
 
 void ChunkRegion::PrepareForDeletion()
 {
+    startedDeletion = true;
     // Purge any tasks in the queue
-    mTerrainGenerationPool.purge();
-    mChunkMergePool.purge();
-    mChunkMeshPool.wait_for_tasks();
-
+    mTaskPool.purge();
     // Wait for any tasks already processing
-    mTerrainGenerationPool.wait_for_tasks();
-    mChunkMergePool.wait_for_tasks();
-    mChunkMeshPool.wait_for_tasks();
-
+    mTaskPool.wait_for_tasks();
+    // Empty chunk buffer queue
     moodycamel::ConcurrentQueue<Chunk*>().swap(mChunkBufferQueue);
-
     // Deallocate memory for each chunk
     for (auto& stack : mChunkStacks) {
         for (auto it = stack.begin(); it != stack.end(); ++it) {
