@@ -67,10 +67,10 @@ void ChunkRegion::GenerateChunks(const siv::PerlinNoise& perlin)
     }
 }
 
-void ChunkRegion::Draw(Shader& shader)
+void ChunkRegion::Draw(Vec3 playerPosition, Shader& shader)
 {
     for (auto& chunkStack : mChunkStacks) {
-        chunkStack.Draw(shader);
+        chunkStack.Draw(playerPosition, shader);
     }
 }
 
@@ -80,6 +80,7 @@ void ChunkRegion::BufferChunks()
     for (size_t i = 0; i < dequeued; i++) {
         mChunkBufferDequeResult[i]->BufferData();
     }
+    chunksBuffered += dequeued;
 }
 
 Chunk* ChunkRegion::GetChunk(iVec3 pos) {
@@ -120,6 +121,11 @@ void ChunkRegion::PrepareForDeletion()
     }
     // Mark as ready for deletion
     readyForDeletion = true;
+}
+
+bool ChunkRegion::FinishedGenerating()
+{
+    return mHasStartedChunkMerging && mHasStartedChunkMeshing && mHasStartedTerrainGeneration && mTaskPool.get_tasks_total() == 0 && chunksBuffered == DEFAULT_CHUNK_REGION_CHUNK_COUNT;
 }
 
 /*

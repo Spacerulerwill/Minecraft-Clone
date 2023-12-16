@@ -107,6 +107,20 @@ void Game::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action
         }
         break;
     }
+    case GLFW_KEY_EQUAL: {
+        if (action == GLFW_PRESS) {
+            pWorld->LOD++;
+        }
+        break;
+    }
+    case GLFW_KEY_MINUS: {
+        if (action == GLFW_PRESS) {
+            if (pWorld->LOD > 1) {
+                pWorld->LOD--;
+            }
+        }
+        break;
+    }
     }
 }
 

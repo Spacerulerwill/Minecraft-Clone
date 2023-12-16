@@ -35,13 +35,15 @@ public:
     ChunkRegion(iVec2 pos);
     iVec2 GetPosition() const;
     void GenerateChunks(const siv::PerlinNoise& perlin);
-    void Draw(Shader& shader);
+    void Draw(Vec3 playerPosition, Shader& shader);
     void BufferChunks();
     Chunk* GetChunk(iVec3 pos);
     ChunkStack* GetChunkStack(iVec2 pos);
     void PrepareForDeletion();
+    bool FinishedGenerating();
     std::atomic<bool> startedDeletion = false;
     std::atomic<bool> readyForDeletion = false;
+    std::atomic<std::size_t> chunksBuffered = 0;
 };
 
 #endif // !CHUNK_REGION_H

@@ -23,6 +23,7 @@ private:
     std::unordered_map<iVec2, ChunkRegion> mChunkRegionMap;
     BS::thread_pool mRegionUnloadPool;
 public:
+    GLint LOD = 1;
     Camera mCamera = Camera(Vec3{ 0.0f, 700.0f, 0.0f });
     void Draw();
     void GenerateChunkRegions();

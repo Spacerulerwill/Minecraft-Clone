@@ -7,6 +7,7 @@ License: MIT
 #include <world/chunk/Constants.hpp>
 #include <world/chunk/ChunkRegion.hpp>
 #include <util/Log.hpp>
+#include <cmath>
 
 Chunk::Chunk(iVec3 pos) : mPos(pos)
 {
@@ -119,11 +120,19 @@ void Chunk::BufferData()
     }
 }
 
-void Chunk::Draw(Shader& shader)
+void Chunk::Draw(Vec3 playerPosition, Shader& shader)
 {
-    mVAO.Bind();
-    shader.SetMat4("model", mModel);
-    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mVertexCount));
+    if (mVertexCount > 0) {
+        float xdist = (static_cast<float>(mPos[0]) * CS) - playerPosition[0];
+        float zdist = (static_cast<float>(mPos[2]) * CS) - playerPosition[2];
+        float distToPlayer = static_cast<float>(std::sqrt(xdist * xdist + zdist * zdist));
+
+        if (distToPlayer < static_cast<float>(CHUNK_RENDER_DISTANCE) * CS) {
+            mVAO.Bind();
+            shader.SetMat4("model", mModel);
+            glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mVertexCount));
+        }
+    }
 }
 
 BlockID Chunk::GetBlock(iVec3 pos) const

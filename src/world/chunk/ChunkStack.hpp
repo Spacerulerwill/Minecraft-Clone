@@ -24,7 +24,7 @@ public:
 
     ChunkStack(iVec2 pos);
     void GenerateTerrain(const siv::PerlinNoise& perlin);
-    void Draw(Shader& shader);
+    void Draw(Vec3 playerPosition, Shader& shader);
     void SetBlock(BlockID block, iVec3 pos);
     BlockID GetBlock(iVec3 pos) const;
     Chunk* GetChunk(int y);

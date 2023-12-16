@@ -69,10 +69,10 @@ Chunk* ChunkStack::GetChunk(int y) {
     }
 }
 
-void ChunkStack::Draw(Shader& shader)
+void ChunkStack::Draw(Vec3 playerPosition, Shader& shader)
 {
     for (auto& chunk : mChunks) {
-        chunk.Draw(shader);
+        chunk.Draw(playerPosition, shader);
     }
 }
 

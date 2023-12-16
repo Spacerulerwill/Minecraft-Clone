@@ -39,7 +39,7 @@ public:
     void CopyNeighbourChunkEdgeBlocks(ChunkRegion* region);
     void CreateMesh();
     void BufferData();
-    void Draw(Shader& shader);
+    void Draw(Vec3 playerPosition, Shader& shader);
     BlockID GetBlock(iVec3 pos) const;
     void SetBlock(BlockID block, iVec3 pos);
 };
