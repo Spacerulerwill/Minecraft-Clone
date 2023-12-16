@@ -7,6 +7,7 @@ License: MIT
 #include <world/chunk/Constants.hpp>
 #include <world/chunk/ChunkRegion.hpp>
 #include <util/Log.hpp>
+#include <world/Block.hpp>
 #include <cmath>
 
 Chunk::Chunk(iVec3 pos) : mPos(pos)

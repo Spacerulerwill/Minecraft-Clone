@@ -8,9 +8,11 @@ LICENSE: MIT
 
 #include <vector>
 #include <world/chunk/Chunk.hpp>
+#include <world/Block.hpp>
 #include <opengl/Shader.hpp>
 #include <math/Vector.hpp>
 #include <PerlinNoise.hpp>
+#include <world/Block.hpp>
 
 class ChunkStack {
 public:

@@ -5,7 +5,7 @@ License: MIT
 
 #include <world/chunk/ChunkMesher.hpp>
 #include <math/Vector.hpp>
-#include <util/Log.hpp>
+#include <world/Block.hpp>
 
 #ifdef _MSC_VER
 inline const int CTZ(uint64_t& x) {

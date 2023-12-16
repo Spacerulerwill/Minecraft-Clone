@@ -24,8 +24,6 @@ constexpr int CS_P_MINUS_ONE = CS_P - 1;
 constexpr int CS = CS_P - 2;
 constexpr int CS_MINUS_ONE = CS - 1;
 
-using BlockID = uint8_t;
-
 // Chunk region exponents (used for bitshifts once again)
 constexpr int CHUNK_REGION_SIZE_EXP = 4;
 

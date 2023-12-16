@@ -3,35 +3,7 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#ifndef BUFFER_OBJECT_H
-#define BUFFER_OBJECT_H
-
-#include <glad/gl.h>
-
-template <GLenum type>
-class BufferObject {
-private:
-    GLuint uID = 0;
-    GLsizeiptr mCount = 0;
-public:
-    BufferObject();
-    BufferObject(const GLvoid* data, GLsizeiptr size, GLenum usage);
-    ~BufferObject();
-    BufferObject(const BufferObject&) = delete;
-    BufferObject& operator=(const BufferObject&) = delete;
-    BufferObject(BufferObject&&) noexcept;
-    BufferObject& operator=(BufferObject&&) noexcept;
-    void BufferData(const GLvoid* data, GLsizeiptr size, GLenum usage);
-    void BufferSubData(const GLvoid* data, GLintptr offset, GLsizeiptr size);
-    void Bind() const;
-    void Unbind() const;
-    GLsizeiptr GetCount() const;
-};
-
-using VertexBuffer = BufferObject<GL_ARRAY_BUFFER>;
-using ElementBuffer = BufferObject<GL_ELEMENT_ARRAY_BUFFER>;
-
-#endif // !BUFFER_OBJECT_H
+#include <world/Block.hpp>
 
 /*
 MIT License

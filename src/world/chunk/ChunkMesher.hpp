@@ -9,6 +9,7 @@ License: MIT
 #include <vector>
 #include <cstdint>
 #include <world/chunk/Constants.hpp>
+#include <world/Block.hpp>
 
 namespace ChunkMesher {
     struct ChunkVertex {
