@@ -112,7 +112,7 @@ void Camera::ProcessMouseMovement(float xpos, float ypos)
     xoffset *= mMouseSensitivity;
     yoffset *= mMouseSensitivity;
 
-    mPitch = std::clamp(mPitch + yoffset, -90.0f, 90.0f);
+    mPitch = std::clamp(mPitch + yoffset, -89.0f, 89.0f);
     mYaw = static_cast<float>(fmod((mYaw + xoffset), 360));
 
     UpdateCameraVectors();

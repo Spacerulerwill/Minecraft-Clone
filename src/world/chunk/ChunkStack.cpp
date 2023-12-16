@@ -35,6 +35,11 @@ size_t ChunkStack::size() const {
 }
 
 void ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin) {
+
+    for (int i = 0; i < DEFAULT_CHUNK_STACK_HEIGHT; i++) {
+        mChunks.at(i).AllocateMemory();
+    }
+
     for (int x = 1; x < CS_P_MINUS_ONE; x++) {
         for (int z = 1; z < CS_P_MINUS_ONE; z++) {
             float heightMultiplayer = perlin.octave2D_01((mPos[0] * CS + x) * 0.0025, (mPos[1] * CS + z) * 0.0025, 4, 0.5);

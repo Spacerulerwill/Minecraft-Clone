@@ -27,13 +27,14 @@ class Chunk {
 private:
     VertexArray mVAO;
     VertexBuffer mVBO;
-    std::vector<BlockID> mBlocks = std::vector<BlockID>(CS_P3, 0);
+    std::vector<BlockID> mBlocks;
     iVec3 mPos{};
     Mat4 mModel = Mat4::identity();
     std::vector<ChunkMesher::ChunkVertex> mVertices;
     std::size_t mVertexCount = 0;
 public:
     Chunk(iVec3 pos);
+    void AllocateMemory();
     void CopyNeighbourChunkEdgeBlocks(ChunkRegion* region);
     void CreateMesh();
     void BufferData();
