@@ -80,7 +80,7 @@ void Game::ProcessKeyInput()
         pWorld->mCamera.SetMovementSpeed(300.0f);
     }
     else {
-        pWorld->mCamera.SetMovementSpeed(10.0f);
+        pWorld->mCamera.SetMovementSpeed(50.0f);
     }
 }
 
