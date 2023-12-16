@@ -7,6 +7,8 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
+uniform int LOD = 1;
+
 out float AOMultiplier;
 
 const float AO_MIN = 0.3;
@@ -16,6 +18,10 @@ float calculateAOMultiplier(uint AOLevel) {
     return AO_MIN + (AOLevel * AO_PART);
 }
 
+int roundUp(int numToRound, int multiple)
+{
+    return ((numToRound + multiple - 1) / multiple) * multiple;
+}
 void main()
 {
     float x = float(data&uint(63));
@@ -24,7 +30,11 @@ void main()
     uint ao = uint((data >> 18)&uint(3));
     
     AOMultiplier = calculateAOMultiplier(ao);
-    gl_Position = projection * view * model * vec4(x,y,z, 1.0);  
+    gl_Position = projection * view * model * vec4(
+        float(roundUp(int(x), LOD)),
+        float(roundUp(int(y), LOD)),
+        float(roundUp(int(z), LOD)), 
+    1.0);  
 }
 
 #shader fragment
