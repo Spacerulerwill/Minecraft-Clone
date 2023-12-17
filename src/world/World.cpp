@@ -36,7 +36,8 @@ void World::GenerateChunks()
     // unload chunks out of distance
     for (auto it = mChunkStacks.begin(); it != mChunkStacks.end();) {
         ChunkStack& stack = it->second;
-        iVec2 stackPos = stack.GetPosition();
+
+        ++++++++++++++ + iVec2 stackPos = stack.GetPosition();
         if ((stackPos[0] < playerChunkPos[0] - CHUNK_RENDER_DISTANCE ||
             stackPos[0] > playerChunkPos[0] + CHUNK_RENDER_DISTANCE ||
             stackPos[1] < playerChunkPos[1] - CHUNK_RENDER_DISTANCE ||
