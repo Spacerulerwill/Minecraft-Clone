@@ -18,8 +18,8 @@ void Game::Run() {
 
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_POLYGON_SMOOTH);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    //glEnable(GL_CULL_FACE);
+    //glCullFace(GL_BACK);
 
     pMSAARenderer = std::make_unique<MSAARenderer>(SCREEN_WIDTH, SCREEN_HEIGHT);
     Shader framebufferShader("res/shaders/framebuffer.shader");
@@ -57,7 +57,7 @@ void Game::Run() {
         glfwPollEvents();
         mWindow.SwapBuffers();
 
-        pWorld->GenerateChunkRegions();
+        pWorld->GenerateChunks();
     }
 }
 

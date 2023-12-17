@@ -6,11 +6,12 @@ LICENSE: MIT
 #include <world/chunk/Constants.hpp>
 #include <world/chunk/ChunkStack.hpp>
 #include <world/Block.hpp>
+#include <util/Log.hpp>
 
 ChunkStack::ChunkStack(iVec2 pos) : mPos(pos)
 {
     for (int y = 0; y < DEFAULT_CHUNK_STACK_HEIGHT; y++) {
-        mChunks.emplace_back(iVec3{ pos[0], y, pos[1] });
+        mChunks.emplace_back(std::make_shared<Chunk>(iVec3{ pos[0], y, pos[1] }));
     }
 }
 
@@ -37,12 +38,12 @@ size_t ChunkStack::size() const {
 void ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin) {
 
     for (int i = 0; i < DEFAULT_CHUNK_STACK_HEIGHT; i++) {
-        mChunks.at(i).AllocateMemory();
+        mChunks.at(i)->AllocateMemory();
     }
 
-    for (int x = 1; x < CS_P_MINUS_ONE; x++) {
-        for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-            float heightMultiplayer = perlin.octave2D_01((mPos[0] * CS + x) * 0.0025, (mPos[1] * CS + z) * 0.0025, 4, 0.5);
+    for (int x = 0; x < CS_P; x++) {
+        for (int z = 0; z < CS_P; z++) {
+            float heightMultiplayer = perlin.octave2D_01((mPos[0] * CS + x) * 0.00125, (mPos[1] * CS + z) * 0.00125, 4, 0.5);
             int height = MIN_WORLD_GEN_HEIGHT + (heightMultiplayer * MAX_MINUS_MIN_WORLD_GEN_HEIGHT);
 
             for (int y = 0; y < height; y++) {
@@ -50,29 +51,56 @@ void ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin) {
             }
         }
     }
+
+    for (std::size_t i = 0; i < DEFAULT_CHUNK_STACK_HEIGHT; i++) {
+        std::shared_ptr<Chunk> currentChunk = mChunks.at(i);
+        std::shared_ptr<Chunk> belowChunk = GetChunk(i - 1);
+        std::shared_ptr<Chunk> aboveChunk = GetChunk(i + 1);
+
+        if (belowChunk != nullptr) {
+            for (int x = 1; x < CS_P_MINUS_ONE; x++) {
+                for (int z = 1; z < CS_P_MINUS_ONE; z++) {
+                    currentChunk->SetBlock(belowChunk->GetBlock(iVec3{ x, CS, z }), iVec3{ x, 0, z });
+                }
+            }
+        }
+
+        if (aboveChunk != nullptr) {
+            for (int x = 1; x < CS_P_MINUS_ONE; x++) {
+                for (int z = 1; z < CS_P_MINUS_ONE; z++) {
+                    currentChunk->SetBlock(aboveChunk->GetBlock(iVec3{ x, 1, z }), iVec3{ x, CS_P_MINUS_ONE, z });
+                }
+            }
+        }
+    }
 }
 
 void ChunkStack::SetBlock(BlockID block, iVec3 pos) {
-    mChunks.at(pos[1] / CS).SetBlock(block, iVec3{ pos[0], 1 + pos[1] % CS, pos[2] });
+    mChunks.at(pos[1] / CS)->SetBlock(block, iVec3{ pos[0], 1 + pos[1] % CS, pos[2] });
 }
 
 BlockID ChunkStack::GetBlock(iVec3 pos) const {
-    return mChunks.at(pos[1] / CS).GetBlock(iVec3{ pos[0], 1 + pos[1] % CS, pos[2] });
+    return mChunks.at(pos[1] / CS)->GetBlock(iVec3{ pos[0], 1 + pos[1] % CS, pos[2] });
 }
 
-Chunk* ChunkStack::GetChunk(int y) {
+std::shared_ptr<Chunk>ChunkStack::GetChunk(int y) {
     if (y >= mChunks.size()) {
         return nullptr;
     }
     else {
-        return &mChunks.at(y);
+        return mChunks.at(y);
     }
 }
 
-void ChunkStack::Draw(Vec3 playerPosition, Shader& shader)
+iVec2 ChunkStack::GetPosition() const
+{
+    return mPos;
+}
+
+void ChunkStack::Draw(Shader& shader)
 {
     for (auto& chunk : mChunks) {
-        chunk.Draw(playerPosition, shader);
+        chunk->Draw(shader);
     }
 }
 

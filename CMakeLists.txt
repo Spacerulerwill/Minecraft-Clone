@@ -35,8 +35,6 @@ add_executable(${PROJECT_NAME}
     src/world/chunk/ChunkMesher.hpp
     src/world/chunk/ChunkStack.cpp
     src/world/chunk/ChunkStack.hpp
-    src/world/chunk/ChunkRegion.cpp
-    src/world/chunk/ChunkRegion.hpp
     src/world/chunk/Constants.hpp
     src/world/Block.cpp
     src/world/Block.hpp

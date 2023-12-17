@@ -5,7 +5,6 @@ License: MIT
 
 #include <world/chunk/Chunk.hpp>
 #include <world/chunk/Constants.hpp>
-#include <world/chunk/ChunkRegion.hpp>
 #include <world/Block.hpp>
 #include <cmath>
 
@@ -24,72 +23,9 @@ Chunk::Chunk(iVec3 pos) : mPos(pos)
         });
 }
 
-void Chunk::CopyNeighbourChunkEdgeBlocks(ChunkRegion* region)
+iVec3 Chunk::GetPosition() const
 {
-    iVec3 localChunkPos = mPos % CHUNK_REGION_SIZE;
-    if (localChunkPos[0] < 0) {
-        localChunkPos[0] = CHUNK_REGION_SIZE - (localChunkPos[0] * -1);
-    }
-    if (localChunkPos[1] < 0) {
-        localChunkPos[1] = CHUNK_REGION_SIZE - (localChunkPos[1] * -1);
-    }
-    if (localChunkPos[2] < 0) {
-        localChunkPos[2] = CHUNK_REGION_SIZE - (localChunkPos[2] * -1);
-    }
-    Chunk* belowChunk = region->GetChunk(localChunkPos + iVec3{ 0, -1, 0 });
-    Chunk* aboveChunk = region->GetChunk(localChunkPos + iVec3{ 0, 1, 0 });
-    Chunk* leftChunk = region->GetChunk(localChunkPos + iVec3{ -1, 0, 0 });
-    Chunk* rightChunk = region->GetChunk(localChunkPos + iVec3{ 1, 0, 0 });
-    Chunk* frontChunk = region->GetChunk(localChunkPos + iVec3{ 0, 0, -1 });
-    Chunk* backChunk = region->GetChunk(localChunkPos + iVec3{ 0, 0, 1 });
-
-    if (belowChunk != nullptr) {
-        for (int x = 1; x < CS_P_MINUS_ONE; x++) {
-            for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-                SetBlock(belowChunk->GetBlock(iVec3{ x, CS, z }), iVec3{ x, 0, z });
-            }
-        }
-    }
-
-    if (aboveChunk != nullptr) {
-        for (int x = 1; x < CS_P_MINUS_ONE; x++) {
-            for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-                SetBlock(aboveChunk->GetBlock(iVec3{ x, 1, z }), iVec3{ x, CS_P_MINUS_ONE, z });
-            }
-        }
-    }
-
-    if (leftChunk != nullptr) {
-        for (int y = 1; y < CS_P_MINUS_ONE; y++) {
-            for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-                SetBlock(leftChunk->GetBlock(iVec3{ CS, y, z }), iVec3{ 0, y, z });
-            }
-        }
-    }
-
-    if (rightChunk != nullptr) {
-        for (int y = 1; y < CS_P_MINUS_ONE; y++) {
-            for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-                SetBlock(rightChunk->GetBlock(iVec3{ 1, y, z }), iVec3{ CS_P_MINUS_ONE, y, z });
-            }
-        }
-    }
-
-    if (frontChunk != nullptr) {
-        for (int x = 1; x < CS_P_MINUS_ONE; x++) {
-            for (int y = 1; y < CS_P_MINUS_ONE; y++) {
-                SetBlock(frontChunk->GetBlock(iVec3{ x, y, CS }), iVec3{ x, y, 0 });
-            }
-        }
-    }
-
-    if (backChunk != nullptr) {
-        for (int x = 1; x < CS_P_MINUS_ONE; x++) {
-            for (int y = 1; y < CS_P_MINUS_ONE; y++) {
-                SetBlock(backChunk->GetBlock(iVec3{ x, y, 1 }), iVec3{ x, y, CS_P_MINUS_ONE });
-            }
-        }
-    }
+    return mPos;
 }
 
 void Chunk::AllocateMemory()
@@ -109,6 +45,7 @@ void Chunk::CreateMesh() {
 
     // Mesh
     mVertices = ChunkMesher::BinaryGreedyMesh(mBlocks);
+    needsBuffering = true;
 }
 
 void Chunk::BufferData()
@@ -118,20 +55,15 @@ void Chunk::BufferData()
         mVertexCount = mVertices.size();
         std::vector<ChunkMesher::ChunkVertex>().swap(mVertices);
     }
+    needsBuffering = false;
 }
 
-void Chunk::Draw(Vec3 playerPosition, Shader& shader)
+void Chunk::Draw(Shader& shader)
 {
     if (mVertexCount > 0) {
-        float xdist = (static_cast<float>(mPos[0]) * CS) - playerPosition[0];
-        float zdist = (static_cast<float>(mPos[2]) * CS) - playerPosition[2];
-        float distToPlayer = static_cast<float>(std::sqrt(xdist * xdist + zdist * zdist));
-
-        if (distToPlayer < static_cast<float>(CHUNK_RENDER_DISTANCE) * CS) {
-            mVAO.Bind();
-            shader.SetMat4("model", mModel);
-            glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mVertexCount));
-        }
+        mVAO.Bind();
+        shader.SetMat4("model", mModel);
+        glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mVertexCount));
     }
 }
 

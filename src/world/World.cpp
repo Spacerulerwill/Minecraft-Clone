@@ -18,83 +18,76 @@ void World::Draw()
     chunkShader.Bind();
     chunkShader.SetMat4("projection", perspective);
     chunkShader.SetMat4("view", view);
-    chunkShader.SetInt("LOD", LOD);
+    chunkShader.SetInt("LOD", 1);
 
-    for (auto& [pos, region] : mChunkRegionMap) {
-        region.Draw(mCamera.GetPosition(), chunkShader);
+    for (auto& [pos, stack] : mChunkStacks) {
+        stack.Draw(chunkShader);
     }
 }
 
-void World::GenerateChunkRegions()
+void World::GenerateChunks()
 {
     Vec3 playerPos = mCamera.GetPosition();
+    iVec2 playerChunkPos{
+        static_cast<int>(floor(playerPos[0]) / CS),
+        static_cast<int>(floor(playerPos[2]) / CS)
+    };
 
-    // Unload out of render distance regions
-    for (auto it = mChunkRegionMap.begin(); it != mChunkRegionMap.end();)
-    {
-        ChunkRegion* region = &(it->second);
-        iVec2 regionPos = region->GetPosition();
-
-        // Current region position for player
-        Vec3 p = playerPos / CHUNK_REGION_BLOCK_SIZE;
-        iVec2 playerRegionPos = iVec2{
-                static_cast<int>(floor(p[0])),
-                static_cast<int>(floor(p[2]))
-        };
-
-        // Check if any of the regions are out of bounds
-        int minRegionX = static_cast<int>(floor(((playerPos[0] - CHUNK_RENDER_DISTANCE * CS) / CHUNK_REGION_BLOCK_SIZE)));
-        int maxRegionX = static_cast<int>(floor(((playerPos[0] + (CHUNK_RENDER_DISTANCE - 1) * CS) / CHUNK_REGION_BLOCK_SIZE)));
-        int minRegionZ = static_cast<int>(floor(((playerPos[2] - CHUNK_RENDER_DISTANCE * CS) / CHUNK_REGION_BLOCK_SIZE)));
-        int maxRegionZ = static_cast<int>(floor(((playerPos[2] + (CHUNK_RENDER_DISTANCE - 1) * CS) / CHUNK_REGION_BLOCK_SIZE)));
-
-        if (regionPos[0] < minRegionX || regionPos[0] > maxRegionX || regionPos[1] < minRegionZ || regionPos[1] > maxRegionZ) {
-            if (region->readyForDeletion) {
-                it = mChunkRegionMap.erase(it);
-            }
-            else if (!region->startedDeletion) {
-                mRegionUnloadPool.push_task([region] {
-                    region->PrepareForDeletion();
-                    });
-                ++it;
-            }
-            else {
-                ++it;
-            }
+    // unload chunks out of distance
+    for (auto it = mChunkStacks.begin(); it != mChunkStacks.end();) {
+        ChunkStack& stack = it->second;
+        iVec2 stackPos = stack.GetPosition();
+        if ((stackPos[0] < playerChunkPos[0] - CHUNK_RENDER_DISTANCE ||
+            stackPos[0] > playerChunkPos[0] + CHUNK_RENDER_DISTANCE ||
+            stackPos[1] < playerChunkPos[1] - CHUNK_RENDER_DISTANCE ||
+            stackPos[1] > playerChunkPos[1] + CHUNK_RENDER_DISTANCE) && !stack.isBeingmMeshed) {
+            it = mChunkStacks.erase(it);
         }
-        else
-        {
+        else {
             ++it;
         }
     }
-
-    for (int x = -CHUNK_RENDER_DISTANCE; x < CHUNK_RENDER_DISTANCE; x++) {
-        for (int z = -CHUNK_RENDER_DISTANCE; z < CHUNK_RENDER_DISTANCE; z++) {
-            Vec3 newPlayerPos = playerPos + Vec3{ x * static_cast<float>(CS), 0.0f, z * static_cast<float>(CS) };
-            Vec3 newPlayerChunkRegionPosFloat = newPlayerPos / CHUNK_REGION_BLOCK_SIZE;
-            iVec2 newRegionPos = iVec2{
-                static_cast<int>(floor(newPlayerChunkRegionPosFloat[0])),
-                static_cast<int>(floor(newPlayerChunkRegionPosFloat[2]))
-            };
-
-            auto findResult = mChunkRegionMap.find(newRegionPos);
-            ChunkRegion* region = nullptr;
-            if (findResult == mChunkRegionMap.end()) {
-                auto emplaceResult = mChunkRegionMap.emplace(newRegionPos, newRegionPos);
-                region = &emplaceResult.first->second;
+    std::size_t chunksBuffered = 0;
+    std::size_t chunksCreated = 0;
+    for (int x = -CHUNK_RENDER_DISTANCE; x <= CHUNK_RENDER_DISTANCE; x++) {
+        for (int z = -CHUNK_RENDER_DISTANCE; z <= CHUNK_RENDER_DISTANCE; z++) {
+            iVec2 pos = playerChunkPos + iVec2{ x,z };
+            auto find = mChunkStacks.find(pos);
+            if (find == mChunkStacks.end()) {
+                if (chunksCreated < CHUNK_BUFFER_PER_FRAME) {
+                    auto emplace = mChunkStacks.emplace(pos, pos);
+                    ChunkStack& chunkStack = emplace.first->second;
+                    chunkStack.isBeingmMeshed = true;
+                    mTaskPool.push_task([&chunkStack, this] {
+                        chunkStack.GenerateTerrain(mPerlin);
+                        for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+                            std::shared_ptr<Chunk> chunk = (*it);
+                            chunk->CreateMesh();
+                        }
+                        chunkStack.isBeingmMeshed = false;
+                        });
+                    chunksCreated++;
+                }
             }
             else {
-                region = &findResult->second;
-            }
-
-            if (!region->FinishedGenerating()) {
-                region->GenerateChunks(mPerlin);
-                region->BufferChunks();
-                return;
+                ChunkStack& stack = find->second;
+                for (auto it = stack.begin(); it != stack.end(); ++it) {
+                    std::shared_ptr<Chunk> chunk = *it;
+                    if (chunksBuffered < CHUNK_BUFFER_PER_FRAME) {
+                        if (chunk->needsBuffering) {
+                            chunksBuffered++;
+                            chunk->BufferData();
+                        }
+                    }
+                    else {
+                        return;
+                    }
+                }
             }
         }
     }
 }
+
 
 /*
 MIT License

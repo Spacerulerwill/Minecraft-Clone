@@ -16,8 +16,8 @@ LICENSE: MIT
 
 class ChunkStack {
 public:
-    using iterator = std::vector<Chunk>::iterator;
-    using const_iterator = std::vector<Chunk>::const_iterator;
+    using iterator = std::vector<std::shared_ptr<Chunk>>::iterator;
+    using const_iterator = std::vector<std::shared_ptr<Chunk>>::const_iterator;
     iterator begin();
     iterator end();
     const_iterator cbegin() const;
@@ -26,13 +26,15 @@ public:
 
     ChunkStack(iVec2 pos);
     void GenerateTerrain(const siv::PerlinNoise& perlin);
-    void Draw(Vec3 playerPosition, Shader& shader);
+    void Draw(Shader& shader);
     void SetBlock(BlockID block, iVec3 pos);
     BlockID GetBlock(iVec3 pos) const;
-    Chunk* GetChunk(int y);
+    std::shared_ptr<Chunk> GetChunk(int y);
+    iVec2 GetPosition() const;
+    std::atomic_bool isBeingmMeshed = false;
 private:
     iVec2 mPos{};
-    std::vector<Chunk> mChunks;
+    std::vector<std::shared_ptr<Chunk>> mChunks;
 };
 
 #endif // !CHUNK_STACK_H

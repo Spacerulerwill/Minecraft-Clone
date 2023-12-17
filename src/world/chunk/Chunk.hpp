@@ -22,8 +22,6 @@ inline std::size_t VoxelIndex(iVec3 pos) {
     return pos[2] + (pos[0] << CHUNK_SIZE_EXP) + (pos[1] << CHUNK_SIZE_EXP_X2);
 }
 
-class ChunkRegion;
-
 class Chunk {
 private:
     VertexArray mVAO;
@@ -35,14 +33,15 @@ private:
     std::size_t mVertexCount = 0;
 public:
     Chunk(iVec3 pos);
+    iVec3 GetPosition() const;
     void AllocateMemory();
     void ReleaseMemory();
-    void CopyNeighbourChunkEdgeBlocks(ChunkRegion* region);
     void CreateMesh();
     void BufferData();
-    void Draw(Vec3 playerPosition, Shader& shader);
+    void Draw(Shader& shader);
     BlockID GetBlock(iVec3 pos) const;
     void SetBlock(BlockID block, iVec3 pos);
+    std::atomic_bool needsBuffering = false;
 };
 
 #endif // !CHUNK_H

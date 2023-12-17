@@ -7,26 +7,28 @@ License: MIT
 #define WORLD_H
 
 #include <world/Skybox.hpp>
-#include <world/chunk/ChunkRegion.hpp>
 #include <opengl/Shader.hpp>
 #include <opengl/Texture.hpp>
+#include <world/chunk/ChunkStack.hpp>
 #include <core/Camera.hpp>
 #include <PerlinNoise.hpp>
 #include <unordered_map>
 #include <BS_thread_pool.hpp>
+#include <concurrentqueue.h>
 
 class World {
 private:
     Skybox mSkybox;
     Shader chunkShader = Shader("res/shaders/chunk.shader");
     siv::PerlinNoise mPerlin = siv::PerlinNoise(0);
-    std::unordered_map<iVec2, ChunkRegion> mChunkRegionMap;
-    BS::thread_pool mRegionUnloadPool;
+    moodycamel::ConcurrentQueue<Chunk*> mChunkBufferQueue;
+    std::unordered_map<iVec2, ChunkStack> mChunkStacks;
+    BS::thread_pool mTaskPool;
 public:
     GLint LOD = 1;
     Camera mCamera = Camera(Vec3{ 0.0f, 700.0f, 0.0f });
     void Draw();
-    void GenerateChunkRegions();
+    void GenerateChunks();
 };
 
 #endif // !WORLD_H
