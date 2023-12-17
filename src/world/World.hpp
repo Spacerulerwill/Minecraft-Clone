@@ -14,14 +14,12 @@ License: MIT
 #include <PerlinNoise.hpp>
 #include <unordered_map>
 #include <BS_thread_pool.hpp>
-#include <concurrentqueue.h>
 
 class World {
 private:
     Skybox mSkybox;
     Shader chunkShader = Shader("res/shaders/chunk.shader");
     siv::PerlinNoise mPerlin = siv::PerlinNoise(0);
-    moodycamel::ConcurrentQueue<Chunk*> mChunkBufferQueue;
     std::unordered_map<iVec2, ChunkStack> mChunkStacks;
     BS::thread_pool mTaskPool;
 public:
