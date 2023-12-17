@@ -47,6 +47,7 @@ void World::GenerateChunks()
             ++it;
         }
     }
+
     std::size_t chunksBuffered = 0;
     std::size_t chunksCreated = 0;
     for (int x = -CHUNK_RENDER_DISTANCE; x <= CHUNK_RENDER_DISTANCE; x++) {

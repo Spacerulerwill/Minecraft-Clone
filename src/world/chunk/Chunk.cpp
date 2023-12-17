@@ -12,7 +12,7 @@ Chunk::Chunk(iVec3 pos) : mPos(pos)
 {
     // Setup buffers
     VertexBufferLayout bufferLayout;
-    bufferLayout.AddAttribute<unsigned int>(1);
+    bufferLayout.AddAttribute<unsigned int>(2);
     mVAO.AddBuffer(mVBO, bufferLayout);
 
     // Translate to its chunk position

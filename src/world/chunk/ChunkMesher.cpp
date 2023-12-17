@@ -80,9 +80,10 @@ inline const void InsertQuad(std::vector<ChunkMesher::ChunkVertex>& vertices, Ch
     }
 }
 
-inline ChunkMesher::ChunkVertex GetChunkVertex(uint32_t x, uint32_t y, uint32_t z, uint32_t ao) {
+inline ChunkMesher::ChunkVertex GetChunkVertex(uint32_t x, uint32_t y, uint32_t z, uint32_t ao, uint32_t texX, uint32_t texY, uint32_t type) {
     return ChunkMesher::ChunkVertex{
         (ao << 18) | ((z - 1) << 12) | ((y - 1) << 6) | (x - 1),
+        (type << 12) | ((texY) << 6) | (texX),
     };
 }
 
@@ -175,6 +176,9 @@ std::vector<ChunkMesher::ChunkVertex> ChunkMesher::BinaryGreedyMesh(const std::v
                     uint8_t mesh_back = forward + 1;
                     uint8_t mesh_up = bit_pos + (face % 2 == 0 ? 1 : 0);
 
+                    BlockID type = blocks[GetAxisIndex(axis, right, forward, bit_pos)];
+                    BlockDataStruct blockData = BlockData[type];
+
                     int c = bit_pos + light_dir;
                     bool ao_F = SolidCheck(blocks[GetAxisIndex(axis, right, forward - 1, c)]);
                     bool ao_B = SolidCheck(blocks[GetAxisIndex(axis, right, forward + 1, c)]);
@@ -197,46 +201,51 @@ std::vector<ChunkMesher::ChunkVertex> ChunkMesher::BinaryGreedyMesh(const std::v
                     ChunkVertex v1, v2, v3, v4;
                     switch (face) {
                     case 0: {
-                        v1 = GetChunkVertex(mesh_left, mesh_up, mesh_front, ao_LF);
-                        v2 = GetChunkVertex(mesh_left, mesh_up, mesh_back, ao_LB);
-                        v3 = GetChunkVertex(mesh_right, mesh_up, mesh_back, ao_RB);
-                        v4 = GetChunkVertex(mesh_right, mesh_up, mesh_front, ao_RF);
+                        TextureID texZ = blockData.faces[TOP_FACE];
+                        v1 = GetChunkVertex(mesh_left, mesh_up, mesh_front, ao_LF, 0, 0, texZ);
+                        v2 = GetChunkVertex(mesh_left, mesh_up, mesh_back, ao_LB, 0, mesh_back - mesh_front, texZ);
+                        v3 = GetChunkVertex(mesh_right, mesh_up, mesh_back, ao_RB, mesh_right - mesh_left, mesh_back - mesh_front, texZ);
+                        v4 = GetChunkVertex(mesh_right, mesh_up, mesh_front, ao_RF, mesh_right - mesh_left, 0, texZ);
                         break;
                     }
                     case 1: {
-                        v1 = GetChunkVertex(mesh_left, mesh_up, mesh_back, ao_LB);
-                        v2 = GetChunkVertex(mesh_left, mesh_up, mesh_front, ao_LF);
-                        v3 = GetChunkVertex(mesh_right, mesh_up, mesh_front, ao_RF);
-                        v4 = GetChunkVertex(mesh_right, mesh_up, mesh_back, ao_RB);
-
+                        TextureID texZ = blockData.faces[BOTTOM_FACE];
+                        v1 = GetChunkVertex(mesh_left, mesh_up, mesh_back, ao_LB, 0, mesh_back - mesh_front, texZ);
+                        v2 = GetChunkVertex(mesh_left, mesh_up, mesh_front, ao_LF, 0, 0, texZ);
+                        v3 = GetChunkVertex(mesh_right, mesh_up, mesh_front, ao_RF, mesh_right - mesh_left, 0, texZ);
+                        v4 = GetChunkVertex(mesh_right, mesh_up, mesh_back, ao_RB, mesh_right - mesh_left, mesh_back - mesh_front, texZ);
                         break;
                     }
                     case 2: {
-                        v1 = GetChunkVertex(mesh_up, mesh_front, mesh_left, ao_LF);
-                        v2 = GetChunkVertex(mesh_up, mesh_back, mesh_left, ao_LB);
-                        v3 = GetChunkVertex(mesh_up, mesh_back, mesh_right, ao_RB);
-                        v4 = GetChunkVertex(mesh_up, mesh_front, mesh_right, ao_RF);
+                        TextureID texZ = blockData.faces[RIGHT_FACE];
+                        v1 = GetChunkVertex(mesh_up, mesh_front, mesh_left, ao_LF, 0, mesh_back - mesh_front, texZ);
+                        v2 = GetChunkVertex(mesh_up, mesh_back, mesh_left, ao_LB, 0, 0, texZ);
+                        v3 = GetChunkVertex(mesh_up, mesh_back, mesh_right, ao_RB, mesh_right - mesh_left, 0, texZ);
+                        v4 = GetChunkVertex(mesh_up, mesh_front, mesh_right, ao_RF, mesh_right - mesh_left, mesh_back - mesh_front, texZ);
                         break;
                     }
                     case 3: {
-                        v1 = GetChunkVertex(mesh_up, mesh_back, mesh_left, ao_LB);
-                        v2 = GetChunkVertex(mesh_up, mesh_front, mesh_left, ao_LF);
-                        v3 = GetChunkVertex(mesh_up, mesh_front, mesh_right, ao_RF);
-                        v4 = GetChunkVertex(mesh_up, mesh_back, mesh_right, ao_RB);
+                        TextureID texZ = blockData.faces[LEFT_FACE];
+                        v1 = GetChunkVertex(mesh_up, mesh_back, mesh_left, ao_LB, 0, 0, texZ);
+                        v2 = GetChunkVertex(mesh_up, mesh_front, mesh_left, ao_LF, 0, mesh_back - mesh_front, texZ);
+                        v3 = GetChunkVertex(mesh_up, mesh_front, mesh_right, ao_RF, mesh_right - mesh_left, mesh_back - mesh_front, texZ);
+                        v4 = GetChunkVertex(mesh_up, mesh_back, mesh_right, ao_RB, mesh_right - mesh_left, 0, texZ);
                         break;
                     }
                     case 4: {
-                        v1 = GetChunkVertex(mesh_front, mesh_left, mesh_up, ao_LF);
-                        v2 = GetChunkVertex(mesh_back, mesh_left, mesh_up, ao_LB);
-                        v3 = GetChunkVertex(mesh_back, mesh_right, mesh_up, ao_RB);
-                        v4 = GetChunkVertex(mesh_front, mesh_right, mesh_up, ao_RF);
+                        TextureID texZ = blockData.faces[BACK_FACE];
+                        v1 = GetChunkVertex(mesh_front, mesh_left, mesh_up, ao_LF, 0, mesh_right - mesh_left, texZ);
+                        v2 = GetChunkVertex(mesh_back, mesh_left, mesh_up, ao_LB, mesh_back - mesh_front, mesh_right - mesh_left, texZ);
+                        v3 = GetChunkVertex(mesh_back, mesh_right, mesh_up, ao_RB, mesh_back - mesh_front, 0, texZ);
+                        v4 = GetChunkVertex(mesh_front, mesh_right, mesh_up, ao_RF, 0, 0, texZ);
                         break;
                     }
                     case 5: {
-                        v1 = GetChunkVertex(mesh_back, mesh_left, mesh_up, ao_LB);
-                        v2 = GetChunkVertex(mesh_front, mesh_left, mesh_up, ao_LF);
-                        v3 = GetChunkVertex(mesh_front, mesh_right, mesh_up, ao_RF);
-                        v4 = GetChunkVertex(mesh_back, mesh_right, mesh_up, ao_RB);
+                        TextureID texZ = blockData.faces[FRONT_FACE];
+                        v1 = GetChunkVertex(mesh_back, mesh_left, mesh_up, ao_LB, 0, mesh_right - mesh_left, texZ);
+                        v2 = GetChunkVertex(mesh_front, mesh_left, mesh_up, ao_LF, mesh_back - mesh_front, mesh_right - mesh_left, texZ);
+                        v3 = GetChunkVertex(mesh_front, mesh_right, mesh_up, ao_RF, mesh_back - mesh_front, 0, texZ);
+                        v4 = GetChunkVertex(mesh_back, mesh_right, mesh_up, ao_RB, 0, 0, texZ);
                         break;
                     }
                     }

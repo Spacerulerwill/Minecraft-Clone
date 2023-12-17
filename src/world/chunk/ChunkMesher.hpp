@@ -13,7 +13,8 @@ License: MIT
 
 namespace ChunkMesher {
     struct ChunkVertex {
-        uint32_t data;
+        uint32_t data1;
+        uint32_t data2;
     };
 
     std::vector<ChunkVertex> BinaryGreedyMesh(const std::vector<BlockID>& blocks);

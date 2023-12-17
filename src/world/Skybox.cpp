@@ -61,8 +61,7 @@ std::array<std::string, 6> Skybox::sSkyboxFaces = {
 
 Skybox::Skybox()
 {
-    glActiveTexture(GL_TEXTURE0);
-    mCubemap = Cubemap(sSkyboxFaces);
+    mCubemap = Cubemap(sSkyboxFaces, GL_TEXTURE0);
 
     // Setup Buffers
     VertexBufferLayout bufLayout;

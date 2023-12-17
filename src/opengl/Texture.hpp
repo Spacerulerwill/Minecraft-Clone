@@ -20,9 +20,9 @@ public:
     Texture& operator=(const Texture&) = delete;
     Texture(Texture&& other) noexcept;
     Texture& operator=(Texture&& other) noexcept;
-    Texture(std::string path) requires (type == GL_TEXTURE_2D);
-    Texture(std::string path, GLsizei tilesize) requires (type == GL_TEXTURE_2D_ARRAY);
-    Texture(std::array<std::string, 6> faces) requires (type == GL_TEXTURE_CUBE_MAP);
+    Texture(std::string path, GLenum textureUnit) requires (type == GL_TEXTURE_2D);
+    Texture(std::string path, GLsizei tilesize, GLenum textureUnit) requires (type == GL_TEXTURE_2D_ARRAY);
+    Texture(std::array<std::string, 6> faces, GLenum textureUnit) requires (type == GL_TEXTURE_CUBE_MAP);
     ~Texture();
     void Bind() const;
     void Unbind() const;

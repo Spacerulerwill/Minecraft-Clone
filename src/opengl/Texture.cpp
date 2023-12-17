@@ -47,8 +47,9 @@ Texture<type>& Texture<type>::operator=(Texture&& other) noexcept
 }
 
 template<GLenum type>
-Texture<type>::Texture(std::string path) requires (type == GL_TEXTURE_2D)
+Texture<type>::Texture(std::string path, GLenum textureUnit) requires (type == GL_TEXTURE_2D)
 {
+    glActiveTexture(textureUnit);
     glGenTextures(1, &uID);
     glBindTexture(type, uID);
 
@@ -75,8 +76,9 @@ Texture<type>::Texture(std::string path) requires (type == GL_TEXTURE_2D)
 }
 
 template<GLenum type>
-Texture<type>::Texture(std::string path, GLsizei tilesize) requires (type == GL_TEXTURE_2D_ARRAY)
+Texture<type>::Texture(std::string path, GLsizei tilesize, GLenum textureUnit) requires (type == GL_TEXTURE_2D_ARRAY)
 {
+    glActiveTexture(textureUnit);
     glGenTextures(1, &uID);
     glBindTexture(GL_TEXTURE_2D_ARRAY, uID);
 
@@ -105,8 +107,9 @@ Texture<type>::Texture(std::string path, GLsizei tilesize) requires (type == GL_
 }
 
 template<GLenum type>
-Texture<type>::Texture(std::array<std::string, 6> faces) requires (type == GL_TEXTURE_CUBE_MAP)
+Texture<type>::Texture(std::array<std::string, 6> faces, GLenum textureUnit) requires (type == GL_TEXTURE_CUBE_MAP)
 {
+    glActiveTexture(textureUnit);
     glGenTextures(1, &uID);
     glBindTexture(GL_TEXTURE_CUBE_MAP, uID);
 

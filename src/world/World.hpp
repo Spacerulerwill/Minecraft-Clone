@@ -10,6 +10,7 @@ License: MIT
 #include <opengl/Shader.hpp>
 #include <opengl/Texture.hpp>
 #include <world/chunk/ChunkStack.hpp>
+#include <world/Block.hpp>
 #include <core/Camera.hpp>
 #include <PerlinNoise.hpp>
 #include <unordered_map>
@@ -22,6 +23,7 @@ private:
     siv::PerlinNoise mPerlin = siv::PerlinNoise(0);
     std::unordered_map<iVec2, ChunkStack> mChunkStacks;
     BS::thread_pool mTaskPool;
+    TexArray2D mTextureAtlas = TexArray2D("res/textures/atlas.png", TEXTURE_SIZE, GL_TEXTURE0);
 public:
     GLint LOD = 1;
     Camera mCamera = Camera(Vec3{ 0.0f, 700.0f, 0.0f });

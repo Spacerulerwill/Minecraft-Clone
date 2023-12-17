@@ -6,15 +6,39 @@ License: MIT
 #ifndef BLOCK_H
 #define BLOCK_H
 
+#include <array>
 #include <cstdint>
+#include <string>
 
 using BlockID = uint8_t;
+using TextureID = uint8_t;
 
-enum Blocks : BlockID {
+enum Block : BlockID {
     AIR,
     STONE,
     NUM_BLOCKS
 };
+
+enum BlockFaces {
+    TOP_FACE,
+    BOTTOM_FACE,
+    LEFT_FACE,
+    RIGHT_FACE,
+    FRONT_FACE,
+    BACK_FACE
+};
+
+struct BlockDataStruct {
+    uint8_t unique_faces;
+    std::array<TextureID, 6> faces;
+};
+
+// Global arrays used to fetch certain information by integer ID, using array indexing
+extern BlockDataStruct BlockData[NUM_BLOCKS];
+
+constexpr unsigned int TEXTURE_SIZE = 16;
+
+void InitBlocks();
 
 #endif // !BLOCK_H
 

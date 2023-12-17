@@ -5,7 +5,7 @@ License: MIT
 
 #include <core/Game.hpp>
 #include <opengl/Shader.hpp>
-#include <world/Skybox.hpp>
+#include <world/Block.hpp>
 #include <math/Matrix.hpp>
 #include <glad/gl.h>
 #include <stdexcept>
@@ -18,8 +18,10 @@ void Game::Run() {
 
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_POLYGON_SMOOTH);
-    //glEnable(GL_CULL_FACE);
-    //glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+    InitBlocks();
 
     pMSAARenderer = std::make_unique<MSAARenderer>(SCREEN_WIDTH, SCREEN_HEIGHT);
     Shader framebufferShader("res/shaders/framebuffer.shader");
