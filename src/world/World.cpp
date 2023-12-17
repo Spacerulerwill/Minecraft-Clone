@@ -18,7 +18,7 @@ void World::Draw()
     chunkShader.Bind();
     chunkShader.SetMat4("projection", perspective);
     chunkShader.SetMat4("view", view);
-    chunkShader.SetInt("LOD", 1);
+    chunkShader.SetInt("LOD", LOD);
 
     for (auto& [pos, stack] : mChunkStacks) {
         stack.Draw(chunkShader);
