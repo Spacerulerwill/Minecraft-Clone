@@ -7,6 +7,7 @@ License: MIT
 #include <opengl/Shader.hpp>
 #include <world/Block.hpp>
 #include <math/Matrix.hpp>
+#include <math/Raycast.hpp>
 #include <glad/glad.h>
 #include <stdexcept>
 #include <format>
@@ -16,6 +17,8 @@ License: MIT
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui/imgui_internal.h>
 #include <GLFW/glfw3.h>
+
+#include <util/Log.hpp>
 
 void Game::Run() {
     if (!gladLoadGL())
@@ -177,8 +180,28 @@ void Game::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, i
         switch (button) {
         case GLFW_MOUSE_BUTTON_1: {
             if (action == GLFW_PRESS) {
-                iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pWorld->mCamera.GetPosition());
-                pWorld->SetBlockAndRemesh(blockPos, STONE);
+                const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(pWorld.get(), pWorld->mCamera.GetPosition(), pWorld->mCamera.GetDirection(), 10.0f);
+
+                if (raycast.chunk != nullptr && raycast.blockHit != AIR) {
+                    raycast.chunk->SetBlock(raycast.blockPos, AIR);
+                    raycast.chunk->CreateMesh();
+                    raycast.chunk->BufferData();
+                }
+
+                LOG_TRACE(std::string(raycast.normal));
+            }
+            break;
+        }
+        case GLFW_MOUSE_BUTTON_RIGHT: {
+            if (action == GLFW_PRESS) {
+                const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(pWorld.get(), pWorld->mCamera.GetPosition(), pWorld->mCamera.GetDirection(), 10.0f);
+
+                if (raycast.chunk != nullptr && raycast.blockHit != AIR) {
+                    iVec3 blockPlacePosition = raycast.blockPos + raycast.normal;
+                    raycast.chunk->SetBlock(blockPlacePosition, STONE);
+                    raycast.chunk->CreateMesh();
+                    raycast.chunk->BufferData();
+                }
             }
             break;
         }
