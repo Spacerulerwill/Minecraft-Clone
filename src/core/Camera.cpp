@@ -81,16 +81,6 @@ void Camera::ProcessKeyboard(World* world, CameraMovement direction, float delta
 
     if (direction == FORWARD) {
         directionMultiplier = mFront;
-        Vec3 newPosition = mPosition;
-        for (int i = 0; i < 3; i++) {
-            newPosition[i] += directionMultiplier[i] * velocity;
-            BlockID block = world->GetBlock(GetWorldBlockPosFromGlobalPos(newPosition));
-            if (block != AIR) {
-                newPosition[i] = mPosition[i];
-            }
-        }
-        mPosition = newPosition;
-        return;
     }
     if (direction == BACKWARD) {
         directionMultiplier = mFront * -1;
@@ -102,7 +92,15 @@ void Camera::ProcessKeyboard(World* world, CameraMovement direction, float delta
         directionMultiplier = mRight;
     }
 
-    mPosition += directionMultiplier * velocity;
+    Vec3 newPosition = mPosition;
+    for (int i = 0; i < 3; i++) {
+        newPosition[i] += directionMultiplier[i] * velocity;
+        BlockID block = world->GetBlock(GetWorldBlockPosFromGlobalPos(newPosition));
+        if (block != AIR) {
+            newPosition[i] = mPosition[i];
+        }
+    }
+    mPosition = newPosition;
 }
 
 void Camera::ProcessMouseMovement(float xpos, float ypos)
