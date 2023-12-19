@@ -7,6 +7,7 @@ License: MIT
 #include <core/Camera.hpp>
 #include <glad/glad.h>
 #include <assert.h>
+#include <world/World.hpp>
 
 const float Camera::MAX_FOV = 90.0f;
 const float Camera::MIN_FOV = 1.0f;
@@ -73,13 +74,23 @@ Vec3 Camera::GetDirection() const {
     return mFront;
 }
 
-void Camera::ProcessKeyboard(CameraMovement direction, float deltaTime)
+void Camera::ProcessKeyboard(World* world, CameraMovement direction, float deltaTime)
 {
     float velocity = mMovementSpeed * deltaTime;
     Vec3 directionMultiplier;
 
     if (direction == FORWARD) {
         directionMultiplier = mFront;
+        Vec3 newPosition = mPosition;
+        for (int i = 0; i < 3; i++) {
+            newPosition[i] += directionMultiplier[i] * velocity;
+            BlockID block = world->GetBlock(GetWorldBlockPosFromGlobalPos(newPosition));
+            if (block != AIR) {
+                newPosition[i] = mPosition[i];
+            }
+        }
+        mPosition = newPosition;
+        return;
     }
     if (direction == BACKWARD) {
         directionMultiplier = mFront * -1;

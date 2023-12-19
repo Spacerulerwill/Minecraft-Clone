@@ -11,6 +11,8 @@ License: MIT
 #include <math/Vector.hpp>
 #include <math/Matrix.hpp>
 
+class World;
+
 enum CameraMovement {
     FORWARD,
     BACKWARD,
@@ -41,7 +43,7 @@ public:
     Vec3 GetPosition() const;
     Vec3 GetDirection() const;
 
-    void ProcessKeyboard(CameraMovement direction, float deltaTime);
+    void ProcessKeyboard(World* world, CameraMovement direction, float deltaTime);
     void ProcessMouseMovement(float xpos, float ypos);
     void ProcessMouseScroll(float yoffset);
 

@@ -87,10 +87,12 @@ void Game::Run() {
 
         Vec3 pos = pWorld->mCamera.GetPosition();
         iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pos);
-        iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
+        iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(blockPos);
+        iVec3 chunkLocalBlockPos = GetChunkBlockPosFromGlobalBlockPos(blockPos);
 
         ImGui::Text(std::format("Block coordinates: {}", std::string(blockPos)).c_str());
         ImGui::Text(std::format("Chunk coordinates: {}", std::string(chunkPos)).c_str());
+
         ImGui::Text(std::format("FPS: {}", static_cast<int>(1.0f / mDeltaTime)).c_str());
         ImGui::End();
 
@@ -113,16 +115,16 @@ void Game::ProcessKeyInput()
 {
     if (!mIsMouseVisible) {
         if (mWindow.IsKeyPressed(GLFW_KEY_W)) {
-            pWorld->mCamera.ProcessKeyboard(FORWARD, mDeltaTime);
+            pWorld->mCamera.ProcessKeyboard(pWorld.get(), FORWARD, mDeltaTime);
         }
         if (mWindow.IsKeyPressed(GLFW_KEY_S)) {
-            pWorld->mCamera.ProcessKeyboard(BACKWARD, mDeltaTime);
+            pWorld->mCamera.ProcessKeyboard(pWorld.get(), BACKWARD, mDeltaTime);
         }
         if (mWindow.IsKeyPressed(GLFW_KEY_A)) {
-            pWorld->mCamera.ProcessKeyboard(LEFT, mDeltaTime);
+            pWorld->mCamera.ProcessKeyboard(pWorld.get(), LEFT, mDeltaTime);
         }
         if (mWindow.IsKeyPressed(GLFW_KEY_D)) {
-            pWorld->mCamera.ProcessKeyboard(RIGHT, mDeltaTime);
+            pWorld->mCamera.ProcessKeyboard(pWorld.get(), RIGHT, mDeltaTime);
         }
         if (mWindow.IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
             pWorld->mCamera.SetMovementSpeed(50.0f);
@@ -187,8 +189,6 @@ void Game::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, i
                     raycast.chunk->CreateMesh();
                     raycast.chunk->BufferData();
                 }
-
-                LOG_TRACE(std::string(raycast.normal));
             }
             break;
         }

@@ -18,11 +18,15 @@ iVec3 GetWorldBlockPosFromGlobalPos(Vec3 globalPosition)
 
 iVec3 GetChunkPosFromGlobalBlockPos(iVec3 globalBlockPos)
 {
-    iVec3 result = globalBlockPos / CS;
-    if (globalBlockPos[0] < 0)
-        result[0]--;
-    if (globalBlockPos[2] < 0)
-        result[2]--;
+    iVec3 result;
+    for (int i = 0; i < 3; i++) {
+        if (globalBlockPos[i] < 0) {
+            result[i] = ((globalBlockPos[i] + 1) / CS) - 1;
+        }
+        else {
+            result[i] = globalBlockPos[i] / CS;
+        }
+    }
     return result;
 }
 

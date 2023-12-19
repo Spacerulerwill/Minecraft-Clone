@@ -1,6 +1,6 @@
 #shader vertex
 
-#version 450 core
+#version 330 core
 
 layout (location = 0) in uvec2 data;
 
@@ -47,7 +47,7 @@ void main()
 
 #shader fragment
 
-#version 450 core
+#version 330 core
 
 in float AOMultiplier;
 in vec3 TexCoords;
