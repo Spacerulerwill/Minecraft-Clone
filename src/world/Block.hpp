@@ -35,9 +35,7 @@ struct BlockDataStruct {
 
 // Global arrays used to fetch certain information by integer ID, using array indexing
 extern BlockDataStruct BlockData[NUM_BLOCKS];
-
 constexpr unsigned int TEXTURE_SIZE = 16;
-
 void InitBlocks();
 
 #endif // !BLOCK_H

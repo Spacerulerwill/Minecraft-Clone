@@ -6,7 +6,7 @@ LICENSE: MIT
 #ifndef FRAMEBUFFER_H
 #define FRAMEBUFFER_H
 
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <opengl/Shader.hpp>
 #include <opengl/BufferObject.hpp>
 #include <opengl/VertexArray.hpp>

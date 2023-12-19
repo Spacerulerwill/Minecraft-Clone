@@ -4,7 +4,7 @@ License: MIT
 */
 
 #include <opengl/BufferObject.hpp>
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <utility>
 
 template<GLenum type>

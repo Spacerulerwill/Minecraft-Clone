@@ -25,6 +25,7 @@ private:
     float mDeltaTime = 0.0f;
     float mLastFrame = 0.0f;
     bool mIsWireFrame = false;
+    bool mIsMouseVisible = false;
 public:
     Game() = default;
     Game(const Game&) = delete;

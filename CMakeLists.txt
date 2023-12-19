@@ -47,7 +47,14 @@ add_executable(${PROJECT_NAME}
     src/util/Log.cpp
     src/util/Log.hpp
     src/util/Concepts.hpp
-    lib/gl.c
+    lib/glad.c
+    lib/imgui/imgui_impl_glfw.cpp
+    lib/imgui/imgui_impl_opengl3.cpp
+    lib/imgui/imgui.cpp
+    lib/imgui/imgui_demo.cpp
+    lib/imgui/imgui_draw.cpp
+    lib/imgui/imgui_tables.cpp
+    lib/imgui/imgui_widgets.cpp
 )
 
 add_subdirectory(submodules/glfw)

@@ -15,6 +15,9 @@ LICENSE: MIT
 #include <world/Block.hpp>
 
 class ChunkStack {
+private:
+    iVec2 mPos{};
+    std::vector<std::shared_ptr<Chunk>> mChunks;
 public:
     using iterator = std::vector<std::shared_ptr<Chunk>>::iterator;
     using const_iterator = std::vector<std::shared_ptr<Chunk>>::const_iterator;
@@ -27,14 +30,13 @@ public:
     ChunkStack(iVec2 pos);
     void GenerateTerrain(const siv::PerlinNoise& perlin);
     void Draw(Shader& shader);
-    void SetBlock(BlockID block, iVec3 pos);
-    BlockID GetBlock(iVec3 pos) const;
-    std::shared_ptr<Chunk> GetChunk(int y);
     iVec2 GetPosition() const;
     std::atomic_bool isBeingmMeshed = false;
-private:
-    iVec2 mPos{};
-    std::vector<std::shared_ptr<Chunk>> mChunks;
+
+    std::shared_ptr<Chunk> GetChunk(std::size_t y) const;
+    BlockID GetBlock(iVec3 pos) const;
+    void SetBlock(iVec3 pos, BlockID block);
+
 };
 
 #endif // !CHUNK_STACK_H

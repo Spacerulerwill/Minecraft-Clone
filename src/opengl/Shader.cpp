@@ -6,7 +6,7 @@ License: MIT
 #include <opengl/Shader.hpp>
 #include <math/Matrix.hpp>
 #include <math/Vector.hpp>
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <util/Log.hpp>
 #include <fstream>
 #include <string>

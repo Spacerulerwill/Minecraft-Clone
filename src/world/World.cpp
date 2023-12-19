@@ -4,7 +4,42 @@ License: MIT
 */
 
 #include <world/World.hpp>
+#include <cmath>
 #include <util/Log.hpp>
+
+iVec3 GetWorldBlockPosFromGlobalPos(Vec3 globalPosition)
+{
+    iVec3 result;
+    for (int i = 0; i < 3; i++) {
+        result[i] = static_cast<iVec3::value_type>(std::floor(globalPosition[i]));
+    }
+    return result;
+}
+
+iVec3 GetChunkPosFromGlobalBlockPos(iVec3 globalBlockPos)
+{
+    iVec3 result = globalBlockPos / CS;
+    if (globalBlockPos[0] < 0)
+        result[0]--;
+    if (globalBlockPos[2] < 0)
+        result[2]--;
+    return result;
+}
+
+iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 globalBlockPos)
+{
+    iVec3 result;
+    for (int i = 0; i < 3; i++) {
+        if (globalBlockPos[i] >= 0) {
+            result[i] = 1 + (globalBlockPos[i] % CS);
+        }
+        else {
+            result[i] = CS_P_MINUS_ONE - (1 + (abs(globalBlockPos[i]) - 1) % CS);
+        }
+    }
+    return result;
+}
+
 
 void World::Draw()
 {
@@ -38,10 +73,10 @@ void World::GenerateChunks()
         ChunkStack& stack = it->second;
 
         iVec2 stackPos = stack.GetPosition();
-        if ((stackPos[0] < playerChunkPos[0] - CHUNK_RENDER_DISTANCE ||
-            stackPos[0] > playerChunkPos[0] + CHUNK_RENDER_DISTANCE ||
-            stackPos[1] < playerChunkPos[1] - CHUNK_RENDER_DISTANCE ||
-            stackPos[1] > playerChunkPos[1] + CHUNK_RENDER_DISTANCE) && !stack.isBeingmMeshed) {
+        if ((stackPos[0] < playerChunkPos[0] - mRenderDistance ||
+            stackPos[0] > playerChunkPos[0] + mRenderDistance ||
+            stackPos[1] < playerChunkPos[1] - mRenderDistance ||
+            stackPos[1] > playerChunkPos[1] + mRenderDistance) && !stack.isBeingmMeshed) {
             it = mChunkStacks.erase(it);
         }
         else {
@@ -51,16 +86,16 @@ void World::GenerateChunks()
 
     std::size_t chunksBuffered = 0;
     std::size_t chunksCreated = 0;
-    for (int x = -CHUNK_RENDER_DISTANCE; x <= CHUNK_RENDER_DISTANCE; x++) {
-        for (int z = -CHUNK_RENDER_DISTANCE; z <= CHUNK_RENDER_DISTANCE; z++) {
+    for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
+        for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
             iVec2 pos = playerChunkPos + iVec2{ x,z };
             auto find = mChunkStacks.find(pos);
             if (find == mChunkStacks.end()) {
-                if (chunksCreated < CHUNK_BUFFER_PER_FRAME) {
+                if (chunksCreated < mBufferPerFrame) {
                     auto emplace = mChunkStacks.emplace(pos, pos);
                     ChunkStack& chunkStack = emplace.first->second;
                     chunkStack.isBeingmMeshed = true;
-                    mTaskPool.push_task([&chunkStack, this] {
+                    mLoadPool.push_task([&chunkStack, this] {
                         chunkStack.GenerateTerrain(mPerlin);
                         for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
                             std::shared_ptr<Chunk> chunk = (*it);
@@ -75,7 +110,7 @@ void World::GenerateChunks()
                 ChunkStack& stack = find->second;
                 for (auto it = stack.begin(); it != stack.end(); ++it) {
                     std::shared_ptr<Chunk> chunk = *it;
-                    if (chunksBuffered < CHUNK_BUFFER_PER_FRAME) {
+                    if (chunksBuffered < mBufferPerFrame) {
                         if (chunk->needsBuffering) {
                             chunksBuffered++;
                             chunk->BufferData();
@@ -90,6 +125,58 @@ void World::GenerateChunks()
     }
 }
 
+const ChunkStack* World::GetChunkStack(iVec2 pos) const
+{
+    auto find = mChunkStacks.find(pos);
+    if (find == mChunkStacks.end()) {
+        return nullptr;
+    }
+    return &find->second;
+}
+
+std::shared_ptr<Chunk> World::GetChunk(iVec3 pos) const
+{
+    const ChunkStack* chunkStack = GetChunkStack(iVec2{ pos[0], pos[2] });
+    if (chunkStack == nullptr) {
+        return nullptr;
+    }
+    return chunkStack->GetChunk(pos[1]);
+}
+
+BlockID World::GetBlock(iVec3 pos) const
+{
+    iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
+    std::shared_ptr<Chunk> chunk = GetChunk(chunkPos);
+    if (chunk != nullptr) {
+        iVec3 blockPos = GetChunkBlockPosFromGlobalBlockPos(pos);
+        return chunk->GetBlock(blockPos);
+    }
+    return AIR;
+}
+
+void World::SetBlock(iVec3 pos, BlockID block)
+{
+    iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
+    std::shared_ptr<Chunk> chunk = GetChunk(chunkPos);
+
+    if (chunk != nullptr) {
+        iVec3 blockPos = GetChunkBlockPosFromGlobalBlockPos(pos);
+        chunk->SetBlock(blockPos, block);
+    }
+}
+
+void World::SetBlockAndRemesh(iVec3 pos, BlockID block)
+{
+    iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
+    std::shared_ptr<Chunk> chunk = GetChunk(chunkPos);
+
+    if (chunk != nullptr) {
+        iVec3 blockPos = GetChunkBlockPosFromGlobalBlockPos(pos);
+        chunk->SetBlock(blockPos, block);
+        chunk->CreateMesh();
+        chunk->BufferData();
+    }
+}
 
 /*
 MIT License

@@ -1,2 +1,2 @@
 include/** linguist-vendored
-lib/gl.c linguist-vendored
+lib/** linguist-vendored

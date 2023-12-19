@@ -16,19 +16,31 @@ License: MIT
 #include <unordered_map>
 #include <BS_thread_pool.hpp>
 
+iVec3 GetWorldBlockPosFromGlobalPos(Vec3 globalPosition);
+iVec3 GetChunkPosFromGlobalBlockPos(iVec3 globalBlockPos);
+iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 pos);
+
 class World {
 private:
+    std::unordered_map<iVec2, ChunkStack> mChunkStacks;
     Skybox mSkybox;
     Shader chunkShader = Shader("res/shaders/chunk.shader");
     siv::PerlinNoise mPerlin = siv::PerlinNoise(0);
-    std::unordered_map<iVec2, ChunkStack> mChunkStacks;
-    BS::thread_pool mTaskPool;
+    BS::thread_pool mLoadPool;
     TexArray2D mTextureAtlas = TexArray2D("res/textures/atlas.png", TEXTURE_SIZE, GL_TEXTURE0);
 public:
     GLint LOD = 1;
+    int mRenderDistance = 5;
+    int mBufferPerFrame = 20;
     Camera mCamera = Camera(Vec3{ 0.0f, 700.0f, 0.0f });
     void Draw();
     void GenerateChunks();
+
+    const ChunkStack* GetChunkStack(iVec2 pos) const;
+    std::shared_ptr<Chunk> GetChunk(iVec3 pos) const;
+    BlockID GetBlock(iVec3 pos) const;
+    void SetBlock(iVec3 pos, BlockID block);
+    void SetBlockAndRemesh(iVec3 pos, BlockID block);
 };
 
 #endif // !WORLD_H

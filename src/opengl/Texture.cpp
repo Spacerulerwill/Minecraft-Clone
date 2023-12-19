@@ -5,7 +5,7 @@ License: MIT
 
 #include <opengl/Texture.hpp>
 #include <algorithm>
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <stb_image.h>
 #include <util/Log.hpp>
 #include <utility>

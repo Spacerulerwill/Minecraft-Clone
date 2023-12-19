@@ -6,7 +6,7 @@ License: MIT
 #ifndef MATRIX_H
 #define MATRIX_H
 
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <array>
 #include <util/Concepts.hpp>
 #include <math/Vector.hpp>

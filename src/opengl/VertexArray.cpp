@@ -3,7 +3,7 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <opengl/VertexArray.hpp>
 #include <utility>
 

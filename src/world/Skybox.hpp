@@ -6,7 +6,7 @@ LICENSE: MIT
 #ifndef SKYBOX_H
 #define SKYBOX_H
 
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <string>
 #include <array>
 #include <opengl/BufferObject.hpp>

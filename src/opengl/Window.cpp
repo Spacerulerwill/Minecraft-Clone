@@ -9,40 +9,39 @@ License: MIT
 
 Window::Window(Game* app, int width, int height, const char* name) {
     // Create our window, and add its callbacks
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    p_Window = glfwCreateWindow(width, height, name, NULL, NULL);
+    pWindow = glfwCreateWindow(width, height, name, NULL, NULL);
 
-    if (p_Window == NULL)
+    if (pWindow == NULL)
     {
         glfwTerminate();
         throw std::runtime_error("Failed to create GLFW Window");
     }
 
-    glfwSetWindowSizeCallback(p_Window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(p_Window, mouse_move_callback);
-    glfwSetMouseButtonCallback(p_Window, mouse_button_callback);
-    glfwSetScrollCallback(p_Window, scroll_callback);
-    glfwSetKeyCallback(p_Window, key_callback);
-    glfwSetWindowUserPointer(p_Window, reinterpret_cast<void*>(app));
-    glfwMakeContextCurrent(p_Window);
+    glfwSetWindowSizeCallback(pWindow, framebuffer_size_callback);
+    glfwSetCursorPosCallback(pWindow, mouse_move_callback);
+    glfwSetMouseButtonCallback(pWindow, mouse_button_callback);
+    glfwSetScrollCallback(pWindow, scroll_callback);
+    glfwSetKeyCallback(pWindow, key_callback);
+    glfwSetWindowUserPointer(pWindow, reinterpret_cast<void*>(app));
+    glfwMakeContextCurrent(pWindow);
 
-    // Set input mode to cursor disabled so use can't move mouse out of window
-    glfwSetInputMode(p_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    SetMouseDisabled();
 }
 
 Window::~Window() {
-    glfwDestroyWindow(p_Window);
+    glfwDestroyWindow(pWindow);
 }
 
 void Window::Bind() const {
-    glfwMakeContextCurrent(p_Window);
+    glfwMakeContextCurrent(pWindow);
 }
 
 void Window::Unbind() const {
@@ -50,31 +49,41 @@ void Window::Unbind() const {
 }
 
 void Window::SetShouldClose(int value) {
-    glfwSetWindowShouldClose(p_Window, value);
+    glfwSetWindowShouldClose(pWindow, value);
 }
 
 bool Window::ShouldClose() const {
-    return glfwWindowShouldClose(p_Window);
+    return glfwWindowShouldClose(pWindow);
 }
 
 void Window::SetHidden() {
-    glfwHideWindow(p_Window);
+    glfwHideWindow(pWindow);
 }
 
 void Window::SetVisible() {
-    glfwShowWindow(p_Window);
+    glfwShowWindow(pWindow);
+}
+
+void Window::SetMouseEnabled()
+{
+    glfwSetInputMode(pWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
+void Window::SetMouseDisabled()
+{
+    glfwSetInputMode(pWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void Window::SwapBuffers() {
-    glfwSwapBuffers(p_Window);
+    glfwSwapBuffers(pWindow);
 }
 
 GLFWwindow* Window::GetWindow() const {
-    return p_Window;
+    return pWindow;
 }
 
 bool Window::IsKeyPressed(int key) const {
-    return glfwGetKey(p_Window, key) == GLFW_PRESS;
+    return glfwGetKey(pWindow, key) == GLFW_PRESS;
 }
 
 void mouse_move_callback(GLFWwindow* window, double xposIn, double yposIn)

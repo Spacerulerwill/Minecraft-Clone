@@ -12,7 +12,7 @@ class Game;
 
 class Window {
 private:
-    GLFWwindow* p_Window = nullptr;
+    GLFWwindow* pWindow = nullptr;
 public:
     Window(Game* app, int width, int height, const char* title);
     ~Window();
@@ -22,6 +22,8 @@ public:
     bool ShouldClose() const;
     void SetHidden();
     void SetVisible();
+    void SetMouseEnabled();
+    void SetMouseDisabled();
     void SwapBuffers();
     bool IsKeyPressed(int key) const;
     GLFWwindow* GetWindow() const;

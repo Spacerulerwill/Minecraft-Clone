@@ -18,10 +18,6 @@ License: MIT
 #include <PerlinNoise.hpp>
 #include <vector>
 
-inline std::size_t VoxelIndex(iVec3 pos) {
-    return pos[2] + (pos[0] << CHUNK_SIZE_EXP) + (pos[1] << CHUNK_SIZE_EXP_X2);
-}
-
 class Chunk {
 private:
     VertexArray mVAO;
@@ -40,7 +36,7 @@ public:
     void BufferData();
     void Draw(Shader& shader);
     BlockID GetBlock(iVec3 pos) const;
-    void SetBlock(BlockID block, iVec3 pos);
+    void SetBlock(iVec3 pos, BlockID block);
     std::atomic_bool needsBuffering = false;
 };
 

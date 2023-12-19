@@ -6,14 +6,16 @@ License: MIT
 #ifndef VECTOR_H
 #define VECTOR_H
 
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <array>
 #include <string>
 #include <concepts>
 #include <util/Concepts.hpp>
+#include <cmath>
 
 template<Arithmetic T, std::size_t size>
 struct Vector {
+    using value_type = T;
     std::array<T, size> elems{};
 
     // Vector operations

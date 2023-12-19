@@ -6,7 +6,7 @@ License: MIT
 #ifndef VERTEX_ARRAY_H
 #define VERTEX_ARRAY_H
 
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <opengl/BufferObject.hpp>
 #include <opengl/VertexBufferLayout.hpp>
 

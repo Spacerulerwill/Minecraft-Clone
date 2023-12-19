@@ -5,7 +5,7 @@ License: MIT
 
 #include <algorithm>
 #include <core/Camera.hpp>
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <assert.h>
 
 const float Camera::MAX_FOV = 90.0f;

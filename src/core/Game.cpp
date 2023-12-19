@@ -7,14 +7,29 @@ License: MIT
 #include <opengl/Shader.hpp>
 #include <world/Block.hpp>
 #include <math/Matrix.hpp>
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <stdexcept>
+#include <format>
+
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+#include <imgui/imgui_internal.h>
+#include <GLFW/glfw3.h>
 
 void Game::Run() {
-    if (!gladLoadGL(static_cast<GLADloadfunc>(glfwGetProcAddress)))
+    if (!gladLoadGL())
     {
         throw std::runtime_error("Failed to load GLAD!");
     }
+
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+    io.IniFilename = NULL;
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(mWindow.GetWindow(), true);
+    ImGui_ImplOpenGL3_Init("#version 330");
 
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_POLYGON_SMOOTH);
@@ -56,38 +71,70 @@ void Game::Run() {
         glDisable(GL_DEPTH_TEST);
         pMSAARenderer->Draw(framebufferShader);
 
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::SetNextWindowSize(ImVec2{ 0,0 });
+        ImGui::SetNextWindowPos(ImVec2{ 0,0 });
+        ImGui::Begin("Settings");
+        ImGui::SliderFloat("Sensitivity", &pWorld->mCamera.mMouseSensitivity, 0.0f, 1.0f);
+        ImGui::SliderInt("Render Distance", &pWorld->mRenderDistance, 5, 30);
+        ImGui::SliderInt("Chunk buffers per frame", &pWorld->mBufferPerFrame, 1, 50);
+
+        Vec3 pos = pWorld->mCamera.GetPosition();
+        iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pos);
+        iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
+
+        ImGui::Text(std::format("Block coordinates: {}", std::string(blockPos)).c_str());
+        ImGui::Text(std::format("Chunk coordinates: {}", std::string(chunkPos)).c_str());
+        ImGui::Text(std::format("FPS: {}", static_cast<int>(1.0f / mDeltaTime)).c_str());
+        ImGui::End();
+
+        ImGui::End();
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         glfwPollEvents();
         mWindow.SwapBuffers();
 
         pWorld->GenerateChunks();
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 }
 
 void Game::ProcessKeyInput()
 {
-    if (mWindow.IsKeyPressed(GLFW_KEY_W)) {
-        pWorld->mCamera.ProcessKeyboard(FORWARD, mDeltaTime);
-    }
-    if (mWindow.IsKeyPressed(GLFW_KEY_S)) {
-        pWorld->mCamera.ProcessKeyboard(BACKWARD, mDeltaTime);
-    }
-    if (mWindow.IsKeyPressed(GLFW_KEY_A)) {
-        pWorld->mCamera.ProcessKeyboard(LEFT, mDeltaTime);
-    }
-    if (mWindow.IsKeyPressed(GLFW_KEY_D)) {
-        pWorld->mCamera.ProcessKeyboard(RIGHT, mDeltaTime);
-    }
-    if (mWindow.IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
-        pWorld->mCamera.SetMovementSpeed(300.0f);
-    }
-    else {
-        pWorld->mCamera.SetMovementSpeed(50.0f);
+    if (!mIsMouseVisible) {
+        if (mWindow.IsKeyPressed(GLFW_KEY_W)) {
+            pWorld->mCamera.ProcessKeyboard(FORWARD, mDeltaTime);
+        }
+        if (mWindow.IsKeyPressed(GLFW_KEY_S)) {
+            pWorld->mCamera.ProcessKeyboard(BACKWARD, mDeltaTime);
+        }
+        if (mWindow.IsKeyPressed(GLFW_KEY_A)) {
+            pWorld->mCamera.ProcessKeyboard(LEFT, mDeltaTime);
+        }
+        if (mWindow.IsKeyPressed(GLFW_KEY_D)) {
+            pWorld->mCamera.ProcessKeyboard(RIGHT, mDeltaTime);
+        }
+        if (mWindow.IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
+            pWorld->mCamera.SetMovementSpeed(50.0f);
+        }
+        else {
+            pWorld->mCamera.SetMovementSpeed(10.0f);
+        }
     }
 }
 
 void Game::GLFWMouseMoveCallback(GLFWwindow* window, float xposIn, float yposIn)
 {
-    pWorld->mCamera.ProcessMouseMovement(xposIn, yposIn);
+    if (!mIsMouseVisible) {
+        pWorld->mCamera.ProcessMouseMovement(xposIn, yposIn);
+    }
 }
 
 void Game::GLFWScrollCallback(GLFWwindow* window, float xoffset, float yoffset)
@@ -108,16 +155,15 @@ void Game::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action
         }
         break;
     }
-    case GLFW_KEY_EQUAL: {
+    case GLFW_KEY_TAB: {
         if (action == GLFW_PRESS) {
-            pWorld->LOD++;
-        }
-        break;
-    }
-    case GLFW_KEY_MINUS: {
-        if (action == GLFW_PRESS) {
-            if (pWorld->LOD > 1) {
-                pWorld->LOD--;
+            mIsMouseVisible = !mIsMouseVisible;
+            if (mIsMouseVisible) {
+                mWindow.SetMouseEnabled();
+            }
+            else {
+                mWindow.SetMouseDisabled();
+                pWorld->mCamera.mIsFirstMouse = true;
             }
         }
         break;
@@ -127,7 +173,17 @@ void Game::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action
 
 void Game::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-
+    if (!mIsMouseVisible) {
+        switch (button) {
+        case GLFW_MOUSE_BUTTON_1: {
+            if (action == GLFW_PRESS) {
+                iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pWorld->mCamera.GetPosition());
+                pWorld->SetBlockAndRemesh(blockPos, STONE);
+            }
+            break;
+        }
+        }
+    }
 }
 
 void Game::GLFWFramebufferResizeCallback(GLFWwindow* window, int width, int height)

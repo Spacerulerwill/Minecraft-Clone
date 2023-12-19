@@ -8,6 +8,10 @@ License: MIT
 #include <world/Block.hpp>
 #include <cmath>
 
+std::size_t VoxelIndex(iVec3 pos) {
+    return pos[2] + (pos[0] << CHUNK_SIZE_EXP) + (pos[1] << CHUNK_SIZE_EXP_X2);
+}
+
 Chunk::Chunk(iVec3 pos) : mPos(pos)
 {
     // Setup buffers
@@ -37,6 +41,7 @@ void Chunk::ReleaseMemory()
 {
     std::vector<BlockID>().swap(mBlocks);
 }
+
 void Chunk::CreateMesh() {
     // Erase previous data
     std::vector<ChunkMesher::ChunkVertex>().swap(mVertices);
@@ -72,7 +77,7 @@ BlockID Chunk::GetBlock(iVec3 pos) const
     return mBlocks[VoxelIndex(pos)];
 }
 
-void Chunk::SetBlock(BlockID block, iVec3 pos)
+void Chunk::SetBlock(iVec3 pos, BlockID block)
 {
     mBlocks[VoxelIndex(pos)] = block;
 }

@@ -47,7 +47,7 @@ void ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin) {
             int height = MIN_WORLD_GEN_HEIGHT + (heightMultiplayer * MAX_MINUS_MIN_WORLD_GEN_HEIGHT);
 
             for (int y = 0; y < height; y++) {
-                SetBlock(STONE, iVec3{ x, y, z });
+                SetBlock(iVec3{ x, y, z }, STONE);
             }
         }
     }
@@ -60,7 +60,7 @@ void ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin) {
         if (belowChunk != nullptr) {
             for (int x = 1; x < CS_P_MINUS_ONE; x++) {
                 for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-                    currentChunk->SetBlock(belowChunk->GetBlock(iVec3{ x, CS, z }), iVec3{ x, 0, z });
+                    currentChunk->SetBlock(iVec3{ x, 0, z }, belowChunk->GetBlock(iVec3{ x, CS, z }));
                 }
             }
         }
@@ -68,27 +68,10 @@ void ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin) {
         if (aboveChunk != nullptr) {
             for (int x = 1; x < CS_P_MINUS_ONE; x++) {
                 for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-                    currentChunk->SetBlock(aboveChunk->GetBlock(iVec3{ x, 1, z }), iVec3{ x, CS_P_MINUS_ONE, z });
+                    currentChunk->SetBlock(iVec3{ x, CS_P_MINUS_ONE, z }, aboveChunk->GetBlock(iVec3{ x, 1, z }));
                 }
             }
         }
-    }
-}
-
-void ChunkStack::SetBlock(BlockID block, iVec3 pos) {
-    mChunks.at(pos[1] / CS)->SetBlock(block, iVec3{ pos[0], 1 + pos[1] % CS, pos[2] });
-}
-
-BlockID ChunkStack::GetBlock(iVec3 pos) const {
-    return mChunks.at(pos[1] / CS)->GetBlock(iVec3{ pos[0], 1 + pos[1] % CS, pos[2] });
-}
-
-std::shared_ptr<Chunk>ChunkStack::GetChunk(int y) {
-    if (y >= mChunks.size()) {
-        return nullptr;
-    }
-    else {
-        return mChunks.at(y);
     }
 }
 
@@ -103,6 +86,24 @@ void ChunkStack::Draw(Shader& shader)
         chunk->Draw(shader);
     }
 }
+
+void ChunkStack::SetBlock(iVec3 pos, BlockID block) {
+    mChunks.at(pos[1] / CS)->SetBlock(iVec3{ pos[0], 1 + pos[1] % CS, pos[2] }, block);
+}
+
+BlockID ChunkStack::GetBlock(iVec3 pos) const {
+    return mChunks.at(pos[1] / CS)->GetBlock(iVec3{ pos[0], 1 + pos[1] % CS, pos[2] });
+}
+
+std::shared_ptr<Chunk>ChunkStack::GetChunk(std::size_t y) const {
+    if (y >= mChunks.size()) {
+        return nullptr;
+    }
+    else {
+        return mChunks.at(y);
+    }
+}
+
 
 /*
 MIT License

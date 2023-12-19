@@ -6,7 +6,7 @@ License: MIT
 #ifndef VERTEX_BUFFERLAYOUT_H
 #define VERTEX_BUFFERLAYOUT_H
 
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <vector>
 
 struct VertexBufferLayoutElement {

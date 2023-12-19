@@ -6,7 +6,7 @@ License: MIT
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <math/Math.hpp>
 #include <math/Vector.hpp>
 #include <math/Matrix.hpp>
@@ -47,8 +47,10 @@ public:
 
     static const float MAX_FOV;
     static const float MIN_FOV;
-private:
+
+    float mMouseSensitivity = 0.1f;
     bool mIsFirstMouse = true;
+private:
     float mLastMouseX = 0.0f;
     float mLastMouseY = 0.0f;
 
@@ -60,11 +62,10 @@ private:
 
     // camera options
     float mMovementSpeed = 2.5f;
-    float mMouseSensitivity = 0.1f;
     float mAspect = 16.0f / 9.0f;
     float mNear = 0.1f;
-    float mFar = 5000.0f;
     float mFOV = 45.0f;
+    float mFar = 5000.0f;
     float mPitch = 0.0f;
     float mYaw = -90.0f;
 

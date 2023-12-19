@@ -6,7 +6,7 @@ License: MIT
 #ifndef BUFFER_OBJECT_H
 #define BUFFER_OBJECT_H
 
-#include <glad/gl.h>
+#include <glad/glad.h>
 
 template <GLenum type>
 class BufferObject {
