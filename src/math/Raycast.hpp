@@ -22,7 +22,7 @@ namespace Raycaster {
         BlockID blockHit;
     };
 
-    BlockRaycastResult BlockRaycast(World* world, Vec3 start, Vec3 direction, float distance);
+    BlockRaycastResult BlockRaycast(const World& world, Vec3 start, Vec3 direction, float distance);
 };
 
 #endif // !RAYCAST_H

@@ -11,6 +11,7 @@ License: MIT
 #include <opengl/Texture.hpp>
 #include <world/chunk/ChunkStack.hpp>
 #include <world/Block.hpp>
+#include <world/Player.hpp>
 #include <core/Camera.hpp>
 #include <PerlinNoise.hpp>
 #include <unordered_map>
@@ -32,7 +33,7 @@ public:
     GLint LOD = 1;
     int mRenderDistance = 5;
     int mBufferPerFrame = 20;
-    Camera mCamera = Camera(Vec3{ 0.0f, 700.0f, 0.0f });
+    Player player;
     void Draw();
     void GenerateChunks();
 

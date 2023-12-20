@@ -38,6 +38,8 @@ add_executable(${PROJECT_NAME}
     src/world/chunk/Constants.hpp
     src/world/Block.cpp
     src/world/Block.hpp
+    src/world/Player.cpp
+    src/world/Player.hpp
     src/math/Vector.cpp
     src/math/Vector.hpp
     src/math/Matrix.cpp

@@ -47,8 +47,8 @@ iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 globalBlockPos)
 
 void World::Draw()
 {
-    Mat4 perspective = mCamera.perspectiveMatrix;
-    Mat4 view = mCamera.GetViewMatrix();
+    Mat4 perspective = player.camera.perspectiveMatrix;
+    Mat4 view = player.camera.GetViewMatrix();
 
     glDepthFunc(GL_LEQUAL);
     mSkybox.Draw(perspective, translationRemoved(view));
@@ -66,7 +66,7 @@ void World::Draw()
 
 void World::GenerateChunks()
 {
-    Vec3 playerPos = mCamera.position;
+    Vec3 playerPos = player.camera.position;
     iVec2 playerChunkPos{
         static_cast<int>(floor(playerPos[0]) / CS),
         static_cast<int>(floor(playerPos[2]) / CS)

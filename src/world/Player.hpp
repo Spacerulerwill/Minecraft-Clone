@@ -3,66 +3,33 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#ifndef CAMERA_H
-#define CAMERA_H
+#ifndef PLAYER_H
+#define PLAYER_H
 
-#include <glad/glad.h>
-#include <math/Math.hpp>
-#include <math/Vector.hpp>
-#include <math/Matrix.hpp>
+#include <core/Camera.hpp>
+#include <opengl/Window.hpp>
 
 class World;
 
-enum CameraMovement {
+enum class PlayerMovement {
     FORWARD,
     BACKWARD,
     LEFT,
-    RIGHT
+    RIGHT,
+    UP,
+    DOWN
 };
 
-struct Camera {
-private:
-    float lastMouseX = 0.0f;
-    float lastMouseY = 0.0f;
-
-    float near = 0.1f;
-    float far = 5000.0f;
-    float pitch = 0.0f;
-    float yaw = -90.0f;
-    float aspect = 16.0f / 9.0f;
-    float FOV = 45.0f;
-public:
-    Camera();
-    Camera(Vec3 pos);
-    Camera(Vec3 pos, float pitch, float yaw);
-
-    void ProcessMouseMovement(float xpos, float ypos);
-    void ProcessMouseScroll(float yoffset);
-
-    void SetFOV(float newFOV);
-    float GetFOV() const;
-
-    static const float MAX_FOV;
-    static const float MIN_FOV;
-
-    bool isFirstMouseInput = true;
-
-    // camera options
-    float mouseSensitivity = 0.1f;
-
-    Vec3 position{ 0.0f, 0.0f, 0.0f };
-    Vec3 front{};
-    Vec3 up{};
-    Vec3 right{};
-    Vec3 worldUp{ 0.0f, 1.0f, 0.0f };
-
-    Mat4 perspectiveMatrix = perspective(radians(FOV), aspect, near, far);
-    Mat4 GetViewMatrix() const;
-
-    void UpdateCameraVectors();
+struct Player {
+    float movementSpeed = 50.0f;
+    Camera camera{ Vec3{0.0f, 400.0f, 0.0f} };
+    void ProcessKeyInput(const World& world, const Window& window, float deltaTime);
+    void ProcessMouseInput(const World& world, int button, int action, int mods);
+    void Move(const World& world, PlayerMovement direction, float deltaTime);
 };
 
-#endif // !CAMERA_H
+
+#endif // !PLAYER_H
 
 /*
 MIT License

@@ -81,11 +81,11 @@ void Game::Run() {
         ImGui::SetNextWindowSize(ImVec2{ 0,0 });
         ImGui::SetNextWindowPos(ImVec2{ 0,0 });
         ImGui::Begin("Settings");
-        ImGui::SliderFloat("Sensitivity", &pWorld->mCamera.mouseSensitivity, 0.0f, 1.0f);
+        ImGui::SliderFloat("Sensitivity", &pWorld->player.camera.mouseSensitivity, 0.0f, 1.0f);
         ImGui::SliderInt("Render Distance", &pWorld->mRenderDistance, 5, 30);
         ImGui::SliderInt("Chunk buffers per frame", &pWorld->mBufferPerFrame, 1, 50);
 
-        Vec3 pos = pWorld->mCamera.position;
+        Vec3 pos = pWorld->player.camera.position;
         iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pos);
         iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(blockPos);
         iVec3 chunkLocalBlockPos = GetChunkBlockPosFromGlobalBlockPos(blockPos);
@@ -114,37 +114,20 @@ void Game::Run() {
 void Game::ProcessKeyInput()
 {
     if (!mIsMouseVisible) {
-        if (mWindow.IsKeyPressed(GLFW_KEY_W)) {
-            pWorld->mCamera.ProcessKeyboard(pWorld.get(), FORWARD, mDeltaTime);
-        }
-        if (mWindow.IsKeyPressed(GLFW_KEY_S)) {
-            pWorld->mCamera.ProcessKeyboard(pWorld.get(), BACKWARD, mDeltaTime);
-        }
-        if (mWindow.IsKeyPressed(GLFW_KEY_A)) {
-            pWorld->mCamera.ProcessKeyboard(pWorld.get(), LEFT, mDeltaTime);
-        }
-        if (mWindow.IsKeyPressed(GLFW_KEY_D)) {
-            pWorld->mCamera.ProcessKeyboard(pWorld.get(), RIGHT, mDeltaTime);
-        }
-        if (mWindow.IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
-            pWorld->mCamera.movementSpeed = 50.0f;
-        }
-        else {
-            pWorld->mCamera.movementSpeed = 10.0f;
-        }
+        pWorld->player.ProcessKeyInput(*pWorld, mWindow, mDeltaTime);
     }
 }
 
 void Game::GLFWMouseMoveCallback(GLFWwindow* window, float xposIn, float yposIn)
 {
     if (!mIsMouseVisible) {
-        pWorld->mCamera.ProcessMouseMovement(xposIn, yposIn);
+        pWorld->player.camera.ProcessMouseMovement(xposIn, yposIn);
     }
 }
 
 void Game::GLFWScrollCallback(GLFWwindow* window, float xoffset, float yoffset)
 {
-    pWorld->mCamera.ProcessMouseScroll(yoffset);
+    pWorld->player.camera.ProcessMouseScroll(yoffset);
 }
 
 void Game::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -168,7 +151,7 @@ void Game::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action
             }
             else {
                 mWindow.SetMouseDisabled();
-                pWorld->mCamera.isFirstMouseInput = true;
+                pWorld->player.camera.isFirstMouseInput = true;
             }
         }
         break;
@@ -179,33 +162,7 @@ void Game::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action
 void Game::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
     if (!mIsMouseVisible) {
-        switch (button) {
-        case GLFW_MOUSE_BUTTON_1: {
-            if (action == GLFW_PRESS) {
-                const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(pWorld.get(), pWorld->mCamera.position, pWorld->mCamera.position, 10.0f);
-
-                if (raycast.chunk != nullptr && raycast.blockHit != AIR) {
-                    raycast.chunk->SetBlock(raycast.blockPos, AIR);
-                    raycast.chunk->CreateMesh();
-                    raycast.chunk->BufferData();
-                }
-            }
-            break;
-        }
-        case GLFW_MOUSE_BUTTON_RIGHT: {
-            if (action == GLFW_PRESS) {
-                const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(pWorld.get(), pWorld->mCamera.position, pWorld->mCamera.front, 10.0f);
-
-                if (raycast.chunk != nullptr && raycast.blockHit != AIR) {
-                    iVec3 blockPlacePosition = raycast.blockPos + raycast.normal;
-                    raycast.chunk->SetBlock(blockPlacePosition, STONE);
-                    raycast.chunk->CreateMesh();
-                    raycast.chunk->BufferData();
-                }
-            }
-            break;
-        }
-        }
+        pWorld->player.ProcessMouseInput(*pWorld, button, action, mods);
     }
 }
 

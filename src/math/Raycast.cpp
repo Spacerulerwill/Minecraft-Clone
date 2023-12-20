@@ -7,7 +7,7 @@ License: MIT
 #include <world/World.hpp>
 #include <util/Log.hpp>
 
-Raycaster::BlockRaycastResult Raycaster::BlockRaycast(World* world, Vec3 start, Vec3 direction, float distance)
+Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 start, Vec3 direction, float distance)
 {
     Vec3 end = start + direction * distance;
     Vec3 normal{ 0,0,0 };
@@ -38,7 +38,7 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(World* world, Vec3 start, 
     while (true)
     {
         iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(iVec3{ i,j,k });
-        std::shared_ptr<Chunk> chunk = world->GetChunk(chunkPos);
+        std::shared_ptr<Chunk> chunk = world.GetChunk(chunkPos);
         iVec3 blockPosInChunk = GetChunkBlockPosFromGlobalBlockPos(iVec3{ i,j,k });
         if (chunk != nullptr) {
             // If we do hit a chunk, check if its air. If it's not then we stop the raycasting otherwise we continue

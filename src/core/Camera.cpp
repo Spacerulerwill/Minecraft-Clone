@@ -28,35 +28,6 @@ Mat4 Camera::GetViewMatrix() const {
     return lookAt(position, position + front, up);
 }
 
-void Camera::ProcessKeyboard(World* world, CameraMovement direction, float deltaTime)
-{
-    float velocity = movementSpeed * deltaTime;
-    Vec3 directionMultiplier;
-
-    if (direction == FORWARD) {
-        directionMultiplier = front;
-    }
-    if (direction == BACKWARD) {
-        directionMultiplier = front * -1;
-    }
-    if (direction == LEFT) {
-        directionMultiplier = right * -1;
-    }
-    if (direction == RIGHT) {
-        directionMultiplier = right;
-    }
-
-    Vec3 newPosition = position;
-    for (int i = 0; i < 3; i++) {
-        newPosition[i] += directionMultiplier[i] * velocity;
-        BlockID block = world->GetBlock(GetWorldBlockPosFromGlobalPos(newPosition));
-        if (block != AIR) {
-            newPosition[i] = position[i];
-        }
-    }
-    position = newPosition;
-}
-
 void Camera::ProcessMouseMovement(float xpos, float ypos)
 {
     if (isFirstMouseInput) // initially set to true
