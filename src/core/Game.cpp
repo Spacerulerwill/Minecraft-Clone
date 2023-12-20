@@ -53,12 +53,15 @@ void Game::Run() {
 
         ProcessKeyInput();
 
+        pWorld->player.ApplyGravity(*pWorld, mDeltaTime);
+
         if (mIsWireFrame) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         }
         else {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
+
 
         pMSAARenderer->BindMSAAFBO();
         glEnable(GL_DEPTH_TEST);
@@ -132,6 +135,8 @@ void Game::GLFWScrollCallback(GLFWwindow* window, float xoffset, float yoffset)
 
 void Game::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+    pWorld->player.KeyCallback(key, scancode, action, mods);
+
     switch (key) {
     case GLFW_KEY_ESCAPE: {
         mWindow.SetShouldClose(GLFW_TRUE);
@@ -162,7 +167,7 @@ void Game::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action
 void Game::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
     if (!mIsMouseVisible) {
-        pWorld->player.ProcessMouseInput(*pWorld, button, action, mods);
+        pWorld->player.MouseCallback(*pWorld, button, action, mods);
     }
 }
 

@@ -2,40 +2,26 @@
 Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
-
-#ifndef PLAYER_H
-#define PLAYER_H
-
-#include <core/Camera.hpp>
-#include <opengl/Window.hpp>
 #include <math/AABB.hpp>
+#include <world/World.hpp>
 
-class World;
+bool BoundingBox::IsColliding(const World& world, Vec3 center)
+{
+    iVec3 corner1 = GetWorldBlockPosFromGlobalPos(center - size);
+    iVec3 corner2 = GetWorldBlockPosFromGlobalPos(center + size);
 
-enum class PlayerMovement {
-    FORWARD,
-    BACKWARD,
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN,
-    GRAVITY
-};
-
-struct Player {
-    float yVelocity = 0.0f;
-    float movementSpeed = 5.0f;
-    Camera camera{ Vec3{ 0.0f, 700.0f,0.0f } };
-    BoundingBox boundingBox{ Vec3{0.4f, 1.0f, 0.4f} };
-    void ProcessKeyInput(const World& world, const Window& window, float deltaTime);
-    void KeyCallback(int key, int scancode, int action, int mods);
-    void MouseCallback(const World& world, int button, int action, int mods);
-    void Move(const World& world, PlayerMovement direction, float deltaTime);
-    void ApplyGravity(const World&, float deltaTime);
-};
-
-
-#endif // !PLAYER_H
+    for (int x = corner1[0]; x <= corner2[0]; x++) {
+        for (int y = corner1[1]; y <= corner2[1]; y++) {
+            for (int z = corner1[2]; z <= corner2[2]; z++) {
+                BlockID block = world.GetBlock(iVec3{ x,y,z });
+                if (block != AIR) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
 
 /*
 MIT License

@@ -9,7 +9,7 @@ License: MIT
 #include <assert.h>
 #include <world/World.hpp>
 
-const float Camera::MAX_FOV = 90.0f;
+const float Camera::MAX_FOV = 135.0f;
 const float Camera::MIN_FOV = 1.0f;
 
 Camera::Camera() {
@@ -59,7 +59,7 @@ void Camera::ProcessMouseScroll(float yoffset)
 
 void Camera::SetFOV(float newFOV)
 {
-    FOV = newFOV;
+    FOV = std::clamp(newFOV, MIN_FOV, MAX_FOV);
     perspectiveMatrix = perspective(radians(FOV), aspect, near, far);
 }
 

@@ -21,6 +21,8 @@ iVec3 GetWorldBlockPosFromGlobalPos(Vec3 globalPosition);
 iVec3 GetChunkPosFromGlobalBlockPos(iVec3 globalBlockPos);
 iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 pos);
 
+const float GRAVITY = 1.0f;
+
 class World {
 private:
     std::unordered_map<iVec2, ChunkStack> mChunkStacks;

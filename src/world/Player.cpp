@@ -6,6 +6,7 @@ License: MIT
 #include <world/Player.hpp>
 #include <world/World.hpp>
 #include <math/Raycast.hpp>
+#include <util/Log.hpp>
 
 void Player::ProcessKeyInput(const World& world, const Window& window, float deltaTime)
 {
@@ -22,14 +23,26 @@ void Player::ProcessKeyInput(const World& world, const Window& window, float del
         Move(world, PlayerMovement::RIGHT, deltaTime);
     }
     if (window.IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
-        movementSpeed = 50.0f;
+        movementSpeed = 25.0f;
     }
     else {
-        movementSpeed = 10.0f;
+        movementSpeed = 5.0f;
     }
 }
 
-void Player::ProcessMouseInput(const World& world, int button, int action, int mods)
+void Player::KeyCallback(int key, int scancode, int action, int mods)
+{
+    switch (key) {
+    case GLFW_KEY_SPACE: {
+        if (action == GLFW_PRESS) {
+            yVelocity = -25.0f;
+            break;
+        }
+    }
+    }
+}
+
+void Player::MouseCallback(const World& world, int button, int action, int mods)
 {
     switch (button) {
     case GLFW_MOUSE_BUTTON_1: {
@@ -62,36 +75,64 @@ void Player::ProcessMouseInput(const World& world, int button, int action, int m
 
 void Player::Move(const World& world, PlayerMovement direction, float deltaTime)
 {
-    float velocity = movementSpeed * deltaTime;
+    float velocity{};
     Vec3 directionMultiplier{};
 
     switch (direction) {
     case PlayerMovement::FORWARD: {
-        directionMultiplier = camera.front;
+        velocity = deltaTime * movementSpeed;
+        directionMultiplier = Vec3{ camera.front[0], 0.0f, camera.front[2] };
         break;
     }
     case PlayerMovement::BACKWARD: {
-        directionMultiplier = camera.front * -1.0f;
+        velocity = deltaTime * movementSpeed;
+        directionMultiplier = Vec3{ camera.front[0], 0.0f, camera.front[2] } *-1.0f;
         break;
     }
     case PlayerMovement::LEFT: {
+        velocity = deltaTime * movementSpeed;
         directionMultiplier = camera.right * -1.0f;
         break;
     }
     case PlayerMovement::RIGHT: {
+        velocity = deltaTime * movementSpeed;
         directionMultiplier = camera.right;
+        break;
+    }
+    case PlayerMovement::DOWN: {
+        velocity = deltaTime * movementSpeed;
+        directionMultiplier = camera.worldUp * -1.0f;
+        break;
+    }
+    case PlayerMovement::UP: {
+        velocity = deltaTime * movementSpeed;
+        directionMultiplier = camera.worldUp;
+        break;
+    }
+    case PlayerMovement::GRAVITY: {
+        velocity = deltaTime * yVelocity;
+        directionMultiplier = camera.worldUp * -1.0f;
+        break;
     }
     }
 
     Vec3 newPosition = camera.position;
     for (int i = 0; i < 3; i++) {
         newPosition[i] += directionMultiplier[i] * velocity;
-        BlockID block = world.GetBlock(GetWorldBlockPosFromGlobalPos(newPosition));
-        if (block != AIR) {
+        if (boundingBox.IsColliding(world, newPosition - Vec3{ 0.0f, 1.0f, 0.0f })) {
             newPosition[i] = camera.position[i];
+            if (i == 1) {
+                yVelocity = 0.0f;
+            }
         }
     }
     camera.position = newPosition;
+}
+
+void Player::ApplyGravity(const World& world, float deltaTime)
+{
+    Move(world, PlayerMovement::GRAVITY, deltaTime);
+    yVelocity += GRAVITY;
 }
 
 

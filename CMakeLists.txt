@@ -47,7 +47,9 @@ add_executable(${PROJECT_NAME}
     src/math/Math.cpp
     src/math/Math.hpp
     src/math/Raycast.cpp
-    src/math/Raycast.hpp
+    src/math/Raycast.hpp 
+    src/math/AABB.cpp
+    src/math/AABB.hpp
     src/util/Log.cpp
     src/util/Log.hpp
     src/util/Concepts.hpp
