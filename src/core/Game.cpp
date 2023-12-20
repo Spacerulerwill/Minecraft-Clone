@@ -81,11 +81,11 @@ void Game::Run() {
         ImGui::SetNextWindowSize(ImVec2{ 0,0 });
         ImGui::SetNextWindowPos(ImVec2{ 0,0 });
         ImGui::Begin("Settings");
-        ImGui::SliderFloat("Sensitivity", &pWorld->mCamera.mMouseSensitivity, 0.0f, 1.0f);
+        ImGui::SliderFloat("Sensitivity", &pWorld->mCamera.mouseSensitivity, 0.0f, 1.0f);
         ImGui::SliderInt("Render Distance", &pWorld->mRenderDistance, 5, 30);
         ImGui::SliderInt("Chunk buffers per frame", &pWorld->mBufferPerFrame, 1, 50);
 
-        Vec3 pos = pWorld->mCamera.GetPosition();
+        Vec3 pos = pWorld->mCamera.position;
         iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pos);
         iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(blockPos);
         iVec3 chunkLocalBlockPos = GetChunkBlockPosFromGlobalBlockPos(blockPos);
@@ -127,10 +127,10 @@ void Game::ProcessKeyInput()
             pWorld->mCamera.ProcessKeyboard(pWorld.get(), RIGHT, mDeltaTime);
         }
         if (mWindow.IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
-            pWorld->mCamera.SetMovementSpeed(50.0f);
+            pWorld->mCamera.movementSpeed = 50.0f;
         }
         else {
-            pWorld->mCamera.SetMovementSpeed(10.0f);
+            pWorld->mCamera.movementSpeed = 10.0f;
         }
     }
 }
@@ -168,7 +168,7 @@ void Game::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action
             }
             else {
                 mWindow.SetMouseDisabled();
-                pWorld->mCamera.mIsFirstMouse = true;
+                pWorld->mCamera.isFirstMouseInput = true;
             }
         }
         break;
@@ -182,7 +182,7 @@ void Game::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, i
         switch (button) {
         case GLFW_MOUSE_BUTTON_1: {
             if (action == GLFW_PRESS) {
-                const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(pWorld.get(), pWorld->mCamera.GetPosition(), pWorld->mCamera.GetDirection(), 10.0f);
+                const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(pWorld.get(), pWorld->mCamera.position, pWorld->mCamera.position, 10.0f);
 
                 if (raycast.chunk != nullptr && raycast.blockHit != AIR) {
                     raycast.chunk->SetBlock(raycast.blockPos, AIR);
@@ -194,7 +194,7 @@ void Game::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, i
         }
         case GLFW_MOUSE_BUTTON_RIGHT: {
             if (action == GLFW_PRESS) {
-                const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(pWorld.get(), pWorld->mCamera.GetPosition(), pWorld->mCamera.GetDirection(), 10.0f);
+                const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(pWorld.get(), pWorld->mCamera.position, pWorld->mCamera.front, 10.0f);
 
                 if (raycast.chunk != nullptr && raycast.blockHit != AIR) {
                     iVec3 blockPlacePosition = raycast.blockPos + raycast.normal;

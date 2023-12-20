@@ -16,134 +16,99 @@ Camera::Camera() {
     UpdateCameraVectors();
 }
 
-Camera::Camera(Vec3 pos) : mPosition(pos) {
+Camera::Camera(Vec3 pos) : position(pos) {
     UpdateCameraVectors();
 }
 
-Camera::Camera(Vec3 pos, float pitch, float yaw) : mPosition(pos), mYaw(yaw), mPitch(pitch) {
+Camera::Camera(Vec3 pos, float pitch, float yaw) : position(pos), yaw(yaw), pitch(pitch) {
     UpdateCameraVectors();
 }
 
 Mat4 Camera::GetViewMatrix() const {
-    return lookAt(mPosition, mPosition + mFront, mUp);
-}
-
-Mat4 Camera::GetPerspectiveMatrix() const {
-    return mPerspectiveMatrix;
-}
-
-void Camera::SetFOV(float FOV) {
-    if (mFOV != FOV) {
-        FOV = std::clamp(FOV, MIN_FOV, MAX_FOV);
-        mPerspectiveMatrix = perspective(radians(FOV), mAspect, mNear, mFar);
-    }
-    mFOV = FOV;
-}
-
-float Camera::GetFOV() const {
-    return mFOV;
-}
-
-void Camera::SetPitch(float pitch) {
-    assert(pitch > -180.0f && pitch < 180.0f);
-    mPitch = pitch;
-}
-
-float Camera::GetPitch() const {
-    return mPitch;
-}
-
-void Camera::SetYaw(float yaw) {
-    assert(yaw > -180.0f && yaw < 180.0f);
-    mYaw = yaw;
-}
-
-float Camera::GetYaw() const {
-    return mYaw;
-}
-
-void Camera::SetMovementSpeed(float speed) {
-    mMovementSpeed = speed;
-}
-
-Vec3 Camera::GetPosition() const {
-    return mPosition;
-}
-
-Vec3 Camera::GetDirection() const {
-    return mFront;
+    return lookAt(position, position + front, up);
 }
 
 void Camera::ProcessKeyboard(World* world, CameraMovement direction, float deltaTime)
 {
-    float velocity = mMovementSpeed * deltaTime;
+    float velocity = movementSpeed * deltaTime;
     Vec3 directionMultiplier;
 
     if (direction == FORWARD) {
-        directionMultiplier = mFront;
+        directionMultiplier = front;
     }
     if (direction == BACKWARD) {
-        directionMultiplier = mFront * -1;
+        directionMultiplier = front * -1;
     }
     if (direction == LEFT) {
-        directionMultiplier = mRight * -1;
+        directionMultiplier = right * -1;
     }
     if (direction == RIGHT) {
-        directionMultiplier = mRight;
+        directionMultiplier = right;
     }
 
-    Vec3 newPosition = mPosition;
+    Vec3 newPosition = position;
     for (int i = 0; i < 3; i++) {
         newPosition[i] += directionMultiplier[i] * velocity;
         BlockID block = world->GetBlock(GetWorldBlockPosFromGlobalPos(newPosition));
         if (block != AIR) {
-            newPosition[i] = mPosition[i];
+            newPosition[i] = position[i];
         }
     }
-    mPosition = newPosition;
+    position = newPosition;
 }
 
 void Camera::ProcessMouseMovement(float xpos, float ypos)
 {
-    if (mIsFirstMouse) // initially set to true
+    if (isFirstMouseInput) // initially set to true
     {
-        mLastMouseX = xpos;
-        mLastMouseY = ypos;
-        mIsFirstMouse = false;
+        lastMouseX = xpos;
+        lastMouseY = ypos;
+        isFirstMouseInput = false;
     }
 
-    float xoffset = xpos - mLastMouseX;
-    float yoffset = mLastMouseY - ypos; // reversed since y-coordinates go from bottom to top
+    float xoffset = xpos - lastMouseX;
+    float yoffset = lastMouseY - ypos; // reversed since y-coordinates go from bottom to top
 
-    mLastMouseX = xpos;
-    mLastMouseY = ypos;
+    lastMouseX = xpos;
+    lastMouseY = ypos;
 
-    xoffset *= mMouseSensitivity;
-    yoffset *= mMouseSensitivity;
+    xoffset *= mouseSensitivity;
+    yoffset *= mouseSensitivity;
 
-    mPitch = std::clamp(mPitch + yoffset, -89.0f, 89.0f);
-    mYaw = static_cast<float>(fmod((mYaw + xoffset), 360));
+    pitch = std::clamp(pitch + yoffset, -89.0f, 89.0f);
+    yaw = static_cast<float>(fmod((yaw + xoffset), 360));
 
     UpdateCameraVectors();
 }
 
 void Camera::ProcessMouseScroll(float yoffset)
 {
-    SetFOV(mFOV - (yoffset) * 2);
+    SetFOV(FOV - (yoffset) * 2);
+}
+
+void Camera::SetFOV(float newFOV)
+{
+    FOV = newFOV;
+    perspectiveMatrix = perspective(radians(FOV), aspect, near, far);
+}
+
+float Camera::GetFOV() const
+{
+    return FOV;
 }
 
 void Camera::UpdateCameraVectors()
 {
     // Calculate new front vector
-    Vec3 front;
-    front[0] = static_cast<float>(cos(radians(mYaw)) * cos(radians(mPitch)));
-    front[1] = static_cast<float>(sin(radians(mPitch)));
-    front[2] = static_cast<float>(sin(radians(mYaw)) * cos(radians(mPitch)));
-    mFront = front.normalized();
+    Vec3 newFront;
+    newFront[0] = static_cast<float>(cos(radians(yaw)) * cos(radians(pitch)));
+    newFront[1] = static_cast<float>(sin(radians(pitch)));
+    newFront[2] = static_cast<float>(sin(radians(yaw)) * cos(radians(pitch)));
+    front = newFront.normalized();
 
     // Calculate up and right 
-    mRight = (mFront.cross(mWorldUp)).normalized();
-    mUp = (mRight.cross(mFront)).normalized();
+    right = (front.cross(worldUp)).normalized();
+    up = (right.cross(front)).normalized();
 }
 
 /*

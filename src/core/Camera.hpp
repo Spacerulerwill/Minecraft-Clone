@@ -20,59 +20,46 @@ enum CameraMovement {
     RIGHT
 };
 
-class Camera {
+struct Camera {
+private:
+    float lastMouseX = 0.0f;
+    float lastMouseY = 0.0f;
+
+    float near = 0.1f;
+    float far = 5000.0f;
+    float pitch = 0.0f;
+    float yaw = -90.0f;
+    float aspect = 16.0f / 9.0f;
+    float FOV = 45.0f;
 public:
     Camera();
     Camera(Vec3 pos);
     Camera(Vec3 pos, float pitch, float yaw);
 
-    Mat4 GetViewMatrix() const;
-    Mat4 GetPerspectiveMatrix() const;
-
-    void SetFOV(float FOV);
-    float GetFOV() const;
-
-    void SetPitch(float pitch);
-    float GetPitch() const;
-
-    void SetYaw(float yaw);
-    float GetYaw() const;
-
-    void SetMovementSpeed(float speed);
-
-    Vec3 GetPosition() const;
-    Vec3 GetDirection() const;
-
     void ProcessKeyboard(World* world, CameraMovement direction, float deltaTime);
     void ProcessMouseMovement(float xpos, float ypos);
     void ProcessMouseScroll(float yoffset);
 
+    void SetFOV(float newFOV);
+    float GetFOV() const;
+
     static const float MAX_FOV;
     static const float MIN_FOV;
 
-    float mMouseSensitivity = 0.1f;
-    bool mIsFirstMouse = true;
-private:
-    float mLastMouseX = 0.0f;
-    float mLastMouseY = 0.0f;
-
-    Vec3 mPosition{ 0.0f, 0.0f, 0.0f };
-    Vec3 mFront;
-    Vec3 mUp;
-    Vec3 mRight;
-    Vec3 mWorldUp{ 0.0f, 1.0f, 0.0f };
+    bool isFirstMouseInput = true;
 
     // camera options
-    float mMovementSpeed = 2.5f;
-    float mAspect = 16.0f / 9.0f;
-    float mNear = 0.1f;
-    float mFOV = 45.0f;
-    float mFar = 5000.0f;
-    float mPitch = 0.0f;
-    float mYaw = -90.0f;
+    float movementSpeed = 2.5f;
+    float mouseSensitivity = 0.1f;
 
-    // Perspective Matrix
-    Mat4 mPerspectiveMatrix = perspective(radians(mFOV), mAspect, mNear, mFar);
+    Vec3 position{ 0.0f, 0.0f, 0.0f };
+    Vec3 front;
+    Vec3 up;
+    Vec3 right;
+    Vec3 worldUp{ 0.0f, 1.0f, 0.0f };
+
+    Mat4 perspectiveMatrix = perspective(radians(FOV), aspect, near, far);
+    Mat4 GetViewMatrix() const;
 
     void UpdateCameraVectors();
 };
