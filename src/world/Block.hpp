@@ -16,6 +16,9 @@ using TextureID = uint8_t;
 enum Block : BlockID {
     AIR,
     STONE,
+    DIRT,
+    GRASS,
+    BEDROCK,
     NUM_BLOCKS
 };
 
