@@ -9,6 +9,7 @@ License: MIT
 #include <core/Camera.hpp>
 #include <opengl/Window.hpp>
 #include <math/AABB.hpp>
+#include <world/Block.hpp>
 
 class World;
 
@@ -23,6 +24,7 @@ enum class PlayerMovement {
 };
 
 struct Player {
+    BlockID selectedBlock = STONE;
     float yVelocity = 0.0f;
     float movementSpeed = 5.0f;
     Camera camera{ Vec3{ 0.0f, 700.0f,0.0f } };

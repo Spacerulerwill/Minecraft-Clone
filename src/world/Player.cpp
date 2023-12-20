@@ -63,9 +63,19 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
 
             if (raycast.chunk != nullptr && raycast.blockHit != AIR) {
                 iVec3 blockPlacePosition = raycast.blockPos + raycast.normal;
-                raycast.chunk->SetBlock(blockPlacePosition, STONE);
+                raycast.chunk->SetBlock(blockPlacePosition, selectedBlock);
                 raycast.chunk->CreateMesh();
                 raycast.chunk->BufferData();
+            }
+        }
+        break;
+    }
+    case GLFW_MOUSE_BUTTON_3: {
+        if (action == GLFW_PRESS) {
+            const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(world, camera.position, camera.front, 10.0f);
+
+            if (raycast.chunk != nullptr && raycast.blockHit != AIR) {
+                selectedBlock = raycast.blockHit;
             }
         }
         break;
