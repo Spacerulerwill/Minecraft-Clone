@@ -9,9 +9,11 @@ License: MIT
 #include <array>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 using BlockID = uint8_t;
 using TextureID = uint8_t;
+using SoundID = uint8_t;
 
 enum Block : BlockID {
     AIR,
@@ -20,6 +22,15 @@ enum Block : BlockID {
     GRASS,
     BEDROCK,
     NUM_BLOCKS
+};
+
+enum class Sound : SoundID {
+    AIR,
+    GRASS,
+    GRAVEL,
+    STONE,
+    WOOD,
+    NUM_SOUNDS
 };
 
 enum BlockFaces {
@@ -34,10 +45,16 @@ enum BlockFaces {
 struct BlockDataStruct {
     uint8_t unique_faces;
     std::array<TextureID, 6> faces;
+    SoundID soundID;
+};
+
+struct BlockSoundStruct {
+    std::vector<std::string> sounds;
 };
 
 // Global arrays used to fetch certain information by integer ID, using array indexing
 extern BlockDataStruct BlockData[NUM_BLOCKS];
+extern BlockSoundStruct BlockSounds[static_cast<std::size_t>(Sound::NUM_SOUNDS)];
 constexpr unsigned int TEXTURE_SIZE = 16;
 void InitBlocks();
 

@@ -6,7 +6,7 @@ License: MIT
 #include <world/Player.hpp>
 #include <world/World.hpp>
 #include <math/Raycast.hpp>
-#include <util/Log.hpp>
+#include <core/SoundEngine.hpp>
 
 void Player::ProcessKeyInput(const World& world, const Window& window, float deltaTime)
 {
@@ -53,6 +53,9 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                 raycast.chunk->SetBlock(raycast.blockPos, AIR);
                 raycast.chunk->CreateMesh();
                 raycast.chunk->BufferData();
+                BlockDataStruct blockData = BlockData[raycast.blockHit];
+                BlockSoundStruct soundData = BlockSounds[blockData.soundID];
+                SoundEngine::GetEngine()->play3D(soundData.sounds[0].c_str(), irrklang::vec3df(camera.position[0], camera.position[1], camera.position[2]));
             }
         }
         break;
@@ -66,6 +69,9 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                 raycast.chunk->SetBlock(blockPlacePosition, selectedBlock);
                 raycast.chunk->CreateMesh();
                 raycast.chunk->BufferData();
+                BlockDataStruct blockData = BlockData[selectedBlock];
+                BlockSoundStruct soundData = BlockSounds[blockData.soundID];
+                SoundEngine::GetEngine()->play3D(soundData.sounds[0].c_str(), irrklang::vec3df(camera.position[0], camera.position[1], camera.position[2]));
             }
         }
         break;

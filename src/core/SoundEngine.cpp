@@ -12,6 +12,7 @@ void SoundEngine::Init() {
     {
         if (!wrapper) {
             wrapper = std::make_unique<irrKlangEngineWrapper>();
+            wrapper->engine->setSoundVolume(1.0f);
         }
     }
 }

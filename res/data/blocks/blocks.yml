@@ -1,10 +1,15 @@
 air:
   unique_faces: 1
+  sound_id: 0
 stone:
   unique_faces: 1
+  sound_id: 3
 dirt: 
   unique_faces: 1
+  sound_id: 2
 grass:
   unique_faces: 3
+  sound_id: 1
 bedrock: 
   unique_faces: 1
+  sound_id: 3

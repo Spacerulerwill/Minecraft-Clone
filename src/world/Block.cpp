@@ -5,10 +5,13 @@ License: MIT
 
 #include <world/Block.hpp>
 #include <yaml-cpp/yaml.h>
+#include <format>
+#include <util/Log.hpp>
 
 BlockDataStruct BlockData[NUM_BLOCKS] = {};
+BlockSoundStruct BlockSounds[static_cast<std::size_t>(Sound::NUM_SOUNDS)] = {};
 
-void InitBlocks() {
+void LoadBlockData() {
     //Load block data from blocks.yml
     YAML::Node blocks_yml = YAML::LoadFile("data/blocks/blocks.yml");
 
@@ -19,6 +22,7 @@ void InitBlocks() {
 
         uint8_t uniqueFacesCount = it->second["unique_faces"].as<uint8_t>();
         blockData.unique_faces = uniqueFacesCount;
+        blockData.soundID = it->second["sound_id"].as<SoundID>();
 
         switch (uniqueFacesCount) {
         case 1: {
@@ -63,6 +67,30 @@ void InitBlocks() {
         face_index += uniqueFacesCount;
         block_count++;
     }
+}
+
+void LoadBlockSoundData() {
+    // Load sounds
+    YAML::Node sounds_yml = YAML::LoadFile("data/blocks/sounds.yml");
+
+    std::size_t index = 0;
+    for (YAML::const_iterator it = sounds_yml.begin(); it != sounds_yml.end(); ++it) {
+        BlockSoundStruct blockSound{};
+        std::string soundName = it->first.as<std::string>();
+        std::size_t count = it->second.as<std::size_t>();
+        std::vector<std::string> paths;
+        for (std::size_t i = 0; i < count; i++) {
+            paths.emplace_back(std::format("sound/block/{}{}.ogg", soundName, i + 1));
+        }
+        blockSound.sounds = std::move(paths);
+        BlockSounds[index] = std::move(blockSound);
+        index++;
+    }
+}
+
+void InitBlocks() {
+    LoadBlockData();
+    LoadBlockSoundData();
 }
 
 
