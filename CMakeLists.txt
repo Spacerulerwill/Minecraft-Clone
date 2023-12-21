@@ -11,6 +11,8 @@ add_executable(${PROJECT_NAME}
     src/core/Game.hpp
     src/core/Camera.cpp
     src/core/Camera.hpp
+    src/core/SoundEngine.cpp
+    src/core/SoundEngine.hpp
     src/opengl/Window.cpp
     src/opengl/Window.hpp
     src/opengl/Texture.cpp
