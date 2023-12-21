@@ -27,10 +27,10 @@ class World {
 private:
     std::unordered_map<iVec2, ChunkStack> mChunkStacks;
     Skybox mSkybox;
-    Shader chunkShader = Shader("res/shaders/chunk.shader");
+    Shader chunkShader = Shader("shaders/chunk.shader");
     siv::PerlinNoise mPerlin = siv::PerlinNoise(0);
     BS::thread_pool mLoadPool;
-    TexArray2D mTextureAtlas = TexArray2D("res/textures/atlas.png", TEXTURE_SIZE, GL_TEXTURE0);
+    TexArray2D mTextureAtlas = TexArray2D("textures/atlas.png", TEXTURE_SIZE, GL_TEXTURE0);
 public:
     GLint LOD = 1;
     int mRenderDistance = 5;

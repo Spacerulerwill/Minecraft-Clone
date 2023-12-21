@@ -20,11 +20,16 @@ License: MIT
 
 #include <util/Log.hpp>
 
+#include <irrKlang/irrKlang.h>
+
 void Game::Run() {
     if (!gladLoadGL())
     {
         throw std::runtime_error("Failed to load GLAD!");
     }
+
+    // start the sound engine with default parameters
+    irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
 
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
@@ -42,7 +47,7 @@ void Game::Run() {
     InitBlocks();
 
     pMSAARenderer = std::make_unique<MSAARenderer>(SCREEN_WIDTH, SCREEN_HEIGHT);
-    Shader framebufferShader("res/shaders/framebuffer.shader");
+    Shader framebufferShader("shaders/framebuffer.shader");
 
     pWorld = std::make_unique<World>();
 

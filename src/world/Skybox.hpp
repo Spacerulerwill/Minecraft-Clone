@@ -22,7 +22,7 @@ private:
 
     VertexBuffer mVBO;
     VertexArray mVAO;
-    Shader mShader = Shader("res/shaders/skybox.shader");
+    Shader mShader = Shader("shaders/skybox.shader");
     Cubemap mCubemap;
 public:
     Skybox();

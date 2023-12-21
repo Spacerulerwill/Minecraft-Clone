@@ -10,7 +10,7 @@ BlockDataStruct BlockData[NUM_BLOCKS] = {};
 
 void InitBlocks() {
     //Load block data from blocks.yml
-    YAML::Node blocks_yml = YAML::LoadFile("res/blocks.yml");
+    YAML::Node blocks_yml = YAML::LoadFile("blocks.yml");
 
     int face_index = 0;
     int block_count = 0;

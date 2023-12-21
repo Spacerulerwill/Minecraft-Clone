@@ -71,6 +71,7 @@ target_include_directories(${PROJECT_NAME}
     SYSTEM PRIVATE submodules/glfw/include
     SYSTEM PRIVATE submodules/spdlog/include
     SYSTEM PRIVATE submodules/yaml-cpp/include
+    SYSTEM PRIVATE include/imgui
     SYSTEM PRIVATE include
     PUBLIC src
 )
@@ -86,6 +87,29 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC glfw
     PUBLIC yaml-cpp
 )
+
+# copy our resources to executable location
+add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+
+if(WIN32)
+    # copy dynamic libraries to executable location
+    add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/lib/windows/dynamic $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+    # link static libraries
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/lib/windows/irrKlang.lib)
+endif(WIN32)
+
+if(UNIX)
+    # copy dynamic libraries to executable location
+    add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/lib/unix/dynamic $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+    # link static libraries
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/lib/unix/irrKlang.a)
+endif(UNIX)
 
 add_compile_definitions(GLFW_INCLUDE_NONE)
 

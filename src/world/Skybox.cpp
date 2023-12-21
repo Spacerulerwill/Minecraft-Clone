@@ -51,12 +51,12 @@ float Skybox::sSkyboxVertices[108] = {
 };
 
 std::array<std::string, 6> Skybox::sSkyboxFaces = {
-    "res/textures/skybox/right.jpg",
-    "res/textures/skybox/left.jpg",
-    "res/textures/skybox/top.jpg",
-    "res/textures/skybox/bottom.jpg",
-    "res/textures/skybox/front.jpg",
-    "res/textures/skybox/back.jpg"
+    "textures/skybox/right.jpg",
+    "textures/skybox/left.jpg",
+    "textures/skybox/top.jpg",
+    "textures/skybox/bottom.jpg",
+    "textures/skybox/front.jpg",
+    "textures/skybox/back.jpg"
 };
 
 Skybox::Skybox()
