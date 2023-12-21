@@ -12,7 +12,6 @@ License: MIT
 class Log {
 public:
     static void Init();
-    static void Shutdown();
     inline static std::shared_ptr<spdlog::logger>& GetLogger() { return sLogger; }
 
     Log(const Log& arg) = delete;

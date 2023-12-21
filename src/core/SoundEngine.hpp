@@ -4,10 +4,40 @@ License: MIT
 */
 
 #ifndef SOUND_ENGINE_H
-#define SOUND_ENGINE_H      
+#define SOUND_ENGINE_H
+
+#include <irrKlang/irrKlang.h>
+#include <stdexcept>
+#include <util/Log.hpp>
+#include <memory>
+
+struct irrKlangEngineWrapper {
+    irrklang::ISoundEngine* engine = nullptr;
+
+    irrKlangEngineWrapper() : engine(irrklang::createIrrKlangDevice()) {
+        LOG_INFO("Initialising sound engine!");
+        if (!engine) {
+            throw std::runtime_error("Failed to initialise irrKlang sound engine!");
+        }
+    }
+
+    ~irrKlangEngineWrapper() {
+        LOG_INFO("Destroying sound engine!");
+        engine->drop();
+    }
+};
 
 class SoundEngine {
-
+private:
+    SoundEngine() = default;
+    ~SoundEngine() = default;
+    static std::unique_ptr<irrKlangEngineWrapper> wrapper;
+public:
+    static void Init();
+    SoundEngine(const SoundEngine& arg) = delete;
+    SoundEngine(const SoundEngine&& arg) = delete;
+    SoundEngine& operator=(const SoundEngine& arg) = delete;
+    SoundEngine& operator=(const SoundEngine&& arg) = delete;
 };
 
 #endif // !SOUND_ENGINE_H

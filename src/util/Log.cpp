@@ -18,12 +18,6 @@ void Log::Init() {
     LOG_INFO("Logger initialised!");
 }
 
-void Log::Shutdown()
-{
-    LOG_INFO("Shutting down logger...");
-    spdlog::shutdown();
-}
-
 /*
 MIT License
 

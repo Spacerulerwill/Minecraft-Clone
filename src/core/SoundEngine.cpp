@@ -3,6 +3,17 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
+#include <core/SoundEngine.hpp>
+
+std::unique_ptr<irrKlangEngineWrapper> SoundEngine::wrapper = nullptr;
+
+void SoundEngine::Init() {
+    {
+        if (!wrapper) {
+            wrapper = std::make_unique<irrKlangEngineWrapper>();
+        }
+    }
+}
 /*
 MIT License
 

@@ -9,31 +9,34 @@ License: MIT
 #include <GLFW/glfw3.h>
 #include <core/Game.hpp>
 #include <util/Log.hpp>
+#include <core/SoundEngine.hpp>
 
-void cleanup() {
-    Log::Shutdown();
-    glfwTerminate();
-}
+struct GLFWContext {
+    GLFWContext() {
+        LOG_INFO("Initialising GLFW");
+        if (!glfwInit()) {
+            throw std::runtime_error("Failed to initialise GLFW");
+        }
+    }
+
+    ~GLFWContext() {
+        LOG_INFO("Terminating GLFW");
+        glfwTerminate();
+    }
+};
 
 int main() {
     Log::Init();
-
-    if (!glfwInit()) {
-        LOG_CRITICAL("Failed to intiailise GLFW!");
-        cleanup();
-        return EXIT_FAILURE;
-    }
-
-    Game game;
     try {
+        GLFWContext context;
+        SoundEngine::Init();
+        Game game;
         game.Run();
     }
     catch (const std::runtime_error& e) {
         LOG_CRITICAL(e.what());
-        cleanup();
         return EXIT_FAILURE;
     }
-    cleanup();
     return EXIT_SUCCESS;
 }
 
