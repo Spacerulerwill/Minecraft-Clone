@@ -1,0 +1,10 @@
+air:
+  unique_faces: 1
+stone:
+  unique_faces: 1
+dirt: 
+  unique_faces: 1
+grass:
+  unique_faces: 3
+bedrock: 
+  unique_faces: 1

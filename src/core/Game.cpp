@@ -4,6 +4,7 @@ License: MIT
 */
 
 #include <core/Game.hpp>
+#include <core/SoundEngine.hpp>
 #include <opengl/Shader.hpp>
 #include <world/Block.hpp>
 #include <math/Matrix.hpp>
@@ -26,6 +27,7 @@ void Game::Run() {
         throw std::runtime_error("Failed to load GLAD!");
     }
 
+    SoundEngine::PreloadGameSounds();
     InitBlocks();
 
     ImGui::CreateContext();

@@ -4,6 +4,7 @@ License: MIT
 */
 
 #include <core/SoundEngine.hpp>
+#include <filesystem>
 
 std::unique_ptr<irrKlangEngineWrapper> SoundEngine::wrapper = nullptr;
 
@@ -11,6 +12,15 @@ void SoundEngine::Init() {
     {
         if (!wrapper) {
             wrapper = std::make_unique<irrKlangEngineWrapper>();
+        }
+    }
+}
+
+void SoundEngine::PreloadGameSounds() {
+    LOG_INFO("Preloading game sounds...");
+    for (const auto& dirEntry : std::filesystem::recursive_directory_iterator("sound/")) {
+        if (!std::filesystem::is_directory(dirEntry)) {
+            wrapper->engine->addSoundSourceFromFile(dirEntry.path().string().c_str(), irrklang::ESM_AUTO_DETECT, true);
         }
     }
 }

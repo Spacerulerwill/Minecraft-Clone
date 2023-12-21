@@ -34,6 +34,8 @@ private:
     static std::unique_ptr<irrKlangEngineWrapper> wrapper;
 public:
     static void Init();
+    static void PreloadGameSounds();
+    inline irrklang::ISoundEngine* GetEngine() const { return wrapper->engine; };
     SoundEngine(const SoundEngine& arg) = delete;
     SoundEngine(const SoundEngine&& arg) = delete;
     SoundEngine& operator=(const SoundEngine& arg) = delete;
