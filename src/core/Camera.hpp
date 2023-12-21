@@ -30,7 +30,7 @@ private:
     float pitch = 0.0f;
     float yaw = -90.0f;
     float aspect = 16.0f / 9.0f;
-    float FOV = 45.0f;
+    float FOV = 90.0f;
 public:
     Camera();
     Camera(Vec3 pos);
