@@ -35,7 +35,7 @@ void Player::KeyCallback(int key, int scancode, int action, int mods)
     switch (key) {
     case GLFW_KEY_SPACE: {
         if (action == GLFW_PRESS) {
-            yVelocity = -25.0f;
+            yVelocity = -15.0f;
             break;
         }
     }
@@ -129,7 +129,7 @@ void Player::Move(const World& world, PlayerMovement direction, float deltaTime)
     Vec3 newPosition = camera.position;
     for (int i = 0; i < 3; i++) {
         newPosition[i] += directionMultiplier[i] * velocity;
-        if (boundingBox.IsColliding(world, newPosition - Vec3{ 0.0f, 1.0f, 0.0f })) {
+        if (boundingBox.IsColliding(world, newPosition - Vec3{ 0.0f, 0.75f, 0.0f })) {
             newPosition[i] = camera.position[i];
             if (i == 1) {
                 yVelocity = 0.0f;

@@ -28,7 +28,7 @@ struct Player {
     float yVelocity = 0.0f;
     float movementSpeed = 5.0f;
     Camera camera{ Vec3{ 0.0f, 700.0f,0.0f } };
-    BoundingBox boundingBox{ Vec3{0.4f, 1.0f, 0.4f} };
+    BoundingBox boundingBox{ Vec3{0.4f, 0.95f, 0.4f} };
     void ProcessKeyInput(const World& world, const Window& window, float deltaTime);
     void KeyCallback(int key, int scancode, int action, int mods);
     void MouseCallback(const World& world, int button, int action, int mods);
