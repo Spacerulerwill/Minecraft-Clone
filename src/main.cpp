@@ -37,6 +37,15 @@ int main() {
         LOG_CRITICAL(e.what());
         return EXIT_FAILURE;
     }
+    catch (const std::exception& e) {
+        LOG_CRITICAL(e.what());
+        return EXIT_FAILURE;
+    }
+    catch (...) {
+        LOG_CRITICAL("Unhandled exception caught!");
+        return EXIT_FAILURE;
+    }
+
     return EXIT_SUCCESS;
 }
 
