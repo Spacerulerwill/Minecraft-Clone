@@ -31,11 +31,12 @@ class SoundEngine {
 private:
     SoundEngine() = default;
     ~SoundEngine() = default;
-    static std::unique_ptr<irrKlangEngineWrapper> wrapper;
 public:
-    static void Init();
     static void PreloadGameSounds();
-    inline static irrklang::ISoundEngine* GetEngine() { return wrapper->engine; };
+    inline static irrklang::ISoundEngine* GetEngine() {
+        static irrKlangEngineWrapper wrapper;
+        return wrapper.engine;
+    };
     SoundEngine(const SoundEngine& arg) = delete;
     SoundEngine(const SoundEngine&& arg) = delete;
     SoundEngine& operator=(const SoundEngine& arg) = delete;

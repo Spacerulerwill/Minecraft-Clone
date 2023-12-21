@@ -101,7 +101,6 @@ void Game::Run() {
         ImGui::Text(std::format("FPS: {}", static_cast<int>(1.0f / mDeltaTime)).c_str());
         ImGui::End();
 
-        ImGui::End();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

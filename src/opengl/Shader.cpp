@@ -184,7 +184,7 @@ GLint Shader::GetLocation(std::string name) const {
         return mUniformLocations.at(name);
     }
     catch (const std::out_of_range&) {
-        LOG_WARNING(fmt::format("Location of {} not found!", name));
+        LOG_WARNING("Location of {} not found!", name);
         return -1;
     }
 }

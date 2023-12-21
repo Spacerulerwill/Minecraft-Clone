@@ -7,19 +7,32 @@ License: MIT
 #define LOG_H
 
 #include <memory>
-#include <spdlog/spdlog.h>          
+#include <spdlog/spdlog.h>    
+#include <spdlog/sinks/stdout_color_sinks.h>
 
-class Log {
-public:
-    static void Init();
-    inline static std::shared_ptr<spdlog::logger>& GetLogger() { return sLogger; }
+struct LogWrapper
+{
+    std::shared_ptr<spdlog::logger> sLogger = nullptr;
+    LogWrapper();
+    ~LogWrapper();
+};
+
+struct Log
+{
+    inline static std::shared_ptr<spdlog::logger>& GetLogger()
+    {
+        static LogWrapper s;
+        return s.sLogger;
+    }
 
     Log(const Log& arg) = delete;
     Log(const Log&& arg) = delete;
     Log& operator=(const Log& arg) = delete;
     Log& operator=(const Log&& arg) = delete;
 private:
-    static std::shared_ptr<spdlog::logger> sLogger;
+
+    Log() = default;
+    ~Log() = default;
 };
 
 #define LOG_CRITICAL(...)       Log::GetLogger()->critical(__VA_ARGS__)
@@ -27,6 +40,7 @@ private:
 #define LOG_WARNING(...)		Log::GetLogger()->warn(__VA_ARGS__)
 #define LOG_INFO(...)		    Log::GetLogger()->info(__VA_ARGS__)
 #define LOG_TRACE(...)	    	Log::GetLogger()->trace(__VA_ARGS__)
+
 
 #endif // !LOG_H
 

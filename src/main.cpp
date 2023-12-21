@@ -26,10 +26,11 @@ struct GLFWContext {
 };
 
 int main() {
-    Log::Init();
+    Log::GetLogger();
+
     try {
         GLFWContext context;
-        SoundEngine::Init();
+        SoundEngine::GetEngine();
         Game game;
         game.Run();
     }
