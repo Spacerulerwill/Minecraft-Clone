@@ -91,7 +91,6 @@ Vector<T, size> Vector<T, size>::operator-(const Vector<T, size>& other) const {
 
 template<Arithmetic T, std::size_t size>
 Vector<T, size> Vector<T, size>::operator*(T scalar) const {
-    assert(scalar != T(0));
     Vector<T, size> result;
     for (std::size_t i = 0; i < size; i++) {
         result[i] = elems[i] * scalar;
