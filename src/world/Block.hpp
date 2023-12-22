@@ -36,10 +36,10 @@ enum class Sound : SoundID {
 enum BlockFaces {
     TOP_FACE,
     BOTTOM_FACE,
-    LEFT_FACE,
     RIGHT_FACE,
-    FRONT_FACE,
-    BACK_FACE
+    LEFT_FACE,
+    BACK_FACE,
+    FRONT_FACE
 };
 
 struct BlockDataStruct {

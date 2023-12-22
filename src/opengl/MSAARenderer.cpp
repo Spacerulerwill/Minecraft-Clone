@@ -10,6 +10,8 @@ MSAARenderer::MSAARenderer(GLsizei width, GLsizei height) : width(width), height
     glGenFramebuffers(1, &msaaFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, msaaFBO);
 
+    glActiveTexture(GL_TEXTURE0);
+
     // create a multisampled color attachment texture
     glGenTextures(1, &textureColorBufferMultiSampled);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled);
@@ -73,7 +75,7 @@ void MSAARenderer::BindMSAAFBO() const {
     glBindFramebuffer(GL_FRAMEBUFFER, msaaFBO);
 }
 
-void MSAARenderer::Draw(const Shader& postprocessShader) const {
+void MSAARenderer::Draw(Shader& postprocessShader) const {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, msaaFBO);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediateFBO);
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
@@ -83,6 +85,7 @@ void MSAARenderer::Draw(const Shader& postprocessShader) const {
     glClear(GL_COLOR_BUFFER_BIT);
 
     postprocessShader.Bind();
+    postprocessShader.SetInt("screenTexture", 0);
     m_VAO.Bind();
     glBindTexture(GL_TEXTURE_2D, screenTexture);
     glDrawArrays(GL_TRIANGLES, 0, 6);

@@ -58,6 +58,9 @@ void World::Draw()
     chunkShader.SetMat4("projection", perspective);
     chunkShader.SetMat4("view", view);
     chunkShader.SetInt("LOD", LOD);
+    chunkShader.SetInt("tex_array", 0);
+    mGrassSideMask.Bind();
+    chunkShader.SetInt("grass_mask", 1);
 
     for (auto& [pos, stack] : mChunkStacks) {
         stack.Draw(chunkShader);

@@ -24,7 +24,7 @@ public:
     void BindMSAAFBO() const;
 
     // Blit the MSAA FBO to the intermediate FBO, and draw that intermediate FBO onto a quad with a post process shader
-    void Draw(const Shader& postprocessShader) const;
+    void Draw(Shader& postprocessShader) const;
 
     static const unsigned int MSAA_SAMPLES = 16;
 private:

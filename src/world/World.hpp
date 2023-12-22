@@ -31,6 +31,7 @@ private:
     siv::PerlinNoise mPerlin = siv::PerlinNoise(0);
     BS::thread_pool mLoadPool;
     TexArray2D mTextureAtlas = TexArray2D("textures/atlas.png", TEXTURE_SIZE, GL_TEXTURE0);
+    Tex2D mGrassSideMask = Tex2D("textures/block/mask/grass_side_mask.png", GL_TEXTURE1);
 public:
     GLint LOD = 1;
     int mRenderDistance = 5;
