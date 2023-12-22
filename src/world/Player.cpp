@@ -91,72 +91,6 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
 
 void Player::Move(const World& world, PlayerMovement direction, float deltaTime)
 {
-    /*
-    switch (direction) {
-    case PlayerMovement::FORWARD: {
-        float velocity = deltaTime * movementSpeed;
-        Vec3 directionMultiplier{ camera.front[0], 0.0f, camera.front[2] };
-        Vec3 distanceToMove = directionMultiplier * velocity;
-        Vec3 newPosition = camera.position + directionMultiplier * velocity;
-        if (boundingBox.IsColliding(world, newPosition - Vec3{ 0.0f, 0.75f, 0.0f })) {
-            distanceToMove[2] = 0.0f;
-        }
-        newPosition = camera.position = distanceToMove;
-        camera.position = newPosition;
-        break;
-    }
-                                case PlayerMovement::BACKWARD: {
-                                    velocity = deltaTime * movementSpeed;
-                                    directionMultiplier = Vec3{ camera.front[0], 0.0f, camera.front[2] } *-1.0f;
-                                    break;
-                                }
-                                case PlayerMovement::LEFT: {
-                                    velocity = deltaTime * movementSpeed;
-                                    directionMultiplier = camera.right * -1.0f;
-                                    break;
-                                }
-                                case PlayerMovement::RIGHT: {
-                                    velocity = deltaTime * movementSpeed;
-                                    directionMultiplier = camera.right;
-                                    break;
-                                }
-                                case PlayerMovement::DOWN: {
-                                    velocity = deltaTime * movementSpeed;
-                                    directionMultiplier = camera.worldUp * -1.0f;
-                                    break;
-                                }
-                                case PlayerMovement::UP: {
-                                    velocity = deltaTime * movementSpeed;
-                                    directionMultiplier = camera.worldUp;
-                                    break;
-                                }
-    case PlayerMovement::GRAVITY: {
-        float velocity = deltaTime * yVelocity;
-        Vec3 directionMultiplier = camera.worldUp * -1.0f;
-        Vec3 distanceToMove = directionMultiplier * velocity;
-        Vec3 newPosition = camera.position + directionMultiplier * velocity;
-        if (boundingBox.IsColliding(world, newPosition - Vec3{ 0.0f, 0.75f, 0.0f })) {
-            distanceToMove[1] = 0.0f;
-        }
-        newPosition = camera.position = distanceToMove;
-        camera.position = newPosition;
-        break;
-    }
-    }
-
-    /*
-    Vec3 newPosition = camera.position;
-    for (int i = 0; i < 3; i++) {
-        newPosition[i] += directionMultiplier[i] * velocity;
-        if (boundingBox.IsColliding(world, newPosition - Vec3{ 0.0f, 0.75f, 0.0f })) {
-            newPosition[i] = camera.position[i];
-            if (i == 1) {
-                yVelocity = 0.0f;
-            }
-        }
-    }
-    camera.position = newPosition;
-    */
 
     float velocity{};
     Vec3 directionMultiplier{};
@@ -164,12 +98,12 @@ void Player::Move(const World& world, PlayerMovement direction, float deltaTime)
     switch (direction) {
     case PlayerMovement::FORWARD: {
         velocity = deltaTime * movementSpeed;
-        directionMultiplier = Vec3{ camera.front[0], 0.0f, camera.front[2] };
+        directionMultiplier = Vec3{ camera.front[0], 0.0f, camera.front[2] }.normalized();
         break;
     }
     case PlayerMovement::BACKWARD: {
         velocity = deltaTime * movementSpeed;
-        directionMultiplier = Vec3{ camera.front[0], 0.0f, camera.front[2] } *-1.0f;
+        directionMultiplier = Vec3{ camera.front[0], 0.0f, camera.front[2] }.normalized() * -1.0f;
         break;
     }
     case PlayerMovement::LEFT: {
