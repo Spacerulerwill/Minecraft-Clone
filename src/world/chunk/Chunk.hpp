@@ -38,6 +38,7 @@ public:
     BlockID GetBlock(iVec3 pos) const;
     void SetBlock(iVec3 pos, BlockID block);
     std::atomic_bool needsBuffering = false;
+    bool loaded = false;
 };
 
 #endif // !CHUNK_H

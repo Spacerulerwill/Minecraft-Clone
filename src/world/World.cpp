@@ -154,7 +154,7 @@ BlockID World::GetBlock(iVec3 pos) const
 {
     iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
     std::shared_ptr<Chunk> chunk = GetChunk(chunkPos);
-    if (chunk != nullptr) {
+    if (chunk != nullptr && chunk->loaded) {
         iVec3 blockPos = GetChunkBlockPosFromGlobalBlockPos(pos);
         return chunk->GetBlock(blockPos);
     }
@@ -166,7 +166,7 @@ void World::SetBlock(iVec3 pos, BlockID block)
     iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
     std::shared_ptr<Chunk> chunk = GetChunk(chunkPos);
 
-    if (chunk != nullptr) {
+    if (chunk != nullptr && chunk->loaded) {
         iVec3 blockPos = GetChunkBlockPosFromGlobalBlockPos(pos);
         chunk->SetBlock(blockPos, block);
     }
@@ -177,7 +177,7 @@ void World::SetBlockAndRemesh(iVec3 pos, BlockID block)
     iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
     std::shared_ptr<Chunk> chunk = GetChunk(chunkPos);
 
-    if (chunk != nullptr) {
+    if (chunk != nullptr && chunk->loaded) {
         iVec3 blockPos = GetChunkBlockPosFromGlobalBlockPos(pos);
         chunk->SetBlock(blockPos, block);
         chunk->CreateMesh();
