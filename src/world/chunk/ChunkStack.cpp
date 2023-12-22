@@ -37,7 +37,7 @@ size_t ChunkStack::size() const {
 
 void ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin) {
 
-    for (int i = 0; i < DEFAULT_CHUNK_STACK_HEIGHT; i++) {
+    for (std::size_t i = 0; i < mChunks.size(); i++) {
         mChunks.at(i)->AllocateMemory();
     }
 
@@ -77,6 +77,10 @@ void ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin) {
                 }
             }
         }
+    }
+
+    for (std::size_t i = 0; i < mChunks.size(); i++) {
+        mChunks.at(i)->loaded = true;
     }
 }
 

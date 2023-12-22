@@ -87,6 +87,7 @@ void MSAARenderer::Draw(Shader& postprocessShader) const {
     postprocessShader.Bind();
     postprocessShader.SetInt("screenTexture", 0);
     m_VAO.Bind();
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, screenTexture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }

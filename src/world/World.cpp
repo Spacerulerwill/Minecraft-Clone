@@ -58,7 +58,10 @@ void World::Draw()
     chunkShader.SetMat4("projection", perspective);
     chunkShader.SetMat4("view", view);
     chunkShader.SetInt("LOD", LOD);
+    mTextureAtlas.Bind();
+    glActiveTexture(GL_TEXTURE0);
     chunkShader.SetInt("tex_array", 0);
+    glActiveTexture(GL_TEXTURE1);
     mGrassSideMask.Bind();
     chunkShader.SetInt("grass_mask", 1);
 
