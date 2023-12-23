@@ -21,6 +21,26 @@ License: MIT
 
 #include <util/Log.hpp>
 
+struct ImGUIContext {
+    ImGUIContext(GLFWwindow* window) {
+        LOG_INFO("Creating ImGUI context");
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO();
+        (void)io;
+        io.IniFilename = NULL;
+        ImGui::StyleColorsDark();
+        ImGui_ImplGlfw_InitForOpenGL(window, true);
+        ImGui_ImplOpenGL3_Init("#version 330");
+    }
+
+    ~ImGUIContext() {
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+        LOG_INFO("Destroying ImGUI context");
+    }
+};
+
 void Game::Run() {
     if (!gladLoadGL())
     {
@@ -29,14 +49,7 @@ void Game::Run() {
 
     SoundEngine::PreloadGameSounds();
     InitBlocks();
-
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    (void)io;
-    io.IniFilename = NULL;
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(mWindow.GetWindow(), true);
-    ImGui_ImplOpenGL3_Init("#version 330");
+    ImGUIContext ImGUIcontext(mWindow.GetWindow());
 
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_POLYGON_SMOOTH);
@@ -64,7 +77,6 @@ void Game::Run() {
         else {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
-
 
         pMSAARenderer->BindMSAAFBO();
         glEnable(GL_DEPTH_TEST);
@@ -111,10 +123,6 @@ void Game::Run() {
 
         pWorld->GenerateChunks();
     }
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
 }
 
 void Game::ProcessKeyInput()
