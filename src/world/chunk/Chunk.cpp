@@ -61,6 +61,7 @@ void Chunk::BufferData()
         std::vector<ChunkMesher::ChunkVertex>().swap(mVertices);
     }
     needsBuffering = false;
+    loaded = true;
 }
 
 void Chunk::Draw(Shader& shader)

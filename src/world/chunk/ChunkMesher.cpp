@@ -198,7 +198,7 @@ std::vector<ChunkMesher::ChunkVertex> ChunkMesher::BinaryGreedyMesh(const std::v
                     merged_forward[(right * CS_P) + bit_pos] = 0;
                     merged_right[bit_pos] = 0;
 
-                    ChunkVertex v1, v2, v3, v4;
+                    ChunkVertex v1{}, v2{}, v3{}, v4{};
                     switch (face) {
                     case 0: {
                         TextureID texZ = blockData.faces[TOP_FACE];

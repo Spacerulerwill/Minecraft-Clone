@@ -78,10 +78,6 @@ void ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin) {
             }
         }
     }
-
-    for (std::size_t i = 0; i < mChunks.size(); i++) {
-        mChunks.at(i)->loaded = true;
-    }
 }
 
 iVec2 ChunkStack::GetPosition() const
