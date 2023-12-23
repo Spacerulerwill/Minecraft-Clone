@@ -33,6 +33,17 @@ struct ImGUIContext {
         ImGui_ImplOpenGL3_Init("#version 330");
     }
 
+    void NewFrame() const {
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+    }
+
+    void Render() const {
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    }
+
     ~ImGUIContext() {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
@@ -94,10 +105,8 @@ void Game::Run() {
         glDisable(GL_BLEND);
         pMSAARenderer->Draw(framebufferShader);
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
 
+        ImGUIcontext.NewFrame();
         ImGui::SetNextWindowSize(ImVec2{ 0,0 });
         ImGui::SetNextWindowPos(ImVec2{ 0,0 });
         ImGui::Begin("Settings");
@@ -114,9 +123,7 @@ void Game::Run() {
         ImGui::Text(std::format("Chunk coordinates: {}", std::string(chunkPos)).c_str());
         ImGui::Text(std::format("FPS: {}", static_cast<int>(1.0f / mDeltaTime)).c_str());
         ImGui::End();
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        ImGUIcontext.Render();
 
         glfwPollEvents();
         mWindow.SwapBuffers();
