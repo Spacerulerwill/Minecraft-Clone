@@ -6,6 +6,7 @@ License: MIT
 #include <world/chunk/Chunk.hpp>
 #include <world/chunk/Constants.hpp>
 #include <world/Block.hpp>
+#include <GLFW/glfw3.h>
 #include <cmath>
 
 std::size_t VoxelIndex(iVec3 pos) {
@@ -60,15 +61,22 @@ void Chunk::BufferData()
         mVertexCount = mVertices.size();
         std::vector<ChunkMesher::ChunkVertex>().swap(mVertices);
     }
+
     needsBuffering = false;
-    loaded = true;
+
+    if (loaded == false) {
+        firstBufferTime = static_cast<float>(glfwGetTime());
+        loaded = true;
+    }
 }
 
-void Chunk::Draw(Shader& shader)
+void Chunk::Draw(Shader& shader, float currentTime)
 {
     if (mVertexCount > 0) {
         mVAO.Bind();
         shader.SetMat4("model", mModel);
+        shader.SetFloat("firstBufferTime", firstBufferTime);
+        shader.SetFloat("time", currentTime);
         glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mVertexCount));
     }
 }

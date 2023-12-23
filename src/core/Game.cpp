@@ -42,6 +42,7 @@ void Game::Run() {
     glEnable(GL_POLYGON_SMOOTH);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     pMSAARenderer = std::make_unique<MSAARenderer>(SCREEN_WIDTH, SCREEN_HEIGHT);
     Shader framebufferShader("shaders/framebuffer.shader");
@@ -67,6 +68,7 @@ void Game::Run() {
 
         pMSAARenderer->BindMSAAFBO();
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -77,6 +79,7 @@ void Game::Run() {
         }
 
         glDisable(GL_DEPTH_TEST);
+        glDisable(GL_BLEND);
         pMSAARenderer->Draw(framebufferShader);
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -97,7 +100,6 @@ void Game::Run() {
 
         ImGui::Text(std::format("Block coordinates: {}", std::string(blockPos)).c_str());
         ImGui::Text(std::format("Chunk coordinates: {}", std::string(chunkPos)).c_str());
-
         ImGui::Text(std::format("FPS: {}", static_cast<int>(1.0f / mDeltaTime)).c_str());
         ImGui::End();
 

@@ -47,6 +47,8 @@ iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 globalBlockPos)
 
 void World::Draw()
 {
+    float currentTime = static_cast<float>(glfwGetTime());
+
     Mat4 perspective = player.camera.perspectiveMatrix;
     Mat4 view = player.camera.GetViewMatrix();
 
@@ -66,7 +68,7 @@ void World::Draw()
     chunkShader.SetInt("grass_mask", 1);
 
     for (auto& [pos, stack] : mChunkStacks) {
-        stack.Draw(chunkShader);
+        stack.Draw(chunkShader, currentTime);
     }
 }
 

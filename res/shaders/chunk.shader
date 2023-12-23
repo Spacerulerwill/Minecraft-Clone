@@ -68,9 +68,12 @@ in vec3 TexCoords;
 flat in ivec3 FragNormal;
 in float isGrass;
 out vec4 FragColor;
+
 uniform sampler2DArray tex_array;
 uniform sampler2D grass_mask;
 uniform vec3 grassColor = vec3(0.0, 1.0, 0.0);
+uniform float firstBufferTime;
+uniform float time;
 
 void main() {
     vec4 texColor = texture(tex_array, TexCoords);
@@ -86,5 +89,5 @@ void main() {
         }
     }
  
-    FragColor = texColor * vec4(vec3(AOMultiplier), 1.0);
+    FragColor = texColor * vec4(vec3(AOMultiplier), clamp(time - firstBufferTime, 0.0, 1.0));
 }

@@ -34,11 +34,12 @@ public:
     void ReleaseMemory();
     void CreateMesh();
     void BufferData();
-    void Draw(Shader& shader);
+    void Draw(Shader& shader, float currentTime);
     BlockID GetBlock(iVec3 pos) const;
     void SetBlock(iVec3 pos, BlockID block);
     std::atomic_bool needsBuffering = false;
     bool loaded = false;
+    float firstBufferTime = 0.0f;
 };
 
 #endif // !CHUNK_H

@@ -29,7 +29,7 @@ public:
 
     ChunkStack(iVec2 pos);
     void GenerateTerrain(const siv::PerlinNoise& perlin);
-    void Draw(Shader& shader);
+    void Draw(Shader& shader, float currentTime);
     iVec2 GetPosition() const;
     std::atomic_bool isBeingmMeshed = false;
 

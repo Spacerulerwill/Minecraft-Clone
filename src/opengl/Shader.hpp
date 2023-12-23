@@ -11,23 +11,10 @@ License: MIT
 #include <unordered_map>
 #include <math/Matrix.hpp>
 #include <math/Vector.hpp>
-#include <util/Log.hpp>
 
 struct ShaderSources {
     std::string Vertex;
     std::string Fragment;
-};
-
-struct ShaderProgramWrapper {
-    GLuint uID{};
-
-    ShaderProgramWrapper() : uID(glCreateProgram()) {
-
-    }
-
-    ~ShaderProgramWrapper() {
-        glDeleteProgram(uID);
-    }
 };
 
 enum ShaderType {
@@ -36,19 +23,22 @@ enum ShaderType {
 
 class Shader {
 private:
-    ShaderProgramWrapper shaderProgramWrapper;
+    GLuint uID{};
     std::string mFilepath{};
     std::unordered_map<std::string, GLint> mUniformLocations{};
 
     ShaderSources ParseShader(const std::string& filepath);
     GLuint CompileShader(GLenum type, std::string& source);
-    void CreateShader(std::string& vertexSource, std::string& fragmementSource);
+    GLuint CreateShader(std::string& vertexSource, std::string& fragmementSource);
     void GetShaderUniformLocations();
     GLint GetLocation(std::string name) const;
 public:
     Shader(std::string filepath);
     Shader(const Shader& arg) = delete;
     Shader(const Shader&& arg) = delete;
+    Shader(Shader&&) noexcept;
+    Shader& operator=(Shader&&) noexcept;
+    ~Shader();
 
     void Bind() const;
     void Unbind() const;

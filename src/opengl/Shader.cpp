@@ -16,10 +16,27 @@ License: MIT
 
 Shader::Shader(std::string filepath) : mFilepath(filepath) {
     ShaderSources shaders = ParseShader(filepath);
-    CreateShader(shaders.Vertex, shaders.Fragment);
+    uID = CreateShader(shaders.Vertex, shaders.Fragment);
     GetShaderUniformLocations();
 }
 
+Shader::Shader(Shader&& other) noexcept : uID(other.uID), mFilepath(std::move(other.mFilepath)), mUniformLocations(std::move(other.mUniformLocations))
+{
+    other.uID = 0;
+    other.mFilepath = {};
+    other.mUniformLocations = {};
+}
+
+Shader& Shader::operator=(Shader&& other) noexcept
+{
+    if (this != &other) {
+        glDeleteShader(uID);
+        uID = std::exchange(other.uID, 0);
+        mFilepath = std::exchange(other.mFilepath, {});
+        mUniformLocations = std::exchange(other.mUniformLocations, {});
+    }
+    return *this;
+}
 ShaderSources Shader::ParseShader(const std::string& filepath) {
 
     std::ifstream stream(filepath);
@@ -65,24 +82,27 @@ GLuint Shader::CompileShader(GLenum type, std::string& source) {
         std::vector<char> infoLog(length);
         glGetShaderInfoLog(id, length, &length, infoLog.data());
         glDeleteShader(id);
-
-        throw std::runtime_error(std::format("Failed to compile {} shader\n{}", type == GL_VERTEX_SHADER ? "vertex" : "fragment", infoLog.data()));
+        throw std::runtime_error(std::format("Failed to compile {} shader at path: {}\n{}", type == GL_VERTEX_SHADER ? "vertex" : "fragment", mFilepath, infoLog.data()));
     }
     return id;
 }
 
-void Shader::CreateShader(std::string& vertex_source, std::string& fragmement_source) {
+GLuint Shader::CreateShader(std::string& vertex_source, std::string& fragmement_source) {
+
+    GLuint program = glCreateProgram();
     GLuint vs = CompileShader(GL_VERTEX_SHADER, vertex_source);
     GLuint fs = CompileShader(GL_FRAGMENT_SHADER, fragmement_source);
 
-    glAttachShader(shaderProgramWrapper.uID, vs);
-    glAttachShader(shaderProgramWrapper.uID, fs);
+    glAttachShader(program, vs);
+    glAttachShader(program, fs);
 
-    glLinkProgram(shaderProgramWrapper.uID);
-    glValidateProgram(shaderProgramWrapper.uID);
+    glLinkProgram(program);
+    glValidateProgram(program);
 
     glDeleteShader(vs);
     glDeleteShader(fs);
+
+    return program;
 }
 
 void Shader::GetShaderUniformLocations() {
@@ -96,10 +116,10 @@ void Shader::GetShaderUniformLocations() {
     GLchar name[bufSize];
     GLsizei length;
 
-    glGetProgramiv(shaderProgramWrapper.uID, GL_ACTIVE_UNIFORMS, &count);
+    glGetProgramiv(uID, GL_ACTIVE_UNIFORMS, &count);
     for (i = 0; i < count; i++)
     {
-        glGetActiveUniform(shaderProgramWrapper.uID, static_cast<GLuint>(i), bufSize, &length, &size, &type, name);
+        glGetActiveUniform(uID, static_cast<GLuint>(i), bufSize, &length, &size, &type, name);
         mUniformLocations[name] = i;
     }
 }
@@ -136,6 +156,7 @@ void Shader::SetVec3(const std::string& name, const Vec3& vec) {
     glUniform3fv(GetLocation(name), 1, vec.GetPointer());
 }
 
+
 void Shader::SetVec2(const std::string& name, const Vec2& vec) {
     glUniform2fv(GetLocation(name), 1, vec.GetPointer());
 }
@@ -150,7 +171,7 @@ void Shader::SetInt(const std::string& name, GLint val)
 }
 
 void Shader::Bind() const {
-    glUseProgram(shaderProgramWrapper.uID);
+    glUseProgram(uID);
 }
 
 void Shader::Unbind() const {
@@ -167,6 +188,10 @@ GLint Shader::GetLocation(std::string name) const {
     }
 }
 
+
+Shader::~Shader() {
+    glDeleteProgram(uID);
+}
 
 /*
 MIT License
