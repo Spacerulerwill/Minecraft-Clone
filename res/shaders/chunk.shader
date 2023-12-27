@@ -71,7 +71,7 @@ out vec4 FragColor;
 
 uniform sampler2DArray tex_array;
 uniform sampler2D grass_mask;
-uniform vec3 grassColor = vec3(0.0, 1.0, 0.0);
+uniform vec3 grassColor = vec3(145.0, 189.0, 89.0) / 255.0;
 uniform float firstBufferTime;
 uniform float time;
 
