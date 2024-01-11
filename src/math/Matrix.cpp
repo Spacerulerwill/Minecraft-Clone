@@ -8,6 +8,7 @@ License: MIT
 #include <util/Concepts.hpp>
 #include <sstream>
 #include <cmath>
+#include <iterator>
 
 /*
 =====================

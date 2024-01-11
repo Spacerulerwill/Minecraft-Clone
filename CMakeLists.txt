@@ -110,7 +110,7 @@ if(UNIX)
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_SOURCE_DIR}/lib/unix/dynamic $<TARGET_FILE_DIR:${PROJECT_NAME}>)
     # link static libraries
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/lib/unix/irrKlang.a)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/lib/unix/libIrrKlang.so)
 endif(UNIX)
 
 add_compile_definitions(GLFW_INCLUDE_NONE)
@@ -118,5 +118,5 @@ add_compile_definitions(GLFW_INCLUDE_NONE)
 if(MSVC)
   target_compile_options(${PROJECT_NAME} PRIVATE /W4 /wd4996 /external:W0)
 else()
-  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 endif()

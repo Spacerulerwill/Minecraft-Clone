@@ -13,6 +13,8 @@ LICENSE: MIT
 #include <math/Vector.hpp>
 #include <PerlinNoise.hpp>
 #include <world/Block.hpp>
+#include <atomic>
+#include <memory>
 
 class ChunkStack {
 private:
@@ -31,7 +33,7 @@ public:
     void GenerateTerrain(const siv::PerlinNoise& perlin);
     void Draw(Shader& shader, float currentTime);
     iVec2 GetPosition() const;
-    std::atomic_bool isBeingmMeshed = false;
+    std::atomic<bool> isBeingmMeshed = false;
 
     std::shared_ptr<Chunk> GetChunk(std::size_t y) const;
     BlockID GetBlock(iVec3 pos) const;

@@ -17,6 +17,7 @@ License: MIT
 #include <math/Matrix.hpp>
 #include <PerlinNoise.hpp>
 #include <vector>
+#include <atomic>
 
 class Chunk {
 private:
@@ -37,7 +38,7 @@ public:
     void Draw(Shader& shader, float currentTime);
     BlockID GetBlock(iVec3 pos) const;
     void SetBlock(iVec3 pos, BlockID block);
-    std::atomic_bool needsBuffering = false;
+    std::atomic<bool> needsBuffering = false;
     bool loaded = false;
     float firstBufferTime = 0.0f;
 };
