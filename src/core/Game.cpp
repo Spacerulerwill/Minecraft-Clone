@@ -9,6 +9,7 @@ License: MIT
 #include <world/Block.hpp>
 #include <math/Matrix.hpp>
 #include <math/Raycast.hpp>
+#include <math/Frustum.hpp>
 #include <glad/glad.h>
 #include <stdexcept>
 #include <format>
@@ -98,7 +99,9 @@ void Game::Run() {
         int totalChunks = 0;
         int chunksDrawn = 0;
 
-        pWorld->Draw(&totalChunks, &chunksDrawn);
+        Frustum frustum = pWorld->player.camera.GetFrustum();
+
+        pWorld->Draw(frustum, &totalChunks, &chunksDrawn);
 
         if (mIsWireFrame) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -107,7 +110,6 @@ void Game::Run() {
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
         pMSAARenderer->Draw(framebufferShader);
-
 
         ImGUIcontext.NewFrame();
         ImGui::SetNextWindowSize(ImVec2{ 0,0 });

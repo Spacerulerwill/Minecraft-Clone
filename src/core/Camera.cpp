@@ -28,6 +28,23 @@ Mat4 Camera::GetViewMatrix() const {
     return lookAt(position, position + front, up);
 }
 
+Frustum Camera::GetFrustum() const
+{
+    Frustum     frustum;
+    const GLfloat halfVSide = far * tanf(radians(FOV) * 0.5f);
+    const GLfloat halfHSide = halfVSide * aspect;
+    const Vec3 frontMultFar = far * front;
+
+    frustum.nearFace = { position + near * front, front };
+    frustum.farFace = { position + frontMultFar, -1.0f * front };
+    frustum.rightFace = { position, (frontMultFar - right * halfHSide).cross(up) };
+    frustum.leftFace = { position, up.cross(frontMultFar + right * halfHSide) };
+    frustum.topFace = { position, right.cross(frontMultFar - up * halfVSide) };
+    frustum.bottomFace = { position, (frontMultFar + up * halfVSide).cross(right) };
+
+    return frustum;
+}
+
 void Camera::ProcessMouseMovement(float xpos, float ypos)
 {
     if (isFirstMouseInput) // initially set to true

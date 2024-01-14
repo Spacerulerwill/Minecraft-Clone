@@ -20,12 +20,11 @@ Chunk::Chunk(iVec3 pos) : mPos(pos)
     bufferLayout.AddAttribute<unsigned int>(2);
     mVAO.AddBuffer(mVBO, bufferLayout);
 
+    Vec3 globalPosition = static_cast<Vec3>(pos) * CS;
+
     // Translate to its chunk position
-    mModel *= translate(Vec3{
-        static_cast<float>(pos[0] * CS),
-        static_cast<float>(pos[1] * CS),
-        static_cast<float>(pos[2] * CS)
-        });
+    mModel *= translate(globalPosition);
+    sphere = Sphere{ globalPosition + Vec3{CS_OVER_2, CS_OVER_2, CS_OVER_2}, 46.0f };
 }
 
 iVec3 Chunk::GetPosition() const
@@ -70,16 +69,18 @@ void Chunk::BufferData()
     }
 }
 
-void Chunk::Draw(Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn)
+void Chunk::Draw(const Frustum& frustum, Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn)
 {
     if (totalChunks) (*totalChunks)++;
     if (mVertexCount > 0) {
-        if (chunksDrawn) (*chunksDrawn)++;
-        mVAO.Bind();
-        shader.SetMat4("model", mModel);
-        shader.SetFloat("firstBufferTime", firstBufferTime);
-        shader.SetFloat("time", currentTime);
-        glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mVertexCount));
+        if (sphere.isOnFrustum(frustum, mModel)) {
+            if (chunksDrawn) (*chunksDrawn)++;
+            mVAO.Bind();
+            shader.SetMat4("model", mModel);
+            shader.SetFloat("firstBufferTime", firstBufferTime);
+            shader.SetFloat("time", currentTime);
+            glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mVertexCount));
+        }
     }
 }
 

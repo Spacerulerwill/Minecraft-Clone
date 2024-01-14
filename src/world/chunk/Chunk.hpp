@@ -15,6 +15,7 @@ License: MIT
 #include <world/Block.hpp>
 #include <math/Vector.hpp>
 #include <math/Matrix.hpp>
+#include <math/Frustum.hpp>
 #include <PerlinNoise.hpp>
 #include <vector>
 #include <atomic>
@@ -28,6 +29,7 @@ private:
     Mat4 mModel = Mat4::identity();
     std::vector<ChunkMesher::ChunkVertex> mVertices;
     std::size_t mVertexCount = 0;
+    Sphere sphere;
 public:
     Chunk(iVec3 pos);
     iVec3 GetPosition() const;
@@ -35,7 +37,7 @@ public:
     void ReleaseMemory();
     void CreateMesh();
     void BufferData();
-    void Draw(Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn);
+    void Draw(const Frustum& frustum, Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn);
     BlockID GetBlock(iVec3 pos) const;
     void SetBlock(iVec3 pos, BlockID block);
     std::atomic<bool> needsBuffering = false;

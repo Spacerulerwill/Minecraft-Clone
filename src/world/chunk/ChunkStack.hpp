@@ -11,6 +11,7 @@ LICENSE: MIT
 #include <world/Block.hpp>
 #include <opengl/Shader.hpp>
 #include <math/Vector.hpp>
+#include <math/Frustum.hpp>
 #include <PerlinNoise.hpp>
 #include <world/Block.hpp>
 #include <atomic>
@@ -31,7 +32,7 @@ public:
 
     ChunkStack(iVec2 pos);
     void GenerateTerrain(const siv::PerlinNoise& perlin);
-    void Draw(Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn);
+    void Draw(const Frustum& frustum, Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn);
     iVec2 GetPosition() const;
     std::atomic<bool> isBeingmMeshed = false;
 

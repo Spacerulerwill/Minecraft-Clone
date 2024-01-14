@@ -21,6 +21,7 @@ constexpr int CS_P_MINUS_ONE = CS_P - 1;
 // Chunk size without paddings
 constexpr int CS = CS_P - 2;
 constexpr int CS_MINUS_ONE = CS - 1;
+constexpr float CS_OVER_2 = CS / 2.0f;
 
 // World gen constants
 constexpr int DEFAULT_CHUNK_STACK_HEIGHT = 8;

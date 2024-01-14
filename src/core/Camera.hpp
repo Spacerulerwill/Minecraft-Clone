@@ -10,6 +10,7 @@ License: MIT
 #include <math/Math.hpp>
 #include <math/Vector.hpp>
 #include <math/Matrix.hpp>
+#include <math/Frustum.hpp>
 
 class World;
 
@@ -58,6 +59,8 @@ public:
 
     Mat4 perspectiveMatrix = perspective(radians(FOV), aspect, near, far);
     Mat4 GetViewMatrix() const;
+
+    Frustum GetFrustum() const;
 
     void UpdateCameraVectors();
 };

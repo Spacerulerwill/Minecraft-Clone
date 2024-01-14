@@ -12,6 +12,7 @@ License: MIT
 #include <world/chunk/ChunkStack.hpp>
 #include <world/Block.hpp>
 #include <world/Player.hpp>
+#include <math/Frustum.hpp>
 #include <core/Camera.hpp>
 #include <PerlinNoise.hpp>
 #include <unordered_map>
@@ -37,7 +38,7 @@ public:
     int mRenderDistance = 5;
     int mBufferPerFrame = 20;
     Player player;
-    void Draw(int* totalChunks, int* chunksDrawn);
+    void Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn);
     void GenerateChunks();
 
     const ChunkStack* GetChunkStack(iVec2 pos) const;

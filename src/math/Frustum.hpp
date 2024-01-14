@@ -6,6 +6,83 @@ License: MIT
 #ifndef FRUSTUM_H
 #define FRUSTUM_H
 
+#include <glad/glad.h>
+#include <math/Vector.hpp>
+
+struct Plane
+{
+    Vec3 normal = { 0.f, 1.f, 0.f }; // unit vector
+    GLfloat     distance = 0.f;        // Distance with origin
+
+    Plane() = default;
+
+    Plane(const Vec3& p1, const Vec3& norm)
+        : normal(norm.normalized()),
+        distance(normal.dot(p1))
+    {}
+
+    float getSignedDistanceToPlane(const Vec3& point) const
+    {
+        return (normal.dot(point)) - distance;
+    }
+};
+
+struct Frustum
+{
+    Plane topFace;
+    Plane bottomFace;
+
+    Plane rightFace;
+    Plane leftFace;
+
+    Plane farFace;
+    Plane nearFace;
+};
+
+struct BoundingVolume
+{
+    virtual bool isOnFrustum(const Frustum& camFrustum, const Mat4& transform) const = 0;
+
+    virtual bool isOnOrForwardPlane(const Plane& plane) const = 0;
+
+    bool isOnFrustum(const Frustum& camFrustum) const
+    {
+        return (isOnOrForwardPlane(camFrustum.leftFace) &&
+            isOnOrForwardPlane(camFrustum.rightFace) &&
+            isOnOrForwardPlane(camFrustum.topFace) &&
+            isOnOrForwardPlane(camFrustum.bottomFace) &&
+            isOnOrForwardPlane(camFrustum.nearFace) &&
+            isOnOrForwardPlane(camFrustum.farFace));
+    };
+};
+
+struct Sphere : public BoundingVolume
+{
+    Sphere() = default;
+    Vec3 center{ 0.f, 0.f, 0.f };
+    GLfloat radius{ 0.f };
+
+    Sphere(const Vec3& inCenter, float inRadius)
+        : BoundingVolume{}, center{ inCenter }, radius{ inRadius }
+    {}
+
+    bool isOnOrForwardPlane(const Plane& plane) const final
+    {
+        return plane.getSignedDistanceToPlane(center) > -radius;
+    }
+
+    bool isOnFrustum(const Frustum& camFrustum, const Mat4& transform) const final
+    {
+        //Check Firstly the result that have the most chance to failure to avoid to call all functions.
+        return (isOnOrForwardPlane(camFrustum.leftFace) &&
+            isOnOrForwardPlane(camFrustum.rightFace) &&
+            isOnOrForwardPlane(camFrustum.farFace) &&
+            isOnOrForwardPlane(camFrustum.nearFace) &&
+            isOnOrForwardPlane(camFrustum.topFace) &&
+            isOnOrForwardPlane(camFrustum.bottomFace));
+    };
+};
+
 #endif // !FRUSTUM_H
 
 /*
