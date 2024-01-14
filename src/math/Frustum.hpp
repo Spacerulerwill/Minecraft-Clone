@@ -1,47 +1,12 @@
 /*
 Copyright (C) 2023 William Redding - All Rights Reserved
-LICENSE: MIT
+License: MIT
 */
 
-#ifndef CHUNK_STACK_H
-#define CHUNK_STACK_H
+#ifndef FRUSTUM_H
+#define FRUSTUM_H
 
-#include <vector>
-#include <world/chunk/Chunk.hpp>
-#include <world/Block.hpp>
-#include <opengl/Shader.hpp>
-#include <math/Vector.hpp>
-#include <PerlinNoise.hpp>
-#include <world/Block.hpp>
-#include <atomic>
-#include <memory>
-
-class ChunkStack {
-private:
-    iVec2 mPos{};
-    std::vector<std::shared_ptr<Chunk>> mChunks;
-public:
-    using iterator = std::vector<std::shared_ptr<Chunk>>::iterator;
-    using const_iterator = std::vector<std::shared_ptr<Chunk>>::const_iterator;
-    iterator begin();
-    iterator end();
-    const_iterator cbegin() const;
-    const_iterator cend() const;
-    size_t size() const;
-
-    ChunkStack(iVec2 pos);
-    void GenerateTerrain(const siv::PerlinNoise& perlin);
-    void Draw(Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn);
-    iVec2 GetPosition() const;
-    std::atomic<bool> isBeingmMeshed = false;
-
-    std::shared_ptr<Chunk> GetChunk(std::size_t y) const;
-    BlockID GetBlock(iVec3 pos) const;
-    void SetBlock(iVec3 pos, BlockID block);
-
-};
-
-#endif // !CHUNK_STACK_H
+#endif // !FRUSTUM_H
 
 /*
 MIT License

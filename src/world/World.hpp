@@ -37,7 +37,7 @@ public:
     int mRenderDistance = 5;
     int mBufferPerFrame = 20;
     Player player;
-    void Draw();
+    void Draw(int* totalChunks, int* chunksDrawn);
     void GenerateChunks();
 
     const ChunkStack* GetChunkStack(iVec2 pos) const;

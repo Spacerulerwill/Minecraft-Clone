@@ -85,10 +85,10 @@ iVec2 ChunkStack::GetPosition() const
     return mPos;
 }
 
-void ChunkStack::Draw(Shader& shader, float currentTime)
+void ChunkStack::Draw(Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn)
 {
     for (auto& chunk : mChunks) {
-        chunk->Draw(shader, currentTime);
+        chunk->Draw(shader, currentTime, totalChunks, chunksDrawn);
     }
 }
 

@@ -45,7 +45,7 @@ iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 globalBlockPos)
 }
 
 
-void World::Draw()
+void World::Draw(int* totalChunks, int* chunksDrawn)
 {
     float currentTime = static_cast<float>(glfwGetTime());
 
@@ -68,7 +68,7 @@ void World::Draw()
     chunkShader.SetInt("grass_mask", 1);
 
     for (auto& [pos, stack] : mChunkStacks) {
-        stack.Draw(chunkShader, currentTime);
+        stack.Draw(chunkShader, currentTime, totalChunks, chunksDrawn);
     }
 }
 

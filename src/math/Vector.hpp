@@ -59,6 +59,19 @@ struct Vector {
     }
 };
 
+template<Arithmetic T, std::size_t size>
+Vector<T, size> operator*(T x, const Vector<T, size>& vec) {
+    return vec * x;
+}
+
+template<Arithmetic T, std::size_t size>
+inline std::ostream& operator<<(std::ostream& out, const Vector<T, size>& vec) {
+    for (std::size_t i = 0; i < size; i++) {
+        out << vec[i] << ' ';
+    }
+    return out;
+}
+
 using Vec2 = Vector<GLfloat, 2>;
 using Vec3 = Vector<GLfloat, 3>;
 using Vec4 = Vector<GLfloat, 4>;

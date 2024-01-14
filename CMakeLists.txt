@@ -52,6 +52,8 @@ add_executable(${PROJECT_NAME}
     src/math/Raycast.hpp 
     src/math/AABB.cpp
     src/math/AABB.hpp
+    src/math/Frustum.cpp
+    src/math/Frustum.hpp
     src/util/Log.cpp
     src/util/Log.hpp
     src/util/Concepts.hpp

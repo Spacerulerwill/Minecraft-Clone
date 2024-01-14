@@ -95,7 +95,10 @@ void Game::Run() {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        pWorld->Draw();
+        int totalChunks = 0;
+        int chunksDrawn = 0;
+
+        pWorld->Draw(&totalChunks, &chunksDrawn);
 
         if (mIsWireFrame) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -122,6 +125,8 @@ void Game::Run() {
         ImGui::Text(std::format("Block coordinates: {}", std::string(blockPos)).c_str());
         ImGui::Text(std::format("Chunk coordinates: {}", std::string(chunkPos)).c_str());
         ImGui::Text(std::format("FPS: {}", static_cast<int>(1.0f / mDeltaTime)).c_str());
+        ImGui::Text(std::format("Total Chunks: {}", totalChunks).c_str());
+        ImGui::Text(std::format("Chunks Drawn: {}", chunksDrawn).c_str());
         ImGui::End();
         ImGUIcontext.Render();
 

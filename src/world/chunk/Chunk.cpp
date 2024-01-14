@@ -70,9 +70,11 @@ void Chunk::BufferData()
     }
 }
 
-void Chunk::Draw(Shader& shader, float currentTime)
+void Chunk::Draw(Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn)
 {
+    if (totalChunks) (*totalChunks)++;
     if (mVertexCount > 0) {
+        if (chunksDrawn) (*chunksDrawn)++;
         mVAO.Bind();
         shader.SetMat4("model", mModel);
         shader.SetFloat("firstBufferTime", firstBufferTime);
