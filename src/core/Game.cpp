@@ -125,6 +125,7 @@ void Game::Run() {
         iVec3 chunkLocalBlockPos = GetChunkBlockPosFromGlobalBlockPos(blockPos);
 
         ImGui::Text(std::format("Block coordinates: {}", std::string(blockPos)).c_str());
+        ImGui::Text(std::format("Chunk local block coordinates: {}", std::string(chunkLocalBlockPos)).c_str());
         ImGui::Text(std::format("Chunk coordinates: {}", std::string(chunkPos)).c_str());
         ImGui::Text(std::format("FPS: {}", static_cast<int>(1.0f / mDeltaTime)).c_str());
         ImGui::Text(std::format("Total Chunks: {}", totalChunks).c_str());

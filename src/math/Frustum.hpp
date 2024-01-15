@@ -8,6 +8,7 @@ License: MIT
 
 #include <glad/glad.h>
 #include <math/Vector.hpp>
+#include <array>
 
 struct Plane
 {
@@ -27,33 +28,35 @@ struct Plane
     }
 };
 
-struct Frustum
-{
-    Plane topFace;
-    Plane bottomFace;
-
-    Plane rightFace;
-    Plane leftFace;
-
-    Plane farFace;
-    Plane nearFace;
+enum class FrustumPlane {
+    TOP,
+    BOTTOM,
+    RIGHT,
+    LEFT,
+    FAR,
+    NEAR
 };
 
+using Frustum = std::array<Plane, 6>;
+
+struct Sphere {
+    Sphere() = default;
+    Vec3 center{ 0.0f, 0.0f, 0.0f };
+    GLfloat radius{ 0.0f };
+
+    Sphere(const Vec3& inCenter, float inRadius)
+        : center{ inCenter }, radius{ inRadius }
+    {}
+
+    bool IsOnFrustum(const Frustum& frustum);
+};
+
+/*
 struct BoundingVolume
 {
-    virtual bool isOnFrustum(const Frustum& camFrustum, const Mat4& transform) const = 0;
+    virtual bool isOnFrustum(const Frustum& camFrustum) const = 0;
 
     virtual bool isOnOrForwardPlane(const Plane& plane) const = 0;
-
-    bool isOnFrustum(const Frustum& camFrustum) const
-    {
-        return (isOnOrForwardPlane(camFrustum.leftFace) &&
-            isOnOrForwardPlane(camFrustum.rightFace) &&
-            isOnOrForwardPlane(camFrustum.topFace) &&
-            isOnOrForwardPlane(camFrustum.bottomFace) &&
-            isOnOrForwardPlane(camFrustum.nearFace) &&
-            isOnOrForwardPlane(camFrustum.farFace));
-    };
 };
 
 struct Sphere : public BoundingVolume
@@ -71,7 +74,7 @@ struct Sphere : public BoundingVolume
         return plane.getSignedDistanceToPlane(center) > -radius;
     }
 
-    bool isOnFrustum(const Frustum& camFrustum, const Mat4& transform) const final
+    bool isOnFrustum(const Frustum& camFrustum) const final
     {
         //Check Firstly the result that have the most chance to failure to avoid to call all functions.
         return (isOnOrForwardPlane(camFrustum.leftFace) &&
@@ -82,6 +85,7 @@ struct Sphere : public BoundingVolume
             isOnOrForwardPlane(camFrustum.bottomFace));
     };
 };
+*/
 
 #endif // !FRUSTUM_H
 

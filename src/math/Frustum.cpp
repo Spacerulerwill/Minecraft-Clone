@@ -3,6 +3,19 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
+#include <math/Frustum.hpp>
+
+bool Sphere::IsOnFrustum(const Frustum& frustum)
+{
+    for (std::size_t i = 0; i < 6; i++) {
+        float distance = frustum[i].getSignedDistanceToPlane(center);
+
+        if (distance < -radius)
+            return false;
+    }
+    return true;
+}
+
 /*
 MIT License
 

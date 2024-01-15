@@ -30,18 +30,17 @@ Mat4 Camera::GetViewMatrix() const {
 
 Frustum Camera::GetFrustum() const
 {
-    Frustum     frustum;
-    const GLfloat halfVSide = far * tanf(radians(FOV) * 0.5f);
-    const GLfloat halfHSide = halfVSide * aspect;
+    Frustum frustum{};
+    const float halfVSide = far * tanf(radians(FOV * .5f));
+    const float halfHSide = halfVSide * aspect;
     const Vec3 frontMultFar = far * front;
 
-    frustum.nearFace = { position + near * front, front };
-    frustum.farFace = { position + frontMultFar, -1.0f * front };
-    frustum.rightFace = { position, (frontMultFar - right * halfHSide).cross(up) };
-    frustum.leftFace = { position, up.cross(frontMultFar + right * halfHSide) };
-    frustum.topFace = { position, right.cross(frontMultFar - up * halfVSide) };
-    frustum.bottomFace = { position, (frontMultFar + up * halfVSide).cross(right) };
-
+    frustum[static_cast<std::size_t>(FrustumPlane::NEAR)] = { position + near * front, front };
+    frustum[static_cast<std::size_t>(FrustumPlane::FAR)] = { position + frontMultFar, front * -1.0f };
+    frustum[static_cast<std::size_t>(FrustumPlane::RIGHT)] = { position, (frontMultFar - right * halfHSide).cross(up).normalized() };
+    frustum[static_cast<std::size_t>(FrustumPlane::LEFT)] = { position, up.cross(frontMultFar + right * halfHSide).normalized() };
+    frustum[static_cast<std::size_t>(FrustumPlane::TOP)] = { position, right.cross(frontMultFar - up * halfVSide).normalized() };
+    frustum[static_cast<std::size_t>(FrustumPlane::BOTTOM)] = { position, (frontMultFar + up * halfVSide).cross(right).normalized() };
     return frustum;
 }
 
