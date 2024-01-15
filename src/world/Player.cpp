@@ -28,18 +28,17 @@ void Player::ProcessKeyInput(const World& world, const Window& window, float del
     else {
         movementSpeed = 5.0f;
     }
+    if (window.IsKeyPressed(GLFW_KEY_SPACE)) {
+        if (canJump) {
+            yVelocity = -15.0f;
+            canJump = false;
+        }
+    }
 }
 
 void Player::KeyCallback(int key, int scancode, int action, int mods)
 {
-    switch (key) {
-    case GLFW_KEY_SPACE: {
-        if (action == GLFW_PRESS) {
-            yVelocity = -15.0f;
-            break;
-        }
-    }
-    }
+
 }
 
 void Player::MouseCallback(const World& world, int button, int action, int mods)
@@ -91,7 +90,6 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
 
 void Player::Move(const World& world, PlayerMovement direction, float deltaTime)
 {
-
     float velocity{};
     Vec3 directionMultiplier{};
 
@@ -141,6 +139,7 @@ void Player::Move(const World& world, PlayerMovement direction, float deltaTime)
             newPosition[axis] = camera.position[axis];
             if (axis == 1) {
                 yVelocity = 0.0f;
+                canJump = true;
             }
         }
     }

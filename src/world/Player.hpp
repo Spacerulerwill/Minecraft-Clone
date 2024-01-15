@@ -25,6 +25,7 @@ enum class PlayerMovement {
 
 struct Player {
     BlockID selectedBlock = STONE;
+    bool canJump = false;
     float yVelocity = 0.0f;
     float movementSpeed = 5.0f;
     Camera camera{ Vec3{ 0.0f, 700.0f,0.0f } };

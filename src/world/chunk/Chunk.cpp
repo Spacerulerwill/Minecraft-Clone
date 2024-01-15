@@ -73,7 +73,7 @@ void Chunk::Draw(const Frustum& frustum, Shader& shader, float currentTime, int*
 {
     if (totalChunks) (*totalChunks)++;
     if (mVertexCount > 0) {
-        if (sphere.isOnFrustum(frustum)) {
+        if (sphere.IsOnFrustum(frustum)) {
             if (chunksDrawn) (*chunksDrawn)++;
             mVAO.Bind();
             shader.SetMat4("model", mModel);
