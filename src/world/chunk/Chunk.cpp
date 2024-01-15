@@ -24,7 +24,7 @@ Chunk::Chunk(iVec3 pos) : mPos(pos)
 
     // Translate to its chunk position
     mModel *= translate(globalPosition);
-    sphere = Sphere{ globalPosition + Vec3{CS_OVER_2, CS_OVER_2, CS_OVER_2}, 46.0f };
+    sphere = Sphere{ globalPosition + Vec3{CS_OVER_2, CS_OVER_2, CS_OVER_2}, 55.0f };
 }
 
 iVec3 Chunk::GetPosition() const
