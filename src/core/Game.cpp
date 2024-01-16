@@ -100,6 +100,8 @@ void Game::Run() {
     VertexArray crosshairVAO;
     crosshairVAO.AddBuffer(crosshairVBO, bufferLayout2);
 
+    SoundEngine::GetEngine()->play2D("sound/music.mp3", true);
+
     while (!mWindow.ShouldClose()) {
         float currentFrame = static_cast<float>(glfwGetTime());
         mDeltaTime = currentFrame - mLastFrame;
@@ -163,8 +165,7 @@ void Game::Run() {
         ImGui::SliderInt("Render Distance", &pWorld->mRenderDistance, 5, 30);
         ImGui::SliderInt("Chunk buffers per frame", &pWorld->mBufferPerFrame, 1, 50);
 
-        Vec3 pos = pWorld->player.camera.position;
-        iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pos);
+        iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pWorld->player.camera.position);
         iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(blockPos);
         iVec3 chunkLocalBlockPos = GetChunkBlockPosFromGlobalBlockPos(blockPos);
 
