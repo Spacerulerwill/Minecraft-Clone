@@ -78,6 +78,28 @@ void Game::Run() {
 
     pWorld = std::make_unique<World>();
 
+    // Crosshair
+    Shader crosshairShader = Shader("shaders/crosshair.shader");
+    int crosshair_size = 32;
+    float bottom_corner_x = (SCREEN_WIDTH / 2.0f) - crosshair_size / 2.0f;
+    float bottom_corner_y = (SCREEN_HEIGHT / 2.0f) - crosshair_size / 2.0f;
+
+    float crosshairVerts[24] = {
+        bottom_corner_x, bottom_corner_y, 0.0f, 0.0f, // bottom left
+        bottom_corner_x + crosshair_size, bottom_corner_y, 1.0f, 0.0f, // bottom right
+        bottom_corner_x + crosshair_size,  bottom_corner_y + crosshair_size, 1.0f, 1.0f, // top right
+        bottom_corner_x, bottom_corner_y, 0.0f, 0.0f, // bottom left
+        bottom_corner_x + crosshair_size,  bottom_corner_y + crosshair_size, 1.0f, 1.0f, // top right
+        bottom_corner_x, bottom_corner_y + crosshair_size, 0.0f, 1.0f,  // top left
+    };
+
+    VertexBuffer crosshairVBO;
+    crosshairVBO.BufferData((const void*)crosshairVerts, sizeof(crosshairVerts), GL_STATIC_DRAW);
+    VertexBufferLayout bufferLayout2;
+    bufferLayout2.AddAttribute<float>(4);
+    VertexArray crosshairVAO;
+    crosshairVAO.AddBuffer(crosshairVBO, bufferLayout2);
+
     while (!mWindow.ShouldClose()) {
         float currentFrame = static_cast<float>(glfwGetTime());
         mDeltaTime = currentFrame - mLastFrame;
@@ -121,6 +143,18 @@ void Game::Run() {
         glDisable(GL_BLEND);
         pMSAARenderer->Draw(framebufferShader);
 
+        // Draw the crosshair
+        Mat4 ortho = orthographic(0.0f, SCREEN_HEIGHT, 0.0f, SCREEN_WIDTH, -1.0f, 100.0f);
+        Tex2D crosshairTexture = Tex2D("textures/ui/crosshair.png", GL_TEXTURE2);
+        glActiveTexture(GL_TEXTURE2);
+        crosshairShader.Bind();
+        crosshairVAO.Bind();
+        crosshairShader.SetInt("screenTexture", 0);
+        crosshairShader.SetInt("crosshair", 2);
+        crosshairShader.SetMat4("projection", ortho);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // Draw the ImGUI window
         ImGUIcontext.NewFrame();
         ImGui::SetNextWindowSize(ImVec2{ 0,0 });
         ImGui::SetNextWindowPos(ImVec2{ 0,0 });
