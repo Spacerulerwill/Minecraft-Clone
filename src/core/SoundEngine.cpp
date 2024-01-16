@@ -11,7 +11,7 @@ void SoundEngine::PreloadGameSounds() {
     LOG_INFO("Preloading game sounds...");
     for (const auto& dirEntry : std::filesystem::recursive_directory_iterator("sound/")) {
         if (!std::filesystem::is_directory(dirEntry)) {
-            engine->addSoundSourceFromFile(dirEntry.path().string().c_str(), irrklang::ESM_NO_STREAMING, true);
+            engine->addSoundSourceFromFile(dirEntry.path().string().c_str(), irrklang::ESM_AUTO_DETECT, true);
         }
     }
 }

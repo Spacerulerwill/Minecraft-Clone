@@ -7,6 +7,7 @@ License: MIT
 #define MATH_HPP
 
 #include <numbers>
+#include <random>
 
 constexpr float PI_OVER_180 = static_cast<float>(std::numbers::pi) / 180.0f;
 constexpr float ONE_EIGHTY_OVER_PI = 180.0f / static_cast<float>(std::numbers::pi);

@@ -22,6 +22,8 @@ License: MIT
 
 #include <util/Log.hpp>
 
+#include <irrKlang/irrKlang.h>
+
 struct ImGUIContext {
     ImGUIContext(GLFWwindow* window) {
         LOG_INFO("Creating ImGUI context");
@@ -59,6 +61,8 @@ void Game::Run() {
         throw std::runtime_error("Failed to load GLAD!");
     }
 
+    srand(time(NULL));
+
     SoundEngine::PreloadGameSounds();
     InitBlocks();
     ImGUIContext ImGUIcontext(mWindow.GetWindow());
@@ -78,6 +82,12 @@ void Game::Run() {
         float currentFrame = static_cast<float>(glfwGetTime());
         mDeltaTime = currentFrame - mLastFrame;
         mLastFrame = currentFrame;
+
+        // Set sound engine listener to players position
+        SoundEngine::GetEngine()->setListenerPosition(
+            irrklang::vec3df((pWorld->player.camera.position)),
+            irrklang::vec3df((pWorld->player.camera.front))
+        );
 
         ProcessKeyInput();
 

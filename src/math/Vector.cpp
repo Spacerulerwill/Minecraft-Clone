@@ -235,6 +235,12 @@ Vector<T, size>::operator std::string() const {
     return oss.str();
 }
 
+template<Arithmetic T, std::size_t size>
+Vector<T, size>::operator irrklang::vec3df() const requires(size == 3)
+{
+    return irrklang::vec3df(elems[0], elems[1], -elems[2]);
+}
+
 /*
 ================================
 Explicit template instantiations

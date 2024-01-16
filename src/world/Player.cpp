@@ -23,7 +23,7 @@ void Player::ProcessKeyInput(const World& world, const Window& window, float del
         Move(world, PlayerMovement::RIGHT, deltaTime);
     }
     if (window.IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
-        movementSpeed = 25.0f;
+        movementSpeed = 10.0f;
     }
     else {
         movementSpeed = 5.0f;
@@ -54,7 +54,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                 raycast.chunk->BufferData();
                 BlockDataStruct blockData = BlockData[raycast.blockHit];
                 BlockSoundStruct soundData = BlockSounds[blockData.soundID];
-                SoundEngine::GetEngine()->play3D(soundData.sounds[0].c_str(), irrklang::vec3df(camera.position[0], camera.position[1], camera.position[2]));
+                SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), irrklang::vec3df(camera.position));
             }
         }
         break;
@@ -70,7 +70,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                 raycast.chunk->BufferData();
                 BlockDataStruct blockData = BlockData[selectedBlock];
                 BlockSoundStruct soundData = BlockSounds[blockData.soundID];
-                SoundEngine::GetEngine()->play3D(soundData.sounds[0].c_str(), irrklang::vec3df(camera.position[0], camera.position[1], camera.position[2]));
+                SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), irrklang::vec3df(camera.position));
             }
         }
         break;

@@ -12,6 +12,7 @@ License: MIT
 #include <concepts>
 #include <util/Concepts.hpp>
 #include <cmath>
+#include <irrKlang/irrKlang.h>
 
 template<Arithmetic T, std::size_t size>
 struct Vector {
@@ -57,6 +58,7 @@ struct Vector {
         }
         return result;
     }
+    operator irrklang::vec3df() const requires (size == 3);
 };
 
 template<Arithmetic T, std::size_t size>
