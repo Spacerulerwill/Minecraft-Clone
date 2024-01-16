@@ -22,7 +22,7 @@ iVec3 GetWorldBlockPosFromGlobalPos(Vec3 globalPosition);
 iVec3 GetChunkPosFromGlobalBlockPos(iVec3 globalBlockPos);
 iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 pos);
 
-constexpr float GRAVITY = 0.5f;
+constexpr const float GRAVITY = 0.5f;
 
 class World {
 private:
