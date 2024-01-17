@@ -1,4 +1,4 @@
-# Building - 64 bit only
+# Building - 64 bit only (CMake)
 
 ## Windows
 
