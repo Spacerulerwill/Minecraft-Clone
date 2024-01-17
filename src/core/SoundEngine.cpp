@@ -14,8 +14,6 @@ void SoundEngine::PreloadGameSounds() {
             engine->addSoundSourceFromFile(dirEntry.path().string().c_str(), irrklang::ESM_AUTO_DETECT, true);
         }
     }
-
-    engine->addSoundSourceFromFile("sound/music.mp3", irrklang::ESM_AUTO_DETECT, true);
 }
 
 /*
