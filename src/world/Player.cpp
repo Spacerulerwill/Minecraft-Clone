@@ -53,7 +53,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                 raycast.chunk->CreateMesh();
                 raycast.chunk->BufferData();
                 BlockDataStruct blockData = BlockData[raycast.blockHit];
-                BlockSoundStruct soundData = BlockSounds[blockData.soundID];
+                BlockSoundStruct soundData = BlockSounds[blockData.breakSoundID];
                 SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), irrklang::vec3df(camera.position));
             }
         }
@@ -69,7 +69,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                 raycast.chunk->CreateMesh();
                 raycast.chunk->BufferData();
                 BlockDataStruct blockData = BlockData[selectedBlock];
-                BlockSoundStruct soundData = BlockSounds[blockData.soundID];
+                BlockSoundStruct soundData = BlockSounds[blockData.placeSoundID];
                 SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), irrklang::vec3df(camera.position));
             }
         }

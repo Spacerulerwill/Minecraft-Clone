@@ -1,15 +1,30 @@
 air:
   unique_faces: 1
-  sound_id: 0
+  break_sound_id: 0
+  place_sound_id: 0
+  opaque: false
 stone:
   unique_faces: 1
-  sound_id: 3
+  break_sound_id: 3
+  place_sound_id: 3
+  opaque: true
 dirt: 
   unique_faces: 1
-  sound_id: 2
+  break_sound_id: 2
+  place_sound_id: 2
+  opaque: true
 grass:
   unique_faces: 3
-  sound_id: 1
+  break_sound_id: 1
+  place_sound_id: 1
+  opaque: true
 bedrock: 
   unique_faces: 1
-  sound_id: 3
+  break_sound_id: 3
+  place_sound_id: 3
+  opaque: true
+glass:
+  unique_faces: 1
+  break_sound_id: 5
+  place_sound_id: 3
+  opaque: false

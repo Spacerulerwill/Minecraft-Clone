@@ -9,7 +9,7 @@ from PIL import Image
 
 def atlas_make():
     BASE_DIR = os.path.join( os.path.dirname( __file__ ), '..', '..')
-    yml_location = os.path.join(BASE_DIR, "res", "blocks.yml")
+    yml_location = os.path.join(BASE_DIR, "res", "data", "blocks", "blocks.yml")
     output_location = os.path.join(BASE_DIR, "res", "textures", "atlas.png")
 
     image_locations = os.path.join(BASE_DIR, "res", "textures", "block")

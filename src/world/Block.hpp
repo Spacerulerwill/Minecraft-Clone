@@ -21,6 +21,7 @@ enum Block : BlockID {
     DIRT,
     GRASS,
     BEDROCK,
+    GLASS,
     NUM_BLOCKS
 };
 
@@ -45,7 +46,9 @@ enum BlockFaces {
 struct BlockDataStruct {
     uint8_t unique_faces;
     std::array<TextureID, 6> faces;
-    SoundID soundID;
+    SoundID breakSoundID;
+    SoundID placeSoundID;
+    bool opaque;
 };
 
 struct BlockSoundStruct {

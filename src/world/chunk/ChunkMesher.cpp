@@ -86,10 +86,9 @@ inline ChunkMesher::ChunkVertex GetChunkVertex(uint32_t x, uint32_t y, uint32_t 
     };
 }
 
-std::vector<ChunkMesher::ChunkVertex> ChunkMesher::BinaryGreedyMesh(const std::vector<BlockID>& blocks) {
+void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks) {
     std::vector<uint64_t> axis_cols(CS_P2 * 3);
     std::vector<uint64_t> col_face_masks(CS_P2 * 6);
-    std::vector<ChunkVertex> vertices;
 
     // Step 1: Convert to binary representation for each direction
     int index = 0;
@@ -97,7 +96,7 @@ std::vector<ChunkMesher::ChunkVertex> ChunkMesher::BinaryGreedyMesh(const std::v
         for (int x = 0; x < CS_P; x++) {
             uint64_t zb = 0;
             for (int z = 0; z < CS_P; z++) {
-                if (SolidCheck(blocks[index])) {
+                if (BlockData[blocks[index]].opaque) {
                     axis_cols[x + (z * CS_P)] |= 1ULL << y;
                     axis_cols[z + (y * CS_P) + (CS_P2)] |= 1ULL << x;
                     zb |= 1ULL << z;
@@ -255,7 +254,176 @@ std::vector<ChunkMesher::ChunkVertex> ChunkMesher::BinaryGreedyMesh(const std::v
             }
         }
     }
-    return vertices;
+}
+
+void ChunkMesher::BinaryGreedyMeshTransparentBlock(BlockID block, std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks) {
+    std::vector<uint64_t> axis_cols(CS_P2 * 3);
+    std::vector<uint64_t> col_face_masks(CS_P2 * 6);
+
+    // Step 1: Convert to binary representation for each direction
+    int index = 0;
+    for (int y = 0; y < CS_P; y++) {
+        for (int x = 0; x < CS_P; x++) {
+            uint64_t zb = 0;
+            for (int z = 0; z < CS_P; z++) {
+                if (blocks[index] == block) {
+                    axis_cols[x + (z * CS_P)] |= 1ULL << y;
+                    axis_cols[z + (y * CS_P) + (CS_P2)] |= 1ULL << x;
+                    zb |= 1ULL << z;
+                }
+                index++;
+            }
+            axis_cols[y + (x * CS_P) + (CS_P2 * 2)] = zb;
+        }
+    }
+
+    // Step 2: Visible face culling
+    for (int axis = 0; axis <= 2; axis++) {
+        for (int i = 0; i < CS_P2; i++) {
+            uint64_t col = axis_cols[(CS_P2 * axis) + i];
+            col_face_masks[(CS_P2 * (axis * 2)) + i] = col & ~((col >> 1) | (1ULL << (CS_P - 1)));
+            col_face_masks[(CS_P2 * (axis * 2 + 1)) + i] = col & ~((col << 1) | 1ULL);
+        }
+    }
+
+    // Step 3: Greedy meshing
+    for (int face = 0; face < 6; face++) {
+        int axis = face / 2;
+        int light_dir = face % 2 == 0 ? 1 : -1;
+
+        int merged_forward[CS_P2] = { 0 };
+        for (int forward = 1; forward < CS_P - 1; forward++) {
+            uint64_t bits_walking_right = 0;
+            int merged_right[CS_P] = { 0 };
+            for (int right = 1; right < CS_P - 1; right++) {
+                uint64_t bits_here = col_face_masks[right + (forward * CS_P) + (face * CS_P2)];
+                uint64_t bits_forward = forward >= CS ? 0 : col_face_masks[right + (forward * CS_P) + (face * CS_P2) + CS_P];
+                uint64_t bits_right = right >= CS ? 0 : col_face_masks[right + 1 + (forward * CS_P) + (face * CS_P2)];
+                uint64_t bits_merging_forward = bits_here & bits_forward & ~bits_walking_right;
+                uint64_t bits_merging_right = bits_here & bits_right;
+
+                uint64_t copy_front = bits_merging_forward;
+
+                while (copy_front) {
+                    int bit_pos = CTZ(copy_front);
+                    copy_front &= ~(1ULL << bit_pos);
+
+                    if (bit_pos == 0 || bit_pos == CS_P - 1) continue;
+
+                    if (CompareForward(blocks, axis, forward, right, bit_pos, light_dir)) {
+                        merged_forward[(right * CS_P) + bit_pos]++;
+                    }
+                    else {
+                        bits_merging_forward &= ~(1ULL << bit_pos);
+                    }
+                }
+
+                uint64_t bits_stopped_forward = bits_here & ~bits_merging_forward;
+                while (bits_stopped_forward) {
+                    int bit_pos = CTZ(bits_stopped_forward);
+                    bits_stopped_forward &= ~(1ULL << bit_pos);
+
+                    // Discards faces from neighbor blocks
+                    if (bit_pos == 0 || bit_pos == CS_P - 1) { continue; };
+
+                    if (
+                        (bits_merging_right & (1ULL << bit_pos)) != 0 &&
+                        merged_forward[(right * CS_P) + bit_pos] == merged_forward[(right + 1) * CS_P + bit_pos] &&
+                        CompareRight(blocks, axis, forward, right, bit_pos, light_dir))
+                    {
+                        bits_walking_right |= 1ULL << bit_pos;
+                        merged_right[bit_pos]++;
+                        merged_forward[(right * CS_P) + bit_pos] = 0;
+                        continue;
+                    }
+                    bits_walking_right &= ~(1ULL << bit_pos);
+
+                    uint8_t mesh_left = right - merged_right[bit_pos];
+                    uint8_t mesh_right = right + 1;
+                    uint8_t mesh_front = forward - merged_forward[(right * CS_P) + bit_pos];
+                    uint8_t mesh_back = forward + 1;
+                    uint8_t mesh_up = bit_pos + (face % 2 == 0 ? 1 : 0);
+
+                    BlockID type = blocks[GetAxisIndex(axis, right, forward, bit_pos)];
+                    bool isGrass = type == GRASS;
+                    BlockDataStruct blockData = BlockData[type];
+
+                    int c = bit_pos + light_dir;
+                    bool ao_F = SolidCheck(blocks[GetAxisIndex(axis, right, forward - 1, c)]);
+                    bool ao_B = SolidCheck(blocks[GetAxisIndex(axis, right, forward + 1, c)]);
+                    bool ao_L = SolidCheck(blocks[GetAxisIndex(axis, right - 1, forward, c)]);
+                    bool ao_R = SolidCheck(blocks[GetAxisIndex(axis, right + 1, forward, c)]);
+
+                    bool ao_LFC = SolidCheck(blocks[GetAxisIndex(axis, right - 1, forward - 1, c)]);
+                    bool ao_LBC = SolidCheck(blocks[GetAxisIndex(axis, right - 1, forward + 1, c)]);
+                    bool ao_RFC = SolidCheck(blocks[GetAxisIndex(axis, right + 1, forward - 1, c)]);
+                    bool ao_RBC = SolidCheck(blocks[GetAxisIndex(axis, right + 1, forward + 1, c)]);
+
+                    uint32_t ao_LB = VertexAO(ao_L, ao_B, ao_LBC);
+                    uint32_t ao_LF = VertexAO(ao_L, ao_F, ao_LFC);
+                    uint32_t ao_RB = VertexAO(ao_R, ao_B, ao_RBC);
+                    uint32_t ao_RF = VertexAO(ao_R, ao_F, ao_RFC);
+
+                    merged_forward[(right * CS_P) + bit_pos] = 0;
+                    merged_right[bit_pos] = 0;
+
+                    ChunkVertex v1{}, v2{}, v3{}, v4{};
+                    switch (face) {
+                    case 0: {
+                        TextureID texZ = blockData.faces[TOP_FACE];
+                        v1 = GetChunkVertex(mesh_left, mesh_up, mesh_front, ao_LF, 0, 0, texZ, face, isGrass);
+                        v2 = GetChunkVertex(mesh_left, mesh_up, mesh_back, ao_LB, 0, mesh_back - mesh_front, texZ, face, isGrass);
+                        v3 = GetChunkVertex(mesh_right, mesh_up, mesh_back, ao_RB, mesh_right - mesh_left, mesh_back - mesh_front, texZ, face, isGrass);
+                        v4 = GetChunkVertex(mesh_right, mesh_up, mesh_front, ao_RF, mesh_right - mesh_left, 0, texZ, face, isGrass);
+                        break;
+                    }
+                    case 1: {
+                        TextureID texZ = blockData.faces[BOTTOM_FACE];
+                        v1 = GetChunkVertex(mesh_left, mesh_up, mesh_back, ao_LB, 0, mesh_back - mesh_front, texZ, face, isGrass);
+                        v2 = GetChunkVertex(mesh_left, mesh_up, mesh_front, ao_LF, 0, 0, texZ, face, isGrass);
+                        v3 = GetChunkVertex(mesh_right, mesh_up, mesh_front, ao_RF, mesh_right - mesh_left, 0, texZ, face, isGrass);
+                        v4 = GetChunkVertex(mesh_right, mesh_up, mesh_back, ao_RB, mesh_right - mesh_left, mesh_back - mesh_front, texZ, face, isGrass);
+                        break;
+                    }
+                    case 2: {
+                        TextureID texZ = blockData.faces[RIGHT_FACE];
+                        v1 = GetChunkVertex(mesh_up, mesh_front, mesh_left, ao_LF, 0, mesh_back - mesh_front, texZ, face, isGrass);
+                        v2 = GetChunkVertex(mesh_up, mesh_back, mesh_left, ao_LB, 0, 0, texZ, face, isGrass);
+                        v3 = GetChunkVertex(mesh_up, mesh_back, mesh_right, ao_RB, mesh_right - mesh_left, 0, texZ, face, isGrass);
+                        v4 = GetChunkVertex(mesh_up, mesh_front, mesh_right, ao_RF, mesh_right - mesh_left, mesh_back - mesh_front, texZ, face, isGrass);
+                        break;
+                    }
+                    case 3: {
+                        TextureID texZ = blockData.faces[LEFT_FACE];
+                        v1 = GetChunkVertex(mesh_up, mesh_back, mesh_left, ao_LB, 0, 0, texZ, face, isGrass);
+                        v2 = GetChunkVertex(mesh_up, mesh_front, mesh_left, ao_LF, 0, mesh_back - mesh_front, texZ, face, isGrass);
+                        v3 = GetChunkVertex(mesh_up, mesh_front, mesh_right, ao_RF, mesh_right - mesh_left, mesh_back - mesh_front, texZ, face, isGrass);
+                        v4 = GetChunkVertex(mesh_up, mesh_back, mesh_right, ao_RB, mesh_right - mesh_left, 0, texZ, face, isGrass);
+                        break;
+                    }
+                    case 4: {
+                        TextureID texZ = blockData.faces[BACK_FACE];
+                        v1 = GetChunkVertex(mesh_front, mesh_left, mesh_up, ao_LF, 0, mesh_right - mesh_left, texZ, face, isGrass);
+                        v2 = GetChunkVertex(mesh_back, mesh_left, mesh_up, ao_LB, mesh_back - mesh_front, mesh_right - mesh_left, texZ, face, isGrass);
+                        v3 = GetChunkVertex(mesh_back, mesh_right, mesh_up, ao_RB, mesh_back - mesh_front, 0, texZ, face, isGrass);
+                        v4 = GetChunkVertex(mesh_front, mesh_right, mesh_up, ao_RF, 0, 0, texZ, face, isGrass);
+                        break;
+                    }
+                    case 5: {
+                        TextureID texZ = blockData.faces[FRONT_FACE];
+                        v1 = GetChunkVertex(mesh_back, mesh_left, mesh_up, ao_LB, 0, mesh_right - mesh_left, texZ, face, isGrass);
+                        v2 = GetChunkVertex(mesh_front, mesh_left, mesh_up, ao_LF, mesh_back - mesh_front, mesh_right - mesh_left, texZ, face, isGrass);
+                        v3 = GetChunkVertex(mesh_front, mesh_right, mesh_up, ao_RF, mesh_back - mesh_front, 0, texZ, face, isGrass);
+                        v4 = GetChunkVertex(mesh_back, mesh_right, mesh_up, ao_RB, 0, 0, texZ, face, isGrass);
+                        break;
+                    }
+                    }
+                    bool flipped = ao_LB + ao_RF > ao_RB + ao_LF;
+                    InsertQuad(vertices, v1, v2, v3, v4, flipped);
+                }
+            }
+        }
+    }
 }
 
 /*

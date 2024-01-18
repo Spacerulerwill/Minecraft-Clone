@@ -49,7 +49,8 @@ void Chunk::CreateMesh() {
     mVertexCount = 0;
 
     // Mesh
-    mVertices = ChunkMesher::BinaryGreedyMesh(mBlocks);
+    ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks);
+    ChunkMesher::BinaryGreedyMeshTransparentBlock(GLASS, mVertices, mBlocks);
     needsBuffering = true;
 }
 

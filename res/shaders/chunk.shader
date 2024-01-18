@@ -78,6 +78,10 @@ uniform float time;
 void main() {
     vec4 texColor = texture(tex_array, TexCoords);
 
+    if (texColor.a < 0.5) {
+        discard;
+    }
+
     if (isGrass > 0.5) {
         if(FragNormal.y == 1) {
 	    texColor.rgb *= grassColor;
