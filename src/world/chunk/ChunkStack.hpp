@@ -32,8 +32,8 @@ public:
 
     ChunkStack(iVec2 pos);
     void GenerateTerrain(const siv::PerlinNoise& perlin);
-    void Draw(const Frustum& frustum, Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn);
-    void DrawWater(const Frustum& frustum, Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn);
+    void Draw(const Frustum& frustum, Shader& shader, int* totalChunks, int* chunksDrawn);
+    void DrawWater(const Frustum& frustum, Shader& shader, int* totalChunks, int* chunksDrawn);
     iVec2 GetPosition() const;
     std::atomic<bool> isBeingmMeshed = false;
 

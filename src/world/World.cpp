@@ -47,8 +47,6 @@ iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 globalBlockPos)
 
 void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 {
-    float currentTime = static_cast<float>(glfwGetTime());
-
     Mat4 perspective = player.camera.perspectiveMatrix;
     Mat4 view = player.camera.GetViewMatrix();
 
@@ -59,7 +57,6 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     chunkShader.Bind();
     chunkShader.SetMat4("projection", perspective);
     chunkShader.SetMat4("view", view);
-    chunkShader.SetInt("LOD", LOD);
     mTextureAtlas.Bind();
 
     glActiveTexture(GL_TEXTURE0);
@@ -70,7 +67,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     chunkShader.SetInt("grass_mask", 1);
 
     for (auto& [pos, stack] : mChunkStacks) {
-        stack.Draw(frustum, chunkShader, currentTime, totalChunks, chunksDrawn);
+        stack.Draw(frustum, chunkShader, totalChunks, chunksDrawn);
     }
 
     waterShader.Bind();
@@ -79,9 +76,11 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     waterShader.SetVec3("color", mGrassColor);
     glActiveTexture(GL_TEXTURE0);
     waterShader.SetInt("tex_array", 0);
+    glEnable(GL_BLEND);
     for (auto& [pos, stack] : mChunkStacks) {
-        stack.DrawWater(frustum, waterShader, currentTime, totalChunks, chunksDrawn);
+        stack.DrawWater(frustum, waterShader, totalChunks, chunksDrawn);
     }
+    glDisable(GL_BLEND);
 }
 
 void World::GenerateChunks()

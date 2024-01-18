@@ -90,17 +90,17 @@ iVec2 ChunkStack::GetPosition() const
     return mPos;
 }
 
-void ChunkStack::Draw(const Frustum& frustum, Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn)
+void ChunkStack::Draw(const Frustum& frustum, Shader& shader, int* totalChunks, int* chunksDrawn)
 {
     for (auto& chunk : mChunks) {
-        chunk->Draw(frustum, shader, currentTime, totalChunks, chunksDrawn);
+        chunk->Draw(frustum, shader, totalChunks, chunksDrawn);
     }
 }
 
-void ChunkStack::DrawWater(const Frustum& frustum, Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn)
+void ChunkStack::DrawWater(const Frustum& frustum, Shader& shader, int* totalChunks, int* chunksDrawn)
 {
     for (auto& chunk : mChunks) {
-        chunk->DrawWater(frustum, shader, currentTime, totalChunks, chunksDrawn);
+        chunk->DrawWater(frustum, shader, totalChunks, chunksDrawn);
     }
 }
 

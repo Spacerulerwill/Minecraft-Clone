@@ -33,9 +33,7 @@ in vec3 TexCoords;
 out vec4 FragColor;
 
 uniform sampler2DArray tex_array;
-uniform float firstBufferTime;
 uniform vec3 color;
-uniform float time;
 
 void main() {
     vec4 texColor = texture(tex_array, TexCoords); 

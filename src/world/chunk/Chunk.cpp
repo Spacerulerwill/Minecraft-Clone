@@ -82,29 +82,26 @@ void Chunk::BufferData()
     }
 }
 
-void Chunk::Draw(const Frustum& frustum, Shader& shader, float currentTime, int* potentialDrawCalls, int* totalDrawCalls)
+void Chunk::Draw(const Frustum& frustum, Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
 {
     if (potentialDrawCalls) (*potentialDrawCalls)++;
     if (mVertexCount > 0) {
         if (sphere.IsOnFrustum(frustum)) {
             if (totalDrawCalls) (*totalDrawCalls)++;
             mVAO.Bind();
-            shader.SetMat4("model", mModel);
-            shader.SetFloat("firstBufferTime", firstBufferTime);
-            shader.SetFloat("time", currentTime);
+            shader.SetMat4("model", mModel);;
             glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mVertexCount));
         }
     }
 }
 
-void Chunk::DrawWater(const Frustum& frustum, Shader& shader, float currentTime, int* potentialDrawCalls, int* totalDrawCalls)
+void Chunk::DrawWater(const Frustum& frustum, Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
 {
     if (potentialDrawCalls) (*potentialDrawCalls)++;
     if (mWaterVertexCount > 0) {
         if (sphere.IsOnFrustum(frustum)) {
             if (totalDrawCalls) (*totalDrawCalls)++;
             mWaterVAO.Bind();
-            // bruh
             shader.SetMat4("model", mModel);
             glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mWaterVertexCount));
         }

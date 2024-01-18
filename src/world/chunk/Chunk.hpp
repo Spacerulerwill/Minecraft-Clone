@@ -43,8 +43,8 @@ public:
     void ReleaseMemory();
     void CreateMesh();
     void BufferData();
-    void Draw(const Frustum& frustum, Shader& shader, float currentTime, int* potentialDrawCalls, int* totalDrawCalls);
-    void DrawWater(const Frustum& frustum, Shader& shader, float currentTime, int* potentialDrawCalls, int* totalDrawCalls);
+    void Draw(const Frustum& frustum, Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
+    void DrawWater(const Frustum& frustum, Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
     BlockID GetBlock(iVec3 pos) const;
     void SetBlock(iVec3 pos, BlockID block);
     std::atomic<bool> needsBuffering = false;

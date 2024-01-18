@@ -7,7 +7,6 @@ layout (location = 0) in uvec2 data;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform int LOD = 1;
 
 out float AOMultiplier;
 out vec3 TexCoords;
@@ -30,10 +29,6 @@ float calculateAOMultiplier(uint AOLevel) {
     return AO_MIN + (AOLevel * AO_PART);
 }
 
-int roundUp(int numToRound, int multiple)
-{
-    return ((numToRound + multiple - 1) / multiple) * multiple;
-}
 void main()
 {
     float x = float(data.x&uint(63));
@@ -52,11 +47,7 @@ void main()
 		float((data.y >> 12)&uint(255))
 	);
 
-    gl_Position = projection * view * model * vec4(
-        float(roundUp(int(x), LOD)),
-        float(roundUp(int(y), LOD)),
-        float(roundUp(int(z), LOD)), 
-    1.0);  
+    gl_Position = projection * view * model * vec4(x,y,z,1.0); 
 }
 
 #shader fragment
@@ -72,8 +63,6 @@ out vec4 FragColor;
 uniform sampler2DArray tex_array;
 uniform sampler2D grass_mask;
 uniform vec3 grassColor = vec3(145.0, 189.0, 89.0) / 255.0;
-uniform float firstBufferTime;
-uniform float time;
 
 void main() {
     vec4 texColor = texture(tex_array, TexCoords);
@@ -93,5 +82,5 @@ void main() {
         }
     }
  
-    FragColor = texColor * vec4(vec3(AOMultiplier), clamp(time - firstBufferTime, 0.0, 1.0));
+    FragColor = texColor * vec4(vec3(AOMultiplier), 1.0);
 }
