@@ -159,7 +159,7 @@ void World::GenerateChunks()
 void World::TrySwitchToNextTextureAtlas()
 {
     double currentTime = glfwGetTime();
-    if (currentTime - lastAtlasSwitch > 0.05) {
+    if (currentTime - lastAtlasSwitch > 0.2) {
         currentAtlasID = (currentAtlasID + 1) % MAX_ANIMATION_FRAMES;
         glActiveTexture(GL_TEXTURE0);
         mTextureAtlases[currentAtlasID].Bind();
