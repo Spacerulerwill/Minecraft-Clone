@@ -20,6 +20,8 @@ License: MIT
 #include <vector>
 #include <atomic>
 
+std::size_t VoxelIndex(iVec3 pos);
+
 class Chunk {
 private:
     VertexArray mVAO;
@@ -31,6 +33,11 @@ private:
     VertexBuffer mWaterVBO;
     std::vector<ChunkMesher::ChunkVertex> mWaterVertices;
     std::size_t mWaterVertexCount = 0;
+
+    VertexArray mCustomModelVAO;
+    VertexBuffer mCustomModelVBO;
+    std::vector<ChunkMesher::ChunkVertex> mCustomModelVertices;
+    std::size_t mCustomModelVertexCount = 0;
 
     std::vector<BlockID> mBlocks;
     iVec3 mPos{};
@@ -45,6 +52,7 @@ public:
     void BufferData();
     void Draw(const Frustum& frustum, Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
     void DrawWater(const Frustum& frustum, Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
+    void DrawCustomModel(const Frustum& frustum, Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
     BlockID GetBlock(iVec3 pos) const;
     void SetBlock(iVec3 pos, BlockID block);
     std::atomic<bool> needsBuffering = false;

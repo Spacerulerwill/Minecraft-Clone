@@ -76,7 +76,7 @@ void Game::Run() {
     pMSAARenderer = std::make_unique<MSAARenderer>(SCREEN_WIDTH, SCREEN_HEIGHT);
     Shader framebufferShader("shaders/framebuffer.shader");
 
-    pWorld = std::make_unique<World>();
+    pWorld = std::make_unique<World>(0);
 
     // Crosshair
     Shader crosshairShader = Shader("shaders/crosshair.shader");

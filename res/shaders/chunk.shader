@@ -62,7 +62,7 @@ out vec4 FragColor;
 
 uniform sampler2DArray tex_array;
 uniform sampler2D grass_mask;
-uniform vec3 grassColor = vec3(145.0, 189.0, 89.0) / 255.0;
+uniform vec3 grass_color;
 
 void main() {
     vec4 texColor = texture(tex_array, TexCoords);
@@ -73,11 +73,11 @@ void main() {
 
     if (isGrass > 0.5) {
         if(FragNormal.y == 1) {
-	    texColor.rgb *= grassColor;
+	    texColor.rgb *= grass_color;
         }
         else if (FragNormal.y != -1) {
             vec4 grass_mask_color = texture(grass_mask, TexCoords.xy);
-            grass_mask_color.rgb *= grassColor;
+            grass_mask_color.rgb *= grass_color;
             texColor = mix(texColor, grass_mask_color, grass_mask_color.a);
         }
     }

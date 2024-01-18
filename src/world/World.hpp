@@ -31,15 +31,19 @@ private:
     Skybox mSkybox;
     Shader chunkShader = Shader("shaders/chunk.shader");
     Shader waterShader = Shader("shaders/water.shader");
-    siv::PerlinNoise mPerlin = siv::PerlinNoise(0);
+    Shader customModelShader = Shader("shaders/custom_model.shader");
+    siv::PerlinNoise mPerlin;
     BS::thread_pool mLoadPool;
     std::array<TexArray2D, MAX_ANIMATION_FRAMES> mTextureAtlases;
     Tex2D mGrassSideMask = Tex2D("textures/block/mask/grass_side_mask.png", GL_TEXTURE1);
     std::size_t currentAtlasID{ 0 };
     double lastAtlasSwitch = 0.0f;
+    siv::PerlinNoise::seed_type seed;
 public:
-    World();
-    Vec3 mGrassColor = Vec3{ 68.0f, 124.0f, 245.0f } / 255.0f;
+    World(siv::PerlinNoise::seed_type seed);
+    Vec3 mWaterColor = Vec3{ 68.0f, 124.0f, 245.0f } / 255.0f;
+    Vec3 mFoliageColor = Vec3{ 145.0f, 189.0f, 89.0f } / 255.0f;
+    Vec3 mGrassColor = Vec3{ 145.0f, 189.0f, 89.0f } / 255.0f;
     int mRenderDistance = 5;
     int mBufferPerFrame = 20;
     Player player;

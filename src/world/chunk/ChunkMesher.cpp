@@ -6,6 +6,7 @@ License: MIT
 #include <world/chunk/ChunkMesher.hpp>
 #include <math/Vector.hpp>
 #include <world/Block.hpp>
+#include <world/chunk/Chunk.hpp>
 
 #ifdef _MSC_VER
 inline const int CTZ(uint64_t& x) {
@@ -26,7 +27,7 @@ inline const int GetAxisIndex(const int& axis, const int& a, const int& b, const
 }
 
 inline const bool SolidCheck(int voxel) {
-    return voxel > 0;
+    return BlockData[voxel].opaque;
 }
 
 inline constexpr iVec2 AODirections[8] = {
@@ -96,7 +97,8 @@ void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std
         for (int x = 0; x < CS_P; x++) {
             uint64_t zb = 0;
             for (int z = 0; z < CS_P; z++) {
-                if (BlockData[blocks[index]].opaque) {
+                BlockDataStruct blockData = BlockData[blocks[index]];
+                if (blockData.opaque && blockData.modelID == static_cast<ModelID>(Model::CUBE)) {
                     axis_cols[x + (z * CS_P)] |= 1ULL << y;
                     axis_cols[z + (y * CS_P) + (CS_P2)] |= 1ULL << x;
                     zb |= 1ULL << z;
@@ -420,6 +422,49 @@ void ChunkMesher::BinaryGreedyMeshTransparentBlock(BlockID block, std::vector<Ch
                     }
                     bool flipped = ao_LB + ao_RF > ao_RB + ao_LF;
                     InsertQuad(vertices, v1, v2, v3, v4, flipped);
+                }
+            }
+        }
+    }
+}
+
+inline ChunkMesher::ChunkVertex GetCustomModelBlockVertex(uint32_t x, uint32_t y, uint32_t z, uint32_t texX, uint32_t texY, uint32_t type, bool isFoliage) {
+    return {
+        ((z) << 20) | ((y) << 10) | (x),
+        (isFoliage << 18) | (type << 10) | (texY << 5) | (texX)
+    };
+}
+
+void ChunkMesher::MeshCustomModelBlocks(std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks) {
+    for (int x = 1; x < CS_P_MINUS_ONE; x++) {
+        for (int y = 1; y < CS_P_MINUS_ONE; y++) {
+            for (int z = 1; z < CS_P_MINUS_ONE; z++) {
+                BlockID type = blocks[VoxelIndex(iVec3{ x, y, z })];
+                BlockDataStruct blockData = BlockData[type];
+                if (blockData.modelID != static_cast<ModelID>(Model::CUBE)) {
+                    if (
+                        !BlockData[blocks[VoxelIndex(iVec3{ x + 1, y, z })]].opaque ||
+                        !BlockData[blocks[VoxelIndex(iVec3{ x - 1, y, z })]].opaque ||
+                        !BlockData[blocks[VoxelIndex(iVec3{ x, y + 1, z })]].opaque ||
+                        !BlockData[blocks[VoxelIndex(iVec3{ x, y - 1, z })]].opaque ||
+                        !BlockData[blocks[VoxelIndex(iVec3{ x, y, z + 1 })]].opaque ||
+                        !BlockData[blocks[VoxelIndex(iVec3{ x, y, z - 1 })]].opaque
+                        ) {
+                        std::vector<uint32_t>& modelVertices = BlockModels[blockData.modelID];
+                        std::vector<ChunkVertex> modelPackedVerts;
+                        for (int i = 0; i < modelVertices.size() - 1; i += 7) {
+                            modelPackedVerts.push_back(GetCustomModelBlockVertex(
+                                modelVertices[i] + ((x - 1) * 16),
+                                modelVertices[i + 1] + ((y - 1) * 16),
+                                modelVertices[i + 2] + ((z - 1) * 16),
+                                modelVertices[i + 3],
+                                modelVertices[i + 4],
+                                blockData.faces[TOP_FACE],
+                                type == TALL_GRASS
+                            ));
+                        }
+                        vertices.insert(vertices.end(), modelPackedVerts.begin(), modelPackedVerts.end());
+                    }
                 }
             }
         }

@@ -2,42 +2,70 @@ air:
   unique_faces: 1
   break_sound_id: 0
   place_sound_id: 0
+  model_id: 0
   opaque: false
   collision: false
 stone:
   unique_faces: 1
   break_sound_id: 3
   place_sound_id: 3
+  model_id: 0
   opaque: true
   collision: true
 dirt: 
   unique_faces: 1
   break_sound_id: 2
   place_sound_id: 2
+  model_id: 0
   opaque: true
   collision: true
 grass:
   unique_faces: 3
   break_sound_id: 1
   place_sound_id: 1
+  model_id: 0
   opaque: true
   collision: true
 bedrock: 
   unique_faces: 1
   break_sound_id: 3
   place_sound_id: 3
+  model_id: 0
   opaque: true
   collision: true
 glass:
   unique_faces: 1
   break_sound_id: 5
   place_sound_id: 3
+  model_id: 0
   opaque: false
   collision: true
 water:
   unique_faces: 1
   break_sound_id: 3
   place_sound_id: 3
+  model_id: 0
   opaque: false
   collision: false
   frames: 32
+rose:
+  unique_faces: 1
+  break_sound_id: 1
+  place_sound_id: 1
+  model_id: 1
+  opaque: false
+  collision: false
+pink_tulip:
+  unique_faces: 1
+  break_sound_id: 1
+  place_sound_id: 1
+  model_id: 1
+  opaque: false
+  collision: false
+tall_grass:
+  unique_faces: 1
+  break_sound_id: 1
+  place_sound_id: 1
+  model_id: 1
+  opaque: false
+  collision: false

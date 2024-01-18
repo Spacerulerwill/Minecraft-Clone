@@ -19,7 +19,7 @@ namespace ChunkMesher {
 
     void BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks);
     void BinaryGreedyMeshTransparentBlock(BlockID block, std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks);
-
+    void MeshCustomModelBlocks(std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks);
 };
 
 #endif // !CHUNK_MESHER_H

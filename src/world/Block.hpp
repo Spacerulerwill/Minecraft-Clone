@@ -14,6 +14,7 @@ License: MIT
 using BlockID = uint8_t;
 using TextureID = uint8_t;
 using SoundID = uint8_t;
+using ModelID = uint8_t;
 
 enum Block : BlockID {
     AIR,
@@ -23,6 +24,9 @@ enum Block : BlockID {
     BEDROCK,
     GLASS,
     WATER,
+    ROSE,
+    PINK_TULIP,
+    TALL_GRASS,
     NUM_BLOCKS
 };
 
@@ -33,6 +37,12 @@ enum class Sound : SoundID {
     STONE,
     WOOD,
     NUM_SOUNDS
+};
+
+enum class Model : ModelID {
+    CUBE,
+    CROSS,
+    NUM_MODELS,
 };
 
 enum BlockFaces {
@@ -49,6 +59,7 @@ struct BlockDataStruct {
     std::array<TextureID, 6> faces;
     SoundID breakSoundID;
     SoundID placeSoundID;
+    ModelID modelID;
     bool opaque;
     bool collision;
 };
@@ -57,9 +68,12 @@ struct BlockSoundStruct {
     std::vector<std::string> sounds;
 };
 
+using BlockModel = std::vector<uint32_t>;
+
 // Global arrays used to fetch certain information by integer ID, using array indexing
 extern BlockDataStruct BlockData[NUM_BLOCKS];
 extern BlockSoundStruct BlockSounds[static_cast<std::size_t>(Sound::NUM_SOUNDS)];
+extern BlockModel BlockModels[static_cast<std::size_t>(Model::NUM_MODELS)];
 constexpr unsigned int TEXTURE_SIZE = 16;
 constexpr const std::size_t MAX_ANIMATION_FRAMES = 32;
 void InitBlocks();

@@ -10,6 +10,8 @@ License: MIT
 
 BlockDataStruct BlockData[NUM_BLOCKS] = {};
 BlockSoundStruct BlockSounds[static_cast<std::size_t>(Sound::NUM_SOUNDS)] = {};
+BlockModel BlockModels[static_cast<std::size_t>(Model::NUM_MODELS)] = {};
+
 
 void LoadBlockData() {
     //Load block data from blocks.yml
@@ -24,6 +26,7 @@ void LoadBlockData() {
         blockData.unique_faces = uniqueFacesCount;
         blockData.breakSoundID = it->second["break_sound_id"].as<SoundID>();
         blockData.placeSoundID = it->second["place_sound_id"].as<SoundID>();
+        blockData.modelID = it->second["model_id"].as<ModelID>();
         blockData.opaque = it->second["opaque"].as<bool>();
         blockData.collision = it->second["collision"].as<bool>();
 
@@ -91,9 +94,31 @@ void LoadBlockSoundData() {
     }
 }
 
+void LoadBlockModels() {
+    BlockModels[static_cast<std::size_t>(Model::CUBE)] = {};
+    BlockModels[static_cast<std::size_t>(Model::CROSS)] = {
+        0, 0, 0, 0, 16, 0, 0,
+        16, 0, 16, 16, 16, 0, 0,
+        16, 16, 16, 16, 0, 0, 0,
+
+        0, 0, 0, 0, 16, 0, 0,
+        16, 16, 16, 16, 0, 0, 0,
+        0, 16, 0, 0, 0, 0, 0,
+
+        0, 0, 16, 16, 16, 0, 0,
+        16, 0, 0, 0, 16, 0, 0,
+        16, 16, 0, 0, 0, 0, 0,
+
+        0, 0, 16, 16, 16, 0, 0,
+        16, 16, 0, 0, 0, 0, 0,
+        0, 16, 16, 16, 0, 0, 0
+    };
+}
+
 void InitBlocks() {
     LoadBlockData();
     LoadBlockSoundData();
+    LoadBlockModels();
 }
 
 

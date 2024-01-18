@@ -8,6 +8,7 @@ License: MIT
 #include <world/Block.hpp>
 #include <GLFW/glfw3.h>
 #include <cmath>
+#include <util/Log.hpp>
 
 std::size_t VoxelIndex(iVec3 pos) {
     return pos[2] + (pos[0] << CHUNK_SIZE_EXP) + (pos[1] << CHUNK_SIZE_EXP_X2);
@@ -20,6 +21,7 @@ Chunk::Chunk(iVec3 pos) : mPos(pos)
     bufferLayout.AddAttribute<unsigned int>(2);
     mVAO.AddBuffer(mVBO, bufferLayout);
     mWaterVAO.AddBuffer(mWaterVBO, bufferLayout);
+    mCustomModelVAO.AddBuffer(mCustomModelVBO, bufferLayout);
 
     Vec3 globalPosition = static_cast<Vec3>(pos) * CS;
 
@@ -44,7 +46,7 @@ void Chunk::ReleaseMemory()
 }
 
 void Chunk::CreateMesh() {
-    // Erase previous data
+    // Erase previous data!
     std::vector<ChunkMesher::ChunkVertex>().swap(mVertices);
     mVertices.reserve(CS_P3 * 3);
     mVertexCount = 0;
@@ -53,10 +55,15 @@ void Chunk::CreateMesh() {
     mWaterVertices.reserve(CS_P3 * 3);
     mWaterVertexCount = 0;
 
+    std::vector<ChunkMesher::ChunkVertex>().swap(mCustomModelVertices);
+    mCustomModelVertices.reserve(CS_P3 * 3);
+    mCustomModelVertexCount = 0;
+
     // Mesh
     ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks);
     ChunkMesher::BinaryGreedyMeshTransparentBlock(GLASS, mVertices, mBlocks);
     ChunkMesher::BinaryGreedyMeshTransparentBlock(WATER, mWaterVertices, mBlocks);
+    ChunkMesher::MeshCustomModelBlocks(mCustomModelVertices, mBlocks);
     needsBuffering = true;
 }
 
@@ -72,6 +79,12 @@ void Chunk::BufferData()
         mWaterVBO.BufferData(mWaterVertices.data(), mWaterVertices.size() * sizeof(ChunkMesher::ChunkVertex), GL_STATIC_DRAW);
         mWaterVertexCount = mWaterVertices.size();
         std::vector<ChunkMesher::ChunkVertex>().swap(mWaterVertices);
+    }
+
+    if (mCustomModelVertices.size() > 0) {
+        mCustomModelVBO.BufferData(mCustomModelVertices.data(), mCustomModelVertices.size() * sizeof(ChunkMesher::ChunkVertex), GL_STATIC_DRAW);
+        mCustomModelVertexCount = mCustomModelVertices.size();
+        std::vector<ChunkMesher::ChunkVertex>().swap(mCustomModelVertices);
     }
 
     needsBuffering = false;
@@ -108,6 +121,18 @@ void Chunk::DrawWater(const Frustum& frustum, Shader& shader, int* potentialDraw
     }
 }
 
+void Chunk::DrawCustomModel(const Frustum& frustum, Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
+{
+    if (potentialDrawCalls) (*potentialDrawCalls)++;
+    if (mCustomModelVertexCount > 0) {
+        if (sphere.IsOnFrustum(frustum)) {
+            if (totalDrawCalls) (*totalDrawCalls)++;
+            mCustomModelVAO.Bind();
+            shader.SetMat4("model", mModel);
+            glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mCustomModelVertexCount));
+        }
+    }
+}
 
 BlockID Chunk::GetBlock(iVec3 pos) const
 {

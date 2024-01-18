@@ -7,6 +7,7 @@ LICENSE: MIT
 #include <world/chunk/ChunkStack.hpp>
 #include <world/Block.hpp>
 #include <util/Log.hpp>
+#include <random>
 
 ChunkStack::ChunkStack(iVec2 pos) : mPos(pos)
 {
@@ -35,7 +36,9 @@ size_t ChunkStack::size() const {
     return mChunks.size();
 }
 
-void ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin) {
+void ChunkStack::GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin) {
+    std::default_random_engine gen(seed);
+    std::uniform_real_distribution<float> distribution(0.0, 1.0);
 
     for (std::size_t i = 0; i < mChunks.size(); i++) {
         mChunks.at(i)->AllocateMemory();
@@ -50,6 +53,23 @@ void ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin) {
                 for (int y = height; y < WATER_LEVEL; y++) {
                     SetBlock(iVec3{ x,y, z }, WATER);
                 }
+                SetBlock(iVec3{ x,height - 1,z }, DIRT);
+            }
+            else {
+                SetBlock(iVec3{ x,height - 1,z }, GRASS);
+
+                if (height < MAX_WORLD_GEN_HEIGHT) {
+                    float rand = distribution(gen);
+                    if (rand < 0.01f) {
+                        SetBlock(iVec3{ x, height, z }, ROSE);
+                    }
+                    else if (rand < 0.02f) {
+                        SetBlock(iVec3{ x, height, z }, PINK_TULIP);
+                    }
+                    else if (rand < 0.2f) {
+                        SetBlock(iVec3{ x, height, z }, TALL_GRASS);
+                    }
+                }
             }
             for (int y = 0; y < height - 4; y++) {
                 SetBlock(iVec3{ x, y, z }, STONE);
@@ -57,7 +77,6 @@ void ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin) {
             for (int y = height - 4; y < height - 1; y++) {
                 SetBlock(iVec3{ x, y, z }, DIRT);
             }
-            SetBlock(iVec3{ x,height - 1,z }, GRASS);
             SetBlock(iVec3{ x, 0, z }, BEDROCK);
         }
     }
@@ -101,6 +120,13 @@ void ChunkStack::DrawWater(const Frustum& frustum, Shader& shader, int* totalChu
 {
     for (auto& chunk : mChunks) {
         chunk->DrawWater(frustum, shader, totalChunks, chunksDrawn);
+    }
+}
+
+void ChunkStack::DrawCustomModel(const Frustum& frustum, Shader& shader, int* totalChunks, int* chunksDrawn)
+{
+    for (auto& chunk : mChunks) {
+        chunk->DrawCustomModel(frustum, shader, totalChunks, chunksDrawn);
     }
 }
 

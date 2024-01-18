@@ -46,8 +46,9 @@ iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 globalBlockPos)
 }
 
 
-World::World()
+World::World(siv::PerlinNoise::seed_type seed) : seed(seed)
 {
+    mPerlin.reseed(seed);
     for (std::size_t i = 0; i < MAX_ANIMATION_FRAMES; i++) {
         mTextureAtlases[i] = TexArray2D(std::format("textures/atlases/atlas{}.png", i), TEXTURE_SIZE, GL_TEXTURE0);
     }
@@ -65,6 +66,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     chunkShader.Bind();
     chunkShader.SetMat4("projection", perspective);
     chunkShader.SetMat4("view", view);
+    chunkShader.SetVec3("grass_color", mGrassColor);
 
     glActiveTexture(GL_TEXTURE0);
     mTextureAtlases[currentAtlasID].Bind();
@@ -81,7 +83,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     waterShader.Bind();
     waterShader.SetMat4("projection", perspective);
     waterShader.SetMat4("view", view);
-    waterShader.SetVec3("color", mGrassColor);
+    waterShader.SetVec3("color", mWaterColor);
     glActiveTexture(GL_TEXTURE0);
     waterShader.SetInt("tex_array", 0);
     glEnable(GL_BLEND);
@@ -89,6 +91,19 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
         stack.DrawWater(frustum, waterShader, totalChunks, chunksDrawn);
     }
     glDisable(GL_BLEND);
+
+    // Draw custom models
+    glDisable(GL_CULL_FACE);
+    customModelShader.Bind();
+    customModelShader.SetMat4("projection", perspective);
+    customModelShader.SetMat4("view", view);
+    glActiveTexture(GL_TEXTURE0);
+    customModelShader.SetInt("tex_array", 0);
+    customModelShader.SetVec3("foliage_color", mFoliageColor);
+    for (auto& [pos, stack] : mChunkStacks) {
+        stack.DrawCustomModel(frustum, customModelShader, totalChunks, chunksDrawn);
+    }
+    glEnable(GL_CULL_FACE);
 }
 
 void World::GenerateChunks()
@@ -127,7 +142,7 @@ void World::GenerateChunks()
                     ChunkStack& chunkStack = emplace.first->second;
                     chunkStack.isBeingmMeshed = true;
                     mLoadPool.push_task([&chunkStack, this] {
-                        chunkStack.GenerateTerrain(mPerlin);
+                        chunkStack.GenerateTerrain(seed, mPerlin);
                         for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
                             std::shared_ptr<Chunk> chunk = (*it);
                             chunk->CreateMesh();
