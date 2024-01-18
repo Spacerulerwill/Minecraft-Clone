@@ -3,33 +3,40 @@ air:
   break_sound_id: 0
   place_sound_id: 0
   opaque: false
+  collision: false
 stone:
   unique_faces: 1
   break_sound_id: 3
   place_sound_id: 3
   opaque: true
+  collision: true
 dirt: 
   unique_faces: 1
   break_sound_id: 2
   place_sound_id: 2
   opaque: true
+  collision: true
 grass:
   unique_faces: 3
   break_sound_id: 1
   place_sound_id: 1
   opaque: true
+  collision: true
 bedrock: 
   unique_faces: 1
   break_sound_id: 3
   place_sound_id: 3
   opaque: true
+  collision: true
 glass:
   unique_faces: 1
   break_sound_id: 5
   place_sound_id: 3
   opaque: false
+  collision: true
 water:
   unique_faces: 1
   break_sound_id: 3
   place_sound_id: 3
   opaque: false
+  collision: false

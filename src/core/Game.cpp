@@ -143,6 +143,14 @@ void Game::Run() {
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
+
+        framebufferShader.Bind();
+        if (pWorld->GetBlock(pWorld->player.camera.position) == WATER) {
+            framebufferShader.SetVec3("screenColor", pWorld->mGrassColor);
+        }
+        else {
+            framebufferShader.SetVec3("screenColor", Vec3{ 0.0f, 0.0f, 0.0f });
+        }
         pMSAARenderer->Draw(framebufferShader);
 
         // Draw the crosshair

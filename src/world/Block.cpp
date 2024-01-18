@@ -25,6 +25,7 @@ void LoadBlockData() {
         blockData.breakSoundID = it->second["break_sound_id"].as<SoundID>();
         blockData.placeSoundID = it->second["place_sound_id"].as<SoundID>();
         blockData.opaque = it->second["opaque"].as<bool>();
+        blockData.collision = it->second["collision"].as<bool>();
 
         switch (uniqueFacesCount) {
         case 1: {

@@ -35,6 +35,7 @@ private:
     TexArray2D mTextureAtlas = TexArray2D("textures/atlas.png", TEXTURE_SIZE, GL_TEXTURE0);
     Tex2D mGrassSideMask = Tex2D("textures/block/mask/grass_side_mask.png", GL_TEXTURE1);
 public:
+    Vec3 mGrassColor = Vec3{ 68.0f, 124.0f, 245.0f } / 255.0f;
     GLint LOD = 1;
     int mRenderDistance = 5;
     int mBufferPerFrame = 20;

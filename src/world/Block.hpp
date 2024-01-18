@@ -50,6 +50,7 @@ struct BlockDataStruct {
     SoundID breakSoundID;
     SoundID placeSoundID;
     bool opaque;
+    bool collision;
 };
 
 struct BlockSoundStruct {

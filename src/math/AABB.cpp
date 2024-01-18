@@ -4,6 +4,7 @@ License: MIT
 */
 #include <math/AABB.hpp>
 #include <world/World.hpp>
+#include <world/Block.hpp>
 
 bool BoundingBox::IsColliding(const World& world, Vec3 center)
 {
@@ -14,7 +15,7 @@ bool BoundingBox::IsColliding(const World& world, Vec3 center)
         for (int y = corner1[1]; y <= corner2[1]; y++) {
             for (int z = corner1[2]; z <= corner2[2]; z++) {
                 BlockID block = world.GetBlock(iVec3{ x,y,z });
-                if (block != AIR) {
+                if (block != AIR && BlockData[block].collision) {
                     return true;
                 }
             }
