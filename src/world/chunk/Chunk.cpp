@@ -19,12 +19,13 @@ Chunk::Chunk(iVec3 pos) : mPos(pos)
     VertexBufferLayout bufferLayout;
     bufferLayout.AddAttribute<unsigned int>(2);
     mVAO.AddBuffer(mVBO, bufferLayout);
+    mWaterVAO.AddBuffer(mWaterVBO, bufferLayout);
 
     Vec3 globalPosition = static_cast<Vec3>(pos) * CS;
 
     // Translate to its chunk position
     mModel *= translate(globalPosition);
-    sphere = Sphere{ globalPosition + Vec3{CS_OVER_2, CS_OVER_2, CS_OVER_2}, 55.0f };
+    sphere = Sphere{ globalPosition + Vec3{CS_OVER_2, CS_OVER_2, CS_OVER_2}, Vec3{CS_OVER_2, CS_OVER_2, CS_OVER_2}.length() };
 }
 
 iVec3 Chunk::GetPosition() const
@@ -48,9 +49,14 @@ void Chunk::CreateMesh() {
     mVertices.reserve(CS_P3 * 3);
     mVertexCount = 0;
 
+    std::vector<ChunkMesher::ChunkVertex>().swap(mWaterVertices);
+    mWaterVertices.reserve(CS_P3 * 3);
+    mWaterVertexCount = 0;
+
     // Mesh
     ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks);
     ChunkMesher::BinaryGreedyMeshTransparentBlock(GLASS, mVertices, mBlocks);
+    ChunkMesher::BinaryGreedyMeshTransparentBlock(WATER, mWaterVertices, mBlocks);
     needsBuffering = true;
 }
 
@@ -62,6 +68,12 @@ void Chunk::BufferData()
         std::vector<ChunkMesher::ChunkVertex>().swap(mVertices);
     }
 
+    if (mWaterVertices.size() > 0) {
+        mWaterVBO.BufferData(mWaterVertices.data(), mWaterVertices.size() * sizeof(ChunkMesher::ChunkVertex), GL_STATIC_DRAW);
+        mWaterVertexCount = mWaterVertices.size();
+        std::vector<ChunkMesher::ChunkVertex>().swap(mWaterVertices);
+    }
+
     needsBuffering = false;
 
     if (loaded == false) {
@@ -70,12 +82,12 @@ void Chunk::BufferData()
     }
 }
 
-void Chunk::Draw(const Frustum& frustum, Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn)
+void Chunk::Draw(const Frustum& frustum, Shader& shader, float currentTime, int* potentialDrawCalls, int* totalDrawCalls)
 {
-    if (totalChunks) (*totalChunks)++;
+    if (potentialDrawCalls) (*potentialDrawCalls)++;
     if (mVertexCount > 0) {
         if (sphere.IsOnFrustum(frustum)) {
-            if (chunksDrawn) (*chunksDrawn)++;
+            if (totalDrawCalls) (*totalDrawCalls)++;
             mVAO.Bind();
             shader.SetMat4("model", mModel);
             shader.SetFloat("firstBufferTime", firstBufferTime);
@@ -84,6 +96,21 @@ void Chunk::Draw(const Frustum& frustum, Shader& shader, float currentTime, int*
         }
     }
 }
+
+void Chunk::DrawWater(const Frustum& frustum, Shader& shader, float currentTime, int* potentialDrawCalls, int* totalDrawCalls)
+{
+    if (potentialDrawCalls) (*potentialDrawCalls)++;
+    if (mWaterVertexCount > 0) {
+        if (sphere.IsOnFrustum(frustum)) {
+            if (totalDrawCalls) (*totalDrawCalls)++;
+            mWaterVAO.Bind();
+            // bruh
+            shader.SetMat4("model", mModel);
+            glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mWaterVertexCount));
+        }
+    }
+}
+
 
 BlockID Chunk::GetBlock(iVec3 pos) const
 {

@@ -92,6 +92,13 @@ void ChunkStack::Draw(const Frustum& frustum, Shader& shader, float currentTime,
     }
 }
 
+void ChunkStack::DrawWater(const Frustum& frustum, Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn)
+{
+    for (auto& chunk : mChunks) {
+        chunk->DrawWater(frustum, shader, currentTime, totalChunks, chunksDrawn);
+    }
+}
+
 void ChunkStack::SetBlock(iVec3 pos, BlockID block) {
     mChunks.at(pos[1] / CS)->SetBlock(iVec3{ pos[0], 1 + pos[1] % CS, pos[2] }, block);
 }

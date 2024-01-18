@@ -72,6 +72,15 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     for (auto& [pos, stack] : mChunkStacks) {
         stack.Draw(frustum, chunkShader, currentTime, totalChunks, chunksDrawn);
     }
+
+    waterShader.Bind();
+    waterShader.SetMat4("projection", perspective);
+    waterShader.SetMat4("view", view);
+    glActiveTexture(GL_TEXTURE0);
+    chunkShader.SetInt("tex_array", 0);
+    for (auto& [pos, stack] : mChunkStacks) {
+        stack.DrawWater(frustum, waterShader, currentTime, totalChunks, chunksDrawn);
+    }
 }
 
 void World::GenerateChunks()

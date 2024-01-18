@@ -24,11 +24,17 @@ class Chunk {
 private:
     VertexArray mVAO;
     VertexBuffer mVBO;
+    std::vector<ChunkMesher::ChunkVertex> mVertices;
+    std::size_t mVertexCount = 0;
+
+    VertexArray mWaterVAO;
+    VertexBuffer mWaterVBO;
+    std::vector<ChunkMesher::ChunkVertex> mWaterVertices;
+    std::size_t mWaterVertexCount = 0;
+
     std::vector<BlockID> mBlocks;
     iVec3 mPos{};
     Mat4 mModel = Mat4::identity();
-    std::vector<ChunkMesher::ChunkVertex> mVertices;
-    std::size_t mVertexCount = 0;
     Sphere sphere;
 public:
     Chunk(iVec3 pos);
@@ -37,7 +43,8 @@ public:
     void ReleaseMemory();
     void CreateMesh();
     void BufferData();
-    void Draw(const Frustum& frustum, Shader& shader, float currentTime, int* totalChunks, int* chunksDrawn);
+    void Draw(const Frustum& frustum, Shader& shader, float currentTime, int* potentialDrawCalls, int* totalDrawCalls);
+    void DrawWater(const Frustum& frustum, Shader& shader, float currentTime, int* potentialDrawCalls, int* totalDrawCalls);
     BlockID GetBlock(iVec3 pos) const;
     void SetBlock(iVec3 pos, BlockID block);
     std::atomic<bool> needsBuffering = false;

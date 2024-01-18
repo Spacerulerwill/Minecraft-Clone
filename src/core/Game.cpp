@@ -130,12 +130,12 @@ void Game::Run() {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        int totalChunks = 0;
-        int chunksDrawn = 0;
+        int potentialDrawCalls = 0;
+        int totalDrawCalls = 0;
 
         Frustum frustum = pWorld->player.camera.GetFrustum();
 
-        pWorld->Draw(frustum, &totalChunks, &chunksDrawn);
+        pWorld->Draw(frustum, &potentialDrawCalls, &totalDrawCalls);
 
         if (mIsWireFrame) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -173,8 +173,8 @@ void Game::Run() {
         ImGui::Text(std::format("Chunk local block coordinates: {}", std::string(chunkLocalBlockPos)).c_str());
         ImGui::Text(std::format("Chunk coordinates: {}", std::string(chunkPos)).c_str());
         ImGui::Text(std::format("FPS: {}", static_cast<int>(1.0f / mDeltaTime)).c_str());
-        ImGui::Text(std::format("Total Chunks: {}", totalChunks).c_str());
-        ImGui::Text(std::format("Chunks Drawn: {}", chunksDrawn).c_str());
+        ImGui::Text(std::format("Potential Draw Calls: {}", potentialDrawCalls).c_str());
+        ImGui::Text(std::format("Total Draw Calls: {}", totalDrawCalls).c_str());
         ImGui::End();
         ImGUIcontext.Render();
 

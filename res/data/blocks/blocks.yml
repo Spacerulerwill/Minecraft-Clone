@@ -28,3 +28,8 @@ glass:
   break_sound_id: 5
   place_sound_id: 3
   opaque: false
+water:
+  unique_faces: 1
+  break_sound_id: 3
+  place_sound_id: 3
+  opaque: false

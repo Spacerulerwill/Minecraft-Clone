@@ -22,6 +22,7 @@ enum Block : BlockID {
     GRASS,
     BEDROCK,
     GLASS,
+    WATER,
     NUM_BLOCKS
 };
 
