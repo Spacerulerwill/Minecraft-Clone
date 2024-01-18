@@ -46,6 +46,11 @@ void ChunkStack::GenerateTerrain(const siv::PerlinNoise& perlin) {
             float heightMultiplayer = perlin.octave2D_01((mPos[0] * CS + x) * 0.001f, (mPos[1] * CS + z) * 0.001f, 4, 0.5);
             int height = MIN_WORLD_GEN_HEIGHT + (heightMultiplayer * MAX_MINUS_MIN_WORLD_GEN_HEIGHT);
 
+            if (height < WATER_LEVEL) {
+                for (int y = height; y < WATER_LEVEL; y++) {
+                    SetBlock(iVec3{ x,y, z }, WATER);
+                }
+            }
             for (int y = 0; y < height - 4; y++) {
                 SetBlock(iVec3{ x, y, z }, STONE);
             }
