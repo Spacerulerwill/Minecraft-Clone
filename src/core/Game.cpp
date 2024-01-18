@@ -149,7 +149,7 @@ void Game::Run() {
             framebufferShader.SetVec3("screenColor", pWorld->mGrassColor);
         }
         else {
-            framebufferShader.SetVec3("screenColor", Vec3{ 0.0f, 0.0f, 0.0f });
+            framebufferShader.SetVec3("screenColor", Vec3{ 1.0f, 1.0f, 1.0f });
         }
         pMSAARenderer->Draw(framebufferShader);
 
