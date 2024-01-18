@@ -121,7 +121,6 @@ std::shared_ptr<Chunk>ChunkStack::GetChunk(std::size_t y) const {
     }
 }
 
-
 /*
 MIT License
 

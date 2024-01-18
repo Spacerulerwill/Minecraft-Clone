@@ -17,6 +17,7 @@ License: MIT
 #include <PerlinNoise.hpp>
 #include <unordered_map>
 #include <BS_thread_pool.hpp>
+#include <array>
 
 iVec3 GetWorldBlockPosFromGlobalPos(Vec3 globalPosition);
 iVec3 GetChunkPosFromGlobalBlockPos(iVec3 globalBlockPos);
@@ -32,14 +33,18 @@ private:
     Shader waterShader = Shader("shaders/water.shader");
     siv::PerlinNoise mPerlin = siv::PerlinNoise(0);
     BS::thread_pool mLoadPool;
-    TexArray2D mTextureAtlas = TexArray2D("textures/atlas.png", TEXTURE_SIZE, GL_TEXTURE0);
+    std::array<TexArray2D, MAX_ANIMATION_FRAMES> mTextureAtlases;
     Tex2D mGrassSideMask = Tex2D("textures/block/mask/grass_side_mask.png", GL_TEXTURE1);
+    std::size_t currentAtlasID{ 0 };
+    double lastAtlasSwitch = 0.0f;
 public:
+    World();
     Vec3 mGrassColor = Vec3{ 68.0f, 124.0f, 245.0f } / 255.0f;
     int mRenderDistance = 5;
     int mBufferPerFrame = 20;
     Player player;
     void Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn);
+    void TrySwitchToNextTextureAtlas();
     void GenerateChunks();
 
     const ChunkStack* GetChunkStack(iVec2 pos) const;

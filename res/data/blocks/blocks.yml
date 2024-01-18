@@ -40,3 +40,4 @@ water:
   place_sound_id: 3
   opaque: false
   collision: false
+  frames: 32

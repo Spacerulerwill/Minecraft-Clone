@@ -6,6 +6,7 @@ License: MIT
 #include <world/World.hpp>
 #include <cmath>
 #include <util/Log.hpp>
+#include <format>
 
 iVec3 GetWorldBlockPosFromGlobalPos(Vec3 globalPosition)
 {
@@ -45,6 +46,13 @@ iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 globalBlockPos)
 }
 
 
+World::World()
+{
+    for (std::size_t i = 0; i < MAX_ANIMATION_FRAMES; i++) {
+        mTextureAtlases[i] = TexArray2D(std::format("textures/atlases/atlas{}.png", i), TEXTURE_SIZE, GL_TEXTURE0);
+    }
+}
+
 void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 {
     Mat4 perspective = player.camera.perspectiveMatrix;
@@ -57,9 +65,9 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     chunkShader.Bind();
     chunkShader.SetMat4("projection", perspective);
     chunkShader.SetMat4("view", view);
-    mTextureAtlas.Bind();
 
     glActiveTexture(GL_TEXTURE0);
+    mTextureAtlases[currentAtlasID].Bind();
     chunkShader.SetInt("tex_array", 0);
 
     glActiveTexture(GL_TEXTURE1);
@@ -145,6 +153,17 @@ void World::GenerateChunks()
                 }
             }
         }
+    }
+}
+
+void World::TrySwitchToNextTextureAtlas()
+{
+    double currentTime = glfwGetTime();
+    if (currentTime - lastAtlasSwitch > 0.05) {
+        currentAtlasID = (currentAtlasID + 1) % MAX_ANIMATION_FRAMES;
+        glActiveTexture(GL_TEXTURE0);
+        mTextureAtlases[currentAtlasID].Bind();
+        lastAtlasSwitch = currentTime;
     }
 }
 

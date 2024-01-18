@@ -61,6 +61,7 @@ struct BlockSoundStruct {
 extern BlockDataStruct BlockData[NUM_BLOCKS];
 extern BlockSoundStruct BlockSounds[static_cast<std::size_t>(Sound::NUM_SOUNDS)];
 constexpr unsigned int TEXTURE_SIZE = 16;
+constexpr const std::size_t MAX_ANIMATION_FRAMES = 32;
 void InitBlocks();
 
 #endif // !BLOCK_H
