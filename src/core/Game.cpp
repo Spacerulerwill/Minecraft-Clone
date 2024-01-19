@@ -36,6 +36,11 @@ struct ImGUIContext {
         ImGui_ImplOpenGL3_Init("#version 330");
     }
 
+    ImGUIContext(const ImGUIContext& arg) = delete;
+    ImGUIContext(const ImGUIContext&& arg) = delete;
+    ImGUIContext& operator=(const ImGUIContext& arg) = delete;
+    ImGUIContext& operator=(const ImGUIContext&& arg) = delete;
+
     void NewFrame() const {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();

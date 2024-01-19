@@ -72,20 +72,20 @@ void Chunk::BufferData()
     if (mVertices.size() > 0) {
         mVBO.BufferData(mVertices.data(), mVertices.size() * sizeof(ChunkMesher::ChunkVertex), GL_STATIC_DRAW);
         mVertexCount = mVertices.size();
-        std::vector<ChunkMesher::ChunkVertex>().swap(mVertices);
     }
+    std::vector<ChunkMesher::ChunkVertex>().swap(mVertices);
 
     if (mWaterVertices.size() > 0) {
         mWaterVBO.BufferData(mWaterVertices.data(), mWaterVertices.size() * sizeof(ChunkMesher::ChunkVertex), GL_STATIC_DRAW);
         mWaterVertexCount = mWaterVertices.size();
-        std::vector<ChunkMesher::ChunkVertex>().swap(mWaterVertices);
     }
+    std::vector<ChunkMesher::ChunkVertex>().swap(mWaterVertices);
 
     if (mCustomModelVertices.size() > 0) {
         mCustomModelVBO.BufferData(mCustomModelVertices.data(), mCustomModelVertices.size() * sizeof(ChunkMesher::ChunkVertex), GL_STATIC_DRAW);
         mCustomModelVertexCount = mCustomModelVertices.size();
-        std::vector<ChunkMesher::ChunkVertex>().swap(mCustomModelVertices);
     }
+    std::vector<ChunkMesher::ChunkVertex>().swap(mCustomModelVertices);
 
     needsBuffering = false;
 
