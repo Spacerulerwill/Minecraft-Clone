@@ -101,7 +101,7 @@ void Game::Run() {
     crosshairVAO.AddBuffer(crosshairVBO, bufferLayout2);
 
     SoundEngine::GetEngine()->play2D("sound/music.mp3", true);
-
+    mWindow.SetVisible();
     while (!mWindow.ShouldClose()) {
         float currentFrame = static_cast<float>(glfwGetTime());
         mDeltaTime = currentFrame - mLastFrame;
