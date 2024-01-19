@@ -49,6 +49,7 @@ iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 globalBlockPos)
 World::World(siv::PerlinNoise::seed_type seed) : seed(seed)
 {
     mPerlin.reseed(seed);
+    LOG_INFO("Loading texture atlases...");
     for (std::size_t i = 0; i < MAX_ANIMATION_FRAMES; i++) {
         mTextureAtlases[i] = TexArray2D(std::format("textures/atlases/atlas{}.png", i), TEXTURE_SIZE, GL_TEXTURE0);
     }

@@ -107,6 +107,7 @@ void Game::Run() {
 
     SoundEngine::GetEngine()->play2D("sound/music.mp3", true);
     mWindow.SetVisible();
+
     while (!mWindow.ShouldClose()) {
         float currentFrame = static_cast<float>(glfwGetTime());
         mDeltaTime = currentFrame - mLastFrame;
@@ -188,6 +189,18 @@ void Game::Run() {
         ImGui::Text(std::format("FPS: {}", static_cast<int>(1.0f / mDeltaTime)).c_str());
         ImGui::Text(std::format("Potential Draw Calls: {}", potentialDrawCalls).c_str());
         ImGui::Text(std::format("Total Draw Calls: {}", totalDrawCalls).c_str());
+        ImGui::Text(
+            "Controls:\n"
+            "Tab - Toggle mouse on screen\n"
+            "Mouse - Look around\n"
+            "WASD - Move around\n"
+            "Left Click - Break block\n"
+            "Right click - Place block\n"
+            "Middle click - Pick block\n"
+            "Scroll - Change FOV\n"
+            "Space - Jump\n"
+            "Enter - Wireframe mode\n"
+        );
         ImGui::End();
         ImGUIcontext.Render();
 
