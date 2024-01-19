@@ -21,15 +21,15 @@ void main()
     uint y_packed = uint((data.x >> 10)&uint(1023));
     uint z_packed = uint((data.x >> 20)&uint(1023));
 
-    float x_whole = float(x_packed / 16.0);
+    float x_whole = float(x_packed) / 16.0;
     float x_fract = (x_packed - (x_whole * 16)) * ONE_SIXTEENTH;
     float x = x_whole + x_fract;
 
-    float y_whole = float(y_packed / 16.0);
+    float y_whole = float(y_packed) / 16.0;
     float y_fract = (y_packed - (y_whole * 16.0)) * ONE_SIXTEENTH;
     float y = y_whole + y_fract;
 
-    float z_whole = float(z_packed / 16.0);
+    float z_whole = float(z_packed) / 16.0;
     float z_fract = (z_packed - (z_whole * 16.0)) * ONE_SIXTEENTH;
     float z = z_whole + z_fract;
 
