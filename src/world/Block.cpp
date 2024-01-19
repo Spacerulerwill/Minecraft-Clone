@@ -12,7 +12,6 @@ BlockDataStruct BlockData[NUM_BLOCKS] = {};
 BlockSoundStruct BlockSounds[static_cast<std::size_t>(Sound::NUM_SOUNDS)] = {};
 BlockModel BlockModels[static_cast<std::size_t>(Model::NUM_MODELS)] = {};
 
-
 void LoadBlockData() {
     //Load block data from blocks.yml
     YAML::Node blocks_yml = YAML::LoadFile("data/blocks/blocks.yml");

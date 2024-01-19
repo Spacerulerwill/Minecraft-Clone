@@ -48,15 +48,12 @@ void Chunk::ReleaseMemory()
 void Chunk::CreateMesh() {
     // Erase previous data!
     std::vector<ChunkMesher::ChunkVertex>().swap(mVertices);
-    mVertices.reserve(CS_P3 * 3);
     mVertexCount = 0;
 
     std::vector<ChunkMesher::ChunkVertex>().swap(mWaterVertices);
-    mWaterVertices.reserve(CS_P3 * 3);
     mWaterVertexCount = 0;
 
     std::vector<ChunkMesher::ChunkVertex>().swap(mCustomModelVertices);
-    mCustomModelVertices.reserve(CS_P3 * 3);
     mCustomModelVertexCount = 0;
 
     // Mesh

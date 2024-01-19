@@ -36,6 +36,7 @@ enum class Sound : SoundID {
     GRAVEL,
     STONE,
     WOOD,
+    GLASS,
     NUM_SOUNDS
 };
 
