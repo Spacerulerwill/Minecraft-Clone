@@ -56,13 +56,39 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                 BlockSoundStruct soundData = BlockSounds[blockData.breakSoundID];
                 SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), irrklang::vec3df(camera.position));
             }
+
+            for (int i = 0; i < 3; i++) {
+                Vec3 chunkPos = raycast.chunk->GetPosition();
+
+                if (raycast.blockPos[i] == 1) {
+                    chunkPos[i] -= 1;
+                    auto chunk = world.GetChunk(chunkPos);
+                    if (chunk != nullptr) {
+                        Vec3 blockPos = raycast.blockPos;
+                        blockPos[i] = CS_P_MINUS_ONE;
+                        chunk->SetBlock(blockPos, AIR);
+                        chunk->CreateMesh();
+                        chunk->BufferData();
+                    }
+                }
+                else if (raycast.blockPos[i] == CS) {
+                    chunkPos[i] += 1;
+                    auto chunk = world.GetChunk(chunkPos);
+                    if (chunk != nullptr) {
+                        Vec3 blockPos = raycast.blockPos;
+                        blockPos[i] = 0;
+                        chunk->SetBlock(blockPos, AIR);
+                        chunk->CreateMesh();
+                        chunk->BufferData();
+                    }
+                }
+            }
         }
         break;
     }
     case GLFW_MOUSE_BUTTON_RIGHT: {
         if (action == GLFW_PRESS) {
             const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(world, camera.position, camera.front, 10.0f);
-
             if (raycast.chunk != nullptr && raycast.blockHit != AIR) {
                 iVec3 blockPlacePosition = raycast.blockPos + raycast.normal;
                 raycast.chunk->SetBlock(blockPlacePosition, selectedBlock);
