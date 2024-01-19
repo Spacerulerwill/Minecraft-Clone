@@ -123,7 +123,7 @@ void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std
         int axis = face / 2;
         int light_dir = face % 2 == 0 ? 1 : -1;
 
-        int merged_forward[CS_P2] = { 0 };
+        std::vector<int> merged_forward(CS_P2);
         for (int forward = 1; forward < CS_P - 1; forward++) {
             uint64_t bits_walking_right = 0;
             int merged_right[CS_P] = { 0 };
@@ -293,7 +293,7 @@ void ChunkMesher::BinaryGreedyMeshTransparentBlock(BlockID block, std::vector<Ch
         int axis = face / 2;
         int light_dir = face % 2 == 0 ? 1 : -1;
 
-        int merged_forward[CS_P2] = { 0 };
+        std::vector<int> merged_forward(CS_P2);
         for (int forward = 1; forward < CS_P - 1; forward++) {
             uint64_t bits_walking_right = 0;
             int merged_right[CS_P] = { 0 };
