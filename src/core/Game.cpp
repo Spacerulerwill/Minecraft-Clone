@@ -188,15 +188,17 @@ void Game::Run() {
             "Controls:\n"
             "Tab - Toggle mouse on screen\n"
             "Mouse - Look around\n"
+            "Scroll - Change FOV\n"
             "WASD - Move around\n"
+            "Shift - Sprint\n"
+            "Space - Jump\n"
             "Left Click - Break block\n"
             "Right click - Place block\n"
             "Middle click - Pick block\n"
             "X - Previous block\n"
-            "C - Next block"
-            "Scroll - Change FOV\n"
-            "Space - Jump\n"
-            "Enter - Wireframe mode\n"
+            "C - Next block\n"
+            "Z - Wireframe mode\n"
+            "Esc - Quit\n"
         );
         ImGui::End();
         ImGUIcontext.Render();
@@ -236,7 +238,7 @@ void Game::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action
         mWindow.SetShouldClose(GLFW_TRUE);
         break;
     }
-    case GLFW_KEY_ENTER: {
+    case GLFW_KEY_Z: {
         if (action == GLFW_PRESS) {
             mIsWireFrame = !mIsWireFrame;
         }
