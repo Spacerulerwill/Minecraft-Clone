@@ -61,6 +61,8 @@ struct ImGUIContext {
 };
 
 void Game::Run() {
+    srand(time(NULL));
+
     if (!gladLoadGL())
     {
         throw std::runtime_error("Failed to load GLAD!");
@@ -79,7 +81,9 @@ void Game::Run() {
     pMSAARenderer = std::make_unique<MSAARenderer>(SCREEN_WIDTH, SCREEN_HEIGHT);
     Shader framebufferShader("shaders/framebuffer.shader");
 
-    pWorld = std::make_unique<World>(0);
+    // Get random world seed and world
+    siv::PerlinNoise::seed_type seed = (static_cast<float>(rand()) / RAND_MAX) * std::numeric_limits<siv::PerlinNoise::seed_type>::max();
+    pWorld = std::make_unique<World>(seed);
 
     // Crosshair
     Shader crosshairShader = Shader("shaders/crosshair.shader");
@@ -188,6 +192,8 @@ void Game::Run() {
             "Left Click - Break block\n"
             "Right click - Place block\n"
             "Middle click - Pick block\n"
+            "X - Previous block\n"
+            "C - Next block"
             "Scroll - Change FOV\n"
             "Space - Jump\n"
             "Enter - Wireframe mode\n"

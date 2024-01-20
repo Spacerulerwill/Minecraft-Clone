@@ -39,7 +39,22 @@ void Player::ProcessKeyInput(const World& world, const Window& window, float del
 
 void Player::KeyCallback(int key, int scancode, int action, int mods)
 {
-
+    switch (key) {
+    case GLFW_KEY_X: {
+        selectedBlock--;
+        if (selectedBlock == AIR) {
+            selectedBlock = NUM_BLOCKS - 1;
+        }
+        break;
+    }
+    case GLFW_KEY_C: {
+        selectedBlock++;
+        if (selectedBlock == NUM_BLOCKS) {
+            selectedBlock = AIR + 1;
+        }
+        break;
+    }
+    }
 }
 
 void Player::MouseCallback(const World& world, int button, int action, int mods)
