@@ -44,7 +44,7 @@ void main()
 
 #shader fragment
 
-#version 450 core
+#version 330 core
 
 in float isFoliage;
 out vec4 FragColor;
