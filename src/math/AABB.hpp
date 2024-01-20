@@ -10,8 +10,9 @@ License: MIT
 class World;
 
 struct BoundingBox {
-    BoundingBox(Vec3 size) :size(size) {}
+    BoundingBox(Vec3 size, Vec3 localPos) :size(size), localPos(localPos) {}
     Vec3 size{};
+    Vec3 localPos{};
     bool IsColliding(const World& world, Vec3 center);
 };
 

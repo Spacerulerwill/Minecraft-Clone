@@ -138,7 +138,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                 if (chunkToPlaceIn != nullptr) {
                     chunkToPlaceIn->SetBlock(blockPlacePosition, selectedBlock);
 
-                    if (boundingBox.IsColliding(world, camera.position - Vec3{ 0.0f, 0.75f, 0.0f })) {
+                    if (boundingBox.IsColliding(world, camera.position)) {
                         chunkToPlaceIn->SetBlock(blockPlacePosition, AIR);
                         return;
                     }
@@ -245,7 +245,7 @@ void Player::Move(const World& world, PlayerMovement direction, float deltaTime)
     Vec3 newPosition = camera.position;
     for (int axis = 0; axis < 3; axis++) {
         newPosition[axis] += distanceToMove[axis];
-        if (boundingBox.IsColliding(world, newPosition - Vec3{ 0.0f, 0.75f, 0.0f })) {
+        if (boundingBox.IsColliding(world, newPosition)) {
             newPosition[axis] = camera.position[axis];
             if (axis == 1) {
                 yVelocity = 0.0f;

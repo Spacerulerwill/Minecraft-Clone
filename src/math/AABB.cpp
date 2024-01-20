@@ -8,8 +8,8 @@ License: MIT
 
 bool BoundingBox::IsColliding(const World& world, Vec3 center)
 {
-    iVec3 corner1 = GetWorldBlockPosFromGlobalPos(center - size);
-    iVec3 corner2 = GetWorldBlockPosFromGlobalPos(center + size);
+    iVec3 corner1 = GetWorldBlockPosFromGlobalPos(center + localPos - size);
+    iVec3 corner2 = GetWorldBlockPosFromGlobalPos(center + localPos + size);
 
     for (int x = corner1[0]; x <= corner2[0]; x++) {
         for (int y = corner1[1]; y <= corner2[1]; y++) {
