@@ -97,7 +97,6 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
             if (raycast.chunk != nullptr && raycast.blockHit != AIR) {
                 std::shared_ptr<Chunk> chunkToPlaceIn = nullptr;
                 iVec3 blockPlacePosition = raycast.blockPos + raycast.normal;
-                LOG_TRACE(std::string(blockPlacePosition));
 
                 for (int i = 0; i < 3; i++) {
                     if (blockPlacePosition[i] == CS_P_MINUS_ONE) {
@@ -137,6 +136,19 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
 
             place_block:
                 if (chunkToPlaceIn != nullptr) {
+                    chunkToPlaceIn->SetBlock(blockPlacePosition, selectedBlock);
+
+                    if (boundingBox.IsColliding(world, camera.position - Vec3{ 0.0f, 0.75f, 0.0f })) {
+                        chunkToPlaceIn->SetBlock(blockPlacePosition, AIR);
+                        return;
+                    }
+
+                    chunkToPlaceIn->CreateMesh();
+                    chunkToPlaceIn->BufferData();
+                    BlockDataStruct blockData = BlockData[selectedBlock];
+                    BlockSoundStruct soundData = BlockSounds[blockData.placeSoundID];
+                    SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), irrklang::vec3df(camera.position));
+
                     for (int i = 0; i < 3; i++) {
                         if (blockPlacePosition[i] == CS) {
                             Vec3 chunkPos = chunkToPlaceIn->GetPosition();
@@ -169,12 +181,6 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                             }
                         }
                     }
-                    chunkToPlaceIn->SetBlock(blockPlacePosition, selectedBlock);
-                    chunkToPlaceIn->CreateMesh();
-                    chunkToPlaceIn->BufferData();
-                    BlockDataStruct blockData = BlockData[selectedBlock];
-                    BlockSoundStruct soundData = BlockSounds[blockData.placeSoundID];
-                    SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), irrklang::vec3df(camera.position));
                 }
             }
         }
