@@ -43,7 +43,7 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
         if (chunk != nullptr) {
             // If we do hit a chunk, check if its air. If it's not then we stop the raycasting otherwise we continue
             BlockID block = chunk->GetBlock(blockPosInChunk);
-            if (block != AIR) {
+            if (!BlockData[block].canInteractThrough) {
                 return BlockRaycastResult{
                     chunk,
                     blockPosInChunk,
@@ -56,11 +56,12 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
         if (tx <= ty && tx <= tz)
         {
             if (i == iend) {
+                BlockID block = chunk != nullptr ? chunk->GetBlock(blockPosInChunk) : AIR;
                 return BlockRaycastResult{
                     chunk,
                     blockPosInChunk,
                     normal,
-                    AIR
+                    block
                 };
             };
             tx += deltatx;
@@ -72,11 +73,12 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
         else if (ty <= tz)
         {
             if (j == jend) {
+                BlockID block = chunk != nullptr ? chunk->GetBlock(blockPosInChunk) : AIR;
                 return BlockRaycastResult{
                     chunk,
                     blockPosInChunk,
-                    iVec3{0,0,0},
-                    AIR
+                    normal,
+                    block
                 };
             };
             ty += deltaty;
@@ -88,11 +90,12 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
         else
         {
             if (k == kend) {
+                BlockID block = chunk != nullptr ? chunk->GetBlock(blockPosInChunk) : AIR;
                 return BlockRaycastResult{
                     chunk,
                     blockPosInChunk,
                     normal,
-                    AIR
+                    block
                 };
             };
             tz += deltatz;

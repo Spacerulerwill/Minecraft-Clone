@@ -49,7 +49,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
         if (action == GLFW_PRESS) {
             const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(world, camera.position, camera.front, 10.0f);
 
-            if (raycast.chunk != nullptr && raycast.blockHit != AIR) {
+            if (raycast.chunk != nullptr && !BlockData[raycast.blockHit].canInteractThrough) {
                 // Update chunk block was broken in
                 raycast.chunk->SetBlock(raycast.blockPos, AIR);
                 raycast.chunk->CreateMesh();
@@ -94,7 +94,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
     case GLFW_MOUSE_BUTTON_RIGHT: {
         if (action == GLFW_PRESS) {
             const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(world, camera.position, camera.front, 10.0f);
-            if (raycast.chunk != nullptr && raycast.blockHit != AIR) {
+            if (raycast.chunk != nullptr && !BlockData[raycast.blockHit].canInteractThrough) {
                 std::shared_ptr<Chunk> chunkToPlaceIn = nullptr;
                 iVec3 blockPlacePosition = raycast.blockPos + raycast.normal;
 
@@ -136,10 +136,11 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
 
             place_block:
                 if (chunkToPlaceIn != nullptr) {
+                    BlockID blockBeforePlace = chunkToPlaceIn->GetBlock(blockPlacePosition);
                     chunkToPlaceIn->SetBlock(blockPlacePosition, selectedBlock);
 
                     if (boundingBox.IsColliding(world, camera.position)) {
-                        chunkToPlaceIn->SetBlock(blockPlacePosition, AIR);
+                        chunkToPlaceIn->SetBlock(blockPlacePosition, blockBeforePlace);
                         return;
                     }
 
@@ -189,7 +190,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
     case GLFW_MOUSE_BUTTON_3: {
         if (action == GLFW_PRESS) {
             const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(world, camera.position, camera.front, 10.0f);
-            if (raycast.chunk != nullptr && raycast.blockHit != AIR) {
+            if (raycast.chunk != nullptr && !BlockData[raycast.blockHit].canInteractThrough) {
                 selectedBlock = raycast.blockHit;
             }
         }

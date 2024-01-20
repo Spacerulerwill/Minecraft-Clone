@@ -66,8 +66,6 @@ void Game::Run() {
         throw std::runtime_error("Failed to load GLAD!");
     }
 
-    srand(time(NULL));
-
     SoundEngine::PreloadGameSounds();
     InitBlocks();
     ImGUIContext ImGUIcontext(mWindow.GetWindow());
@@ -150,13 +148,6 @@ void Game::Run() {
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
 
-        framebufferShader.Bind();
-        if (pWorld->GetBlock(pWorld->player.camera.position) == WATER) {
-            framebufferShader.SetVec3("screenColor", pWorld->mGrassColor);
-        }
-        else {
-            framebufferShader.SetVec3("screenColor", Vec3{ 1.0f, 1.0f, 1.0f });
-        }
         pMSAARenderer->Draw(framebufferShader);
 
         // Draw the crosshair

@@ -28,6 +28,7 @@ void LoadBlockData() {
         blockData.modelID = it->second["model_id"].as<ModelID>();
         blockData.opaque = it->second["opaque"].as<bool>();
         blockData.collision = it->second["collision"].as<bool>();
+        blockData.canInteractThrough = it->second["can_interact_through"].as<bool>();
 
         switch (uniqueFacesCount) {
         case 1: {

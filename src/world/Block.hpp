@@ -63,6 +63,7 @@ struct BlockDataStruct {
     ModelID modelID;
     bool opaque;
     bool collision;
+    bool canInteractThrough;
 };
 
 struct BlockSoundStruct {
