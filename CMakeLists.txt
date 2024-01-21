@@ -112,14 +112,23 @@ if(WIN32)
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 endif(WIN32)
 
-if(UNIX)
+if(LINUX)
     # copy dynamic libraries to executable location
     add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/lib/unix/dynamic $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+    ${CMAKE_SOURCE_DIR}/lib/linux/dynamic $<TARGET_FILE_DIR:${PROJECT_NAME}>)
     # link static libraries
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/lib/unix/libIrrKlang.so)
-endif(UNIX)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/lib/linux/libIrrKlang.so)
+endif(LINUX)
+
+if (APPLE)
+    # copy dynamic libraries to executable location
+    add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/lib/macos/dynamic $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+    # link static libraries
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/lib/macos/libirrklang.dylib)
+endif(APPLE)
 
 add_compile_definitions(GLFW_INCLUDE_NONE)
 
