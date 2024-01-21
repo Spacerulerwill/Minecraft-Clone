@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28.0)
+cmake_minimum_required(VERSION 3.22.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -70,11 +70,13 @@ add_executable(${PROJECT_NAME}
 add_subdirectory(submodules/glfw)
 add_subdirectory(submodules/spdlog)
 add_subdirectory(submodules/yaml-cpp)
+add_subdirectory(submodules/fmt)
 
 target_include_directories(${PROJECT_NAME} 
     SYSTEM PRIVATE submodules/glfw/include
     SYSTEM PRIVATE submodules/spdlog/include
     SYSTEM PRIVATE submodules/yaml-cpp/include
+    SYSTEM PRIVATE submodules/fmt/include
     SYSTEM PRIVATE include/imgui
     SYSTEM PRIVATE include
     PUBLIC src
@@ -84,12 +86,14 @@ target_link_directories(${PROJECT_NAME}
     PRIVATE submodules/glfw/src
     PRIVATE submodules/spdlog/src
     PRIVATE submodules/yaml-cpp/src
+    PRIVATE submodules/fmt/src
 )
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC spdlog
     PUBLIC glfw
     PUBLIC yaml-cpp
+    PUBLIC fmt
 )
 
 # copy our resources to executable location
@@ -120,7 +124,7 @@ endif(UNIX)
 add_compile_definitions(GLFW_INCLUDE_NONE)
 
 if(MSVC)
-  target_compile_options(${PROJECT_NAME} PRIVATE /W4 /wd4996 /external:W0)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /wd4996 /external:W0)
 else()
-  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 endif()

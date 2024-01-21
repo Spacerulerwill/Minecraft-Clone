@@ -6,7 +6,7 @@ License: MIT
 #include <world/World.hpp>
 #include <cmath>
 #include <util/Log.hpp>
-#include <format>
+#include <fmt/format.h>
 
 iVec3 GetWorldBlockPosFromGlobalPos(Vec3 globalPosition)
 {
@@ -51,7 +51,7 @@ World::World(siv::PerlinNoise::seed_type seed) : seed(seed)
     mPerlin.reseed(seed);
     LOG_INFO("Loading texture atlases...");
     for (std::size_t i = 0; i < MAX_ANIMATION_FRAMES; i++) {
-        mTextureAtlases[i] = TexArray2D(std::format("textures/atlases/atlas{}.png", i), TEXTURE_SIZE, GL_TEXTURE0);
+        mTextureAtlases[i] = TexArray2D(fmt::format("textures/atlases/atlas{}.png", i), TEXTURE_SIZE, GL_TEXTURE0);
     }
 }
 

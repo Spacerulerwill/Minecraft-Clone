@@ -12,7 +12,7 @@ License: MIT
 #include <string>
 #include <sstream>
 #include <vector>
-#
+#include <fmt/format.h>
 
 Shader::Shader(std::string filepath) : mFilepath(filepath) {
     ShaderSources shaders = ParseShader(filepath);
@@ -82,7 +82,7 @@ GLuint Shader::CompileShader(GLenum type, std::string& source) {
         std::vector<char> infoLog(length);
         glGetShaderInfoLog(id, length, &length, infoLog.data());
         glDeleteShader(id);
-        throw std::runtime_error(std::format("Failed to compile {} shader at path: {}\n{}", type == GL_VERTEX_SHADER ? "vertex" : "fragment", mFilepath, infoLog.data()));
+        throw std::runtime_error(fmt::format("Failed to compile {} shader at path: {}\n{}", type == GL_VERTEX_SHADER ? "vertex" : "fragment", mFilepath, infoLog.data()));
     }
     return id;
 }

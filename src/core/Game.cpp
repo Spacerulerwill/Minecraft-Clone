@@ -12,7 +12,7 @@ License: MIT
 #include <math/Frustum.hpp>
 #include <glad/glad.h>
 #include <stdexcept>
-#include <format>
+#include <fmt/format.h>
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
@@ -178,12 +178,12 @@ void Game::Run() {
         iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(blockPos);
         iVec3 chunkLocalBlockPos = GetChunkBlockPosFromGlobalBlockPos(blockPos);
 
-        ImGui::Text(std::format("Block coordinates: {}", std::string(blockPos)).c_str());
-        ImGui::Text(std::format("Chunk local block coordinates: {}", std::string(chunkLocalBlockPos)).c_str());
-        ImGui::Text(std::format("Chunk coordinates: {}", std::string(chunkPos)).c_str());
-        ImGui::Text(std::format("FPS: {}", static_cast<int>(1.0f / mDeltaTime)).c_str());
-        ImGui::Text(std::format("Potential Draw Calls: {}", potentialDrawCalls).c_str());
-        ImGui::Text(std::format("Total Draw Calls: {}", totalDrawCalls).c_str());
+        ImGui::Text(fmt::format("Block coordinates: {}", std::string(blockPos)).c_str());
+        ImGui::Text(fmt::format("Chunk local block coordinates: {}", std::string(chunkLocalBlockPos)).c_str());
+        ImGui::Text(fmt::format("Chunk coordinates: {}", std::string(chunkPos)).c_str());
+        ImGui::Text(fmt::format("FPS: {}", static_cast<int>(1.0f / mDeltaTime)).c_str());
+        ImGui::Text(fmt::format("Potential Draw Calls: {}", potentialDrawCalls).c_str());
+        ImGui::Text(fmt::format("Total Draw Calls: {}", totalDrawCalls).c_str());
         ImGui::Text(
             "Controls:\n"
             "Tab - Toggle mouse on screen\n"

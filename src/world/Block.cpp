@@ -5,8 +5,8 @@ License: MIT
 
 #include <world/Block.hpp>
 #include <yaml-cpp/yaml.h>
-#include <format>
 #include <util/Log.hpp>
+#include <fmt/format.h>
 
 BlockDataStruct BlockData[NUM_BLOCKS] = {};
 BlockSoundStruct BlockSounds[static_cast<std::size_t>(Sound::NUM_SOUNDS)] = {};
@@ -86,7 +86,7 @@ void LoadBlockSoundData() {
         std::size_t count = it->second.as<std::size_t>();
         std::vector<std::string> paths;
         for (std::size_t i = 0; i < count; i++) {
-            paths.emplace_back(std::format("sound/block/{}{}.ogg", soundName, i + 1));
+            paths.emplace_back(fmt::format("sound/block/{}{}.ogg", soundName, i + 1));
         }
         blockSound.sounds = std::move(paths);
         BlockSounds[index] = std::move(blockSound);
