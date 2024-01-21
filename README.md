@@ -1,5 +1,7 @@
-# Building - 64 bit only (CMake)
+# Minecraft Clone (Craft++)
+A simple minecraft clone made in C++. Currently only supports Windows 10/11 and linux.
 
+# Building - 64 bit only (CMake, C++20 compiler)
 ## Windows
 
     git clone https://github.com/Spacerulerwill/Minecraft-Clone.git --recursive
