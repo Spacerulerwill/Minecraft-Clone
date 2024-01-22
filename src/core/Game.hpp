@@ -18,7 +18,7 @@ constexpr int SCREEN_HEIGHT = 720;
 
 class Game {
 private:
-    Window mWindow = Window(this, SCREEN_WIDTH, SCREEN_HEIGHT, "Craft++");
+    Window mWindow = Window(this, SCREEN_WIDTH, SCREEN_HEIGHT, "Craft++", false);
     std::unique_ptr<MSAARenderer> pMSAARenderer = nullptr;
     std::unique_ptr<World> pWorld = nullptr;
     void ProcessKeyInput();

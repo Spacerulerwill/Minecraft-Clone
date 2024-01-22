@@ -79,3 +79,11 @@ tall_grass:
   opaque: false
   collision: false
   can_interact_through: false
+sand:
+  unique_faces: 1
+  break_sound_id: 1
+  place_sound_id: 1
+  model_id: 0
+  opaque: true
+  collision: true
+  can_interact_through: false

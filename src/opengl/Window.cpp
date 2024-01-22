@@ -7,12 +7,12 @@ License: MIT
 #include <core/Game.hpp>
 #include <stdexcept>
 
-Window::Window(Game* app, int width, int height, const char* name) {
+Window::Window(Game* app, int width, int height, const char* name, bool initiallyVisible) {
     // Create our window, and add its callbacks
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+	glfwWindowHint(GLFW_VISIBLE, initiallyVisible ? GLFW_TRUE : GLFW_FALSE);
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);

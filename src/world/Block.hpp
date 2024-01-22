@@ -27,6 +27,7 @@ enum Block : BlockID {
     ROSE,
     PINK_TULIP,
     TALL_GRASS,
+	SAND,
     NUM_BLOCKS
 };
 

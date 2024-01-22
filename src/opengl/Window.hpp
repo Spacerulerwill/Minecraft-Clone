@@ -14,7 +14,7 @@ class Window {
 private:
     GLFWwindow* pWindow = nullptr;
 public:
-    Window(Game* app, int width, int height, const char* title);
+    Window(Game* app, int width, int height, const char* title, bool initially_visible);
     ~Window();
     void Bind() const;
     void Unbind() const;

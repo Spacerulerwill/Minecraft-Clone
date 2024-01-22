@@ -55,6 +55,9 @@ void ChunkStack::GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::Pe
                 }
                 SetBlock(iVec3{ x,height - 1,z }, DIRT);
             }
+			else if (height < WATER_LEVEL + 2) {
+				SetBlock(iVec3{x, height-1, z}, SAND);
+			}
             else {
                 SetBlock(iVec3{ x,height - 1,z }, GRASS);
 
