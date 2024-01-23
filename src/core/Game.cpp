@@ -83,6 +83,7 @@ void Game::Run() {
 
     // Get random world seed and world
     siv::PerlinNoise::seed_type seed = (static_cast<float>(rand()) / RAND_MAX) * std::numeric_limits<siv::PerlinNoise::seed_type>::max();
+	LOG_INFO("Generating world with seed {}", seed);
     pWorld = std::make_unique<World>(seed);
 
     // Crosshair

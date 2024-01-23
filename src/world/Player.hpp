@@ -24,7 +24,7 @@ enum class PlayerMovement {
 };
 
 struct Player {
-    BlockID selectedBlock = SAND;
+    BlockID selectedBlock = SUGARCANE;
     bool canJump = false;
     float yVelocity = 0.0f;
     float movementSpeed = 5.0f;
