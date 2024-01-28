@@ -12,6 +12,7 @@ License: MIT
 #include <math/Frustum.hpp>
 #include <glad/glad.h>
 #include <stdexcept>
+#include <filesystem>
 #include <fmt/format.h>
 
 #include <imgui/imgui.h>
@@ -61,6 +62,7 @@ struct ImGUIContext {
 };
 
 void Game::Run() {
+	std::filesystem::create_directory("worlds");
     srand(time(NULL));
 	mWindow.Bind();
     if (!gladLoadGL())

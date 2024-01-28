@@ -16,6 +16,7 @@ License: MIT
 
 int main() {
     Log::GetLogger();
+	SoundEngine::PreloadGameSounds();
 	
     try {
 		char choice;
