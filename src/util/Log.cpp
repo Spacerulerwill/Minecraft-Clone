@@ -15,7 +15,7 @@ LogWrapper::LogWrapper() {
     sLogger = spdlog::stdout_color_mt("Craft++");
     sLogger->set_level(spdlog::level::trace);
 
-    sLogger->trace("Logger initialised");
+    sLogger->info("Logger initialised");
 }
 
 LogWrapper::~LogWrapper() {

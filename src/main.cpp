@@ -10,29 +10,50 @@ License: MIT
 #include <core/Game.hpp>
 #include <util/Log.hpp>
 #include <core/SoundEngine.hpp>
-
-struct GLFWContext {
-    GLFWContext() {
-        LOG_INFO("Initialising GLFW");
-        if (!glfwInit()) {
-            throw std::runtime_error("Failed to initialise GLFW");
-        }
-    }
-
-    ~GLFWContext() {
-        LOG_INFO("Terminating GLFW");
-        glfwTerminate();
-    }
-};
+#include <string>
+#include <iostream>
+#include <limits>
 
 int main() {
     Log::GetLogger();
-
+	SoundEngine::PreloadGameSounds();
+	
     try {
-        GLFWContext context;
-        SoundEngine::GetEngine();
-        Game game;
-        game.Run();
+		char choice;
+		do {
+			std::cout << R"(
+  ____            __ _      
+ / ___|_ __ __ _ / _| |_  _     _   
+| |   | '__/ _` | |_| __|| |_ _| |_ 
+| |___| | | (_| |  _| ||_   _|_   _|
+\____|_|  \__,_|_|  \__||_|   |_|  
+
+Choose an option:
+C - create world
+L - load world
+D - delete world
+Q - quit
+Enter your choice: )";
+
+			choice = std::tolower(std::cin.get());
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			std::cin.clear();
+
+			switch (choice) {
+				case 'l': {
+					Game game;
+					game.Run();
+					break;
+				}
+				case 'q': {
+					break;
+				}
+				default: {
+					std::cout << "Invalid input!" << std::endl;
+					break;
+				}
+			}
+		} while (choice != 'q');
     }
     catch (const std::runtime_error& e) {
         LOG_CRITICAL(e.what());

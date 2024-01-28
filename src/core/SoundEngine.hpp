@@ -10,6 +10,7 @@ License: MIT
 #include <stdexcept>
 #include <util/Log.hpp>
 #include <memory>
+#include <string>
 
 struct irrKlangEngineWrapper {
     irrklang::ISoundEngine* engine = nullptr;
@@ -41,6 +42,17 @@ public:
     SoundEngine(const SoundEngine&& arg) = delete;
     SoundEngine& operator=(const SoundEngine& arg) = delete;
     SoundEngine& operator=(const SoundEngine&& arg) = delete;
+};
+
+struct ScopedLoopingSound {
+	irrklang::ISound* sound = nullptr;
+	ScopedLoopingSound(const char* dir) {
+		sound = SoundEngine::GetEngine()->play2D(dir, true, false, true);
+	}
+	~ScopedLoopingSound() {
+		sound->stop();
+		sound->drop();
+	}
 };
 
 #endif // !SOUND_ENGINE_H

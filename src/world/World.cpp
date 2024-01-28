@@ -53,6 +53,42 @@ World::World(siv::PerlinNoise::seed_type seed) : seed(seed)
     for (std::size_t i = 0; i < MAX_ANIMATION_FRAMES; i++) {
         mTextureAtlases[i] = TexArray2D(fmt::format("textures/atlases/atlas{}.png", i), TEXTURE_SIZE, GL_TEXTURE0);
     }
+	
+	// Load spawn chunks
+	Vec3 playerPos = player.camera.position;
+    iVec2 playerChunkPos{
+        static_cast<int>(floor(playerPos[0]) / CS),
+        static_cast<int>(floor(playerPos[2]) / CS)
+    };
+
+	LOG_INFO("Loading spawn chunks for world with seed {}...", seed);
+	for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
+        for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
+			iVec2 pos = playerChunkPos + iVec2{ x,z };
+			auto emplace = mChunkStacks.emplace(pos, pos);
+            ChunkStack& chunkStack = emplace.first->second;
+			mLoadPool.push_task([&chunkStack, this] {
+				chunkStack.GenerateTerrain(this->seed, mPerlin);
+				for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+					std::shared_ptr<Chunk> chunk = (*it);
+					chunk->CreateMesh();
+				}
+			});
+		}
+	}
+	mLoadPool.wait_for_tasks();
+
+	for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
+        for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
+			auto find = mChunkStacks.find(iVec2{x,z});
+			ChunkStack& stack = find->second;
+			for (auto it = stack.begin(); it != stack.end(); ++it) {
+				std::shared_ptr<Chunk> chunk = *it;
+				chunk->BufferData();
+			}
+		}
+	}
+
 }
 
 void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
@@ -135,39 +171,41 @@ void World::GenerateChunks()
     std::size_t chunksCreated = 0;
     for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
         for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
-            iVec2 pos = playerChunkPos + iVec2{ x,z };
-            auto find = mChunkStacks.find(pos);
-            if (find == mChunkStacks.end()) {
-                if (chunksCreated < mBufferPerFrame) {
-                    auto emplace = mChunkStacks.emplace(pos, pos);
-                    ChunkStack& chunkStack = emplace.first->second;
-                    chunkStack.isBeingmMeshed = true;
-                    mLoadPool.push_task([&chunkStack, this] {
-                        chunkStack.GenerateTerrain(seed, mPerlin);
-                        for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
-                            std::shared_ptr<Chunk> chunk = (*it);
-                            chunk->CreateMesh();
-                        }
-                        chunkStack.isBeingmMeshed = false;
-                        });
-                    chunksCreated++;
-                }
-            }
-            else {
-                ChunkStack& stack = find->second;
-                for (auto it = stack.begin(); it != stack.end(); ++it) {
-                    std::shared_ptr<Chunk> chunk = *it;
-                    if (chunksBuffered < mBufferPerFrame) {
-                        if (chunk->needsBuffering) {
-                            chunksBuffered++;
-                            chunk->BufferData();
-                        }
-                    }
-                    else {
-                        return;
-                    }
-                }
-            }
+			if (chunksBuffered < mBufferPerFrame && chunksCreated < mBufferPerFrame) {
+				iVec2 pos = playerChunkPos + iVec2{ x,z };
+				auto find = mChunkStacks.find(pos);
+				if (find == mChunkStacks.end()) {
+					if (chunksCreated < mBufferPerFrame) {
+						auto emplace = mChunkStacks.emplace(pos, pos);
+						ChunkStack& chunkStack = emplace.first->second;
+						chunkStack.isBeingmMeshed = true;
+						mLoadPool.push_task([&chunkStack, this] {
+								chunkStack.GenerateTerrain(seed, mPerlin);
+								for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+								std::shared_ptr<Chunk> chunk = (*it);
+								chunk->CreateMesh();
+								}
+								chunkStack.isBeingmMeshed = false;
+								});
+						chunksCreated++;
+					}
+				}
+				else {
+					ChunkStack& stack = find->second;
+					for (auto it = stack.begin(); it != stack.end(); ++it) {
+						std::shared_ptr<Chunk> chunk = *it;
+						if (chunksBuffered < mBufferPerFrame) {
+							if (chunk->needsBuffering) {
+								chunksBuffered++;
+								chunk->BufferData();
+							}
+						}
+						else {
+							return;
+						}
+					}
+				}
+			}
         }
     }
 }

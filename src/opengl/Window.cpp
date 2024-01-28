@@ -22,7 +22,6 @@ Window::Window(Game* app, int width, int height, const char* name, bool initiall
 
     if (pWindow == NULL)
     {
-        glfwTerminate();
         throw std::runtime_error("Failed to create GLFW Window");
     }
 
@@ -32,7 +31,6 @@ Window::Window(Game* app, int width, int height, const char* name, bool initiall
     glfwSetScrollCallback(pWindow, scroll_callback);
     glfwSetKeyCallback(pWindow, key_callback);
     glfwSetWindowUserPointer(pWindow, reinterpret_cast<void*>(app));
-    glfwMakeContextCurrent(pWindow);
 
     SetMouseDisabled();
 }

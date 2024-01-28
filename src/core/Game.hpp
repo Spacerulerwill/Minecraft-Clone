@@ -12,12 +12,29 @@ License: MIT
 #include <opengl/MSAARenderer.hpp>
 #include <core/Camera.hpp>
 #include <world/World.hpp>
+#include <irrKlang/irrKlang.h>
+#include <util/Log.hpp>
 
 constexpr int SCREEN_WIDTH = 1280;
 constexpr int SCREEN_HEIGHT = 720;
 
+struct GLFWContext {
+    GLFWContext() {
+        LOG_INFO("Initialising GLFW");
+        if (!glfwInit()) {
+            throw std::runtime_error("Failed to initialise GLFW");
+        }
+    }
+
+    ~GLFWContext() {
+        LOG_INFO("Terminating GLFW");
+        glfwTerminate();
+    }
+};
+
 class Game {
 private:
+	GLFWContext glfwContext;
     Window mWindow = Window(this, SCREEN_WIDTH, SCREEN_HEIGHT, "Craft++", false);
     std::unique_ptr<MSAARenderer> pMSAARenderer = nullptr;
     std::unique_ptr<World> pWorld = nullptr;

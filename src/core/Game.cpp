@@ -62,13 +62,12 @@ struct ImGUIContext {
 
 void Game::Run() {
     srand(time(NULL));
-
+	mWindow.Bind();
     if (!gladLoadGL())
     {
         throw std::runtime_error("Failed to load GLAD!");
     }
 
-    SoundEngine::PreloadGameSounds();
     InitBlocks();
     ImGUIContext ImGUIcontext(mWindow.GetWindow());
 
@@ -83,7 +82,6 @@ void Game::Run() {
 
     // Get random world seed and world
     siv::PerlinNoise::seed_type seed = (static_cast<float>(rand()) / RAND_MAX) * std::numeric_limits<siv::PerlinNoise::seed_type>::max();
-	LOG_INFO("Generating world with seed {}", seed);
     pWorld = std::make_unique<World>(seed);
 
     // Crosshair
@@ -107,8 +105,8 @@ void Game::Run() {
     bufferLayout2.AddAttribute<float>(4);
     VertexArray crosshairVAO;
     crosshairVAO.AddBuffer(crosshairVBO, bufferLayout2);
-
-    SoundEngine::GetEngine()->play2D("sound/music.mp3", true);
+	
+	auto backgroundMusic = ScopedLoopingSound("sound/music.mp3"); 
     mWindow.SetVisible();
 
     while (!mWindow.ShouldClose()) {
