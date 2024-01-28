@@ -205,6 +205,8 @@ void World::GenerateChunks()
 						}
 					}
 				}
+			} else {
+				return;
 			}
         }
     }

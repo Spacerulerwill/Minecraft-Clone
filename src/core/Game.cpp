@@ -81,8 +81,11 @@ void Game::Run() {
     Shader framebufferShader("shaders/framebuffer.shader");
 
     // Get random world seed and world
-    siv::PerlinNoise::seed_type seed = (static_cast<float>(rand()) / RAND_MAX) * std::numeric_limits<siv::PerlinNoise::seed_type>::max();
-    pWorld = std::make_unique<World>(seed);
+	std::random_device rd; // obtain a random number from hardware
+    std::mt19937 gen(rd()); // seed the generator
+    std::uniform_int_distribution<siv::PerlinNoise::seed_type> distr(0, std::numeric_limits<siv::PerlinNoise::seed_type>::max());
+
+    pWorld = std::make_unique<World>(distr(gen));
 
     // Crosshair
     Shader crosshairShader = Shader("shaders/crosshair.shader");

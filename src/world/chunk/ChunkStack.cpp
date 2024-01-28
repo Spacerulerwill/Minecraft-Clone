@@ -37,7 +37,7 @@ size_t ChunkStack::size() const {
 }
 
 void ChunkStack::GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin) {
-    std::default_random_engine gen(seed);
+    std::mt19937 gen(seed);
     std::uniform_real_distribution<float> distribution(0.0, 1.0);
 
     for (std::size_t i = 0; i < mChunks.size(); i++) {
