@@ -24,16 +24,6 @@ License: MIT
 #define GREEN "\x1b[0;32m"
 #define RESET "\x1b[0m"
 
-#ifdef __linux__ 
-    #define WIPE_TERMINAL "\x1B[2J\x1B[H"
-    #define SWITCH_TO_ALT_TERMINAL "\u001B[?1049h" 
-    #define RESTORE_TERMINAL "\u001B[?1049l" 
-#else
-    #define WIPE_TERMINAL "\033[2J\033[H"
-    #define SWITCH_TO_ALT_TERMINAL ""
-    #define RESTORE_TERMINAL "" 
-#endif // __linux__
-
 struct MenuOptionResult {
     bool success;
     std::string msg;
@@ -148,8 +138,6 @@ MenuOptionResult load_world() {
 }
 
 int main() {
-	std::cout << SWITCH_TO_ALT_TERMINAL;
-	std::cout <<  WIPE_TERMINAL; 
     Log::GetLogger();
 	SoundEngine::PreloadGameSounds();
 	std::filesystem::create_directory("worlds");
@@ -204,27 +192,22 @@ Q - Quit
 					break;
 				}
 			}
-			std::cout << WIPE_TERMINAL;
 		} while (choice != 'q');
     }
     catch (const std::runtime_error& e) {
         LOG_CRITICAL(e.what());
-        goto fail;
+        return EXIT_FAILURE;
     }
     catch (const std::exception& e) {
         LOG_CRITICAL(e.what());
-		goto fail;
+        return EXIT_FAILURE;
     }
     catch (...) {
         LOG_CRITICAL("Unhandled exception caught!");
-		goto fail; 
+        return EXIT_FAILURE;
     }
-	std::cout << RESTORE_TERMINAL;
 	LOG_INFO("Exited successfully");
     return EXIT_SUCCESS;
-fail:
-	std::cout << RESTORE_TERMINAL;
-	return EXIT_FAILURE;
 }
 
 /*
