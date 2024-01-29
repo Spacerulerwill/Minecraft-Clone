@@ -56,6 +56,7 @@ add_executable(${PROJECT_NAME}
     src/math/Frustum.hpp
     src/util/Log.cpp
     src/util/Log.hpp
+	src/util/IO.hpp
     src/util/Concepts.hpp
     lib/glad.c
     lib/imgui/imgui_impl_glfw.cpp

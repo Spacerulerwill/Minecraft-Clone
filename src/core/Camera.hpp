@@ -28,8 +28,6 @@ private:
 
     float near = 0.1f;
     float far = 5000.0f;
-    float pitch = 0.0f;
-    float yaw = -90.0f;
     float aspect = 16.0f / 9.0f;
     float FOV = 90.0f;
 public:
@@ -56,6 +54,9 @@ public:
     Vec3 up{};
     Vec3 right{};
     Vec3 worldUp{ 0.0f, 1.0f, 0.0f };
+
+	float pitch = 0.0f;
+	float yaw = -90.0f;
 
     Mat4 perspectiveMatrix = perspective(radians(FOV), aspect, near, far);
     Mat4 GetViewMatrix() const;

@@ -54,7 +54,7 @@ public:
     void GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     void GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
     void GLFWFramebufferResizeCallback(GLFWwindow* window, int width, int height);
-    void Run();
+    void Run(std::string worldDirectory);
 };
 
 #endif // !GAME_H

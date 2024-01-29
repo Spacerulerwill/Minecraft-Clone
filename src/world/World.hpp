@@ -18,12 +18,24 @@ License: MIT
 #include <unordered_map>
 #include <BS_thread_pool.hpp>
 #include <array>
+#include <stdexcept>
 
 iVec3 GetWorldBlockPosFromGlobalPos(Vec3 globalPosition);
 iVec3 GetChunkPosFromGlobalBlockPos(iVec3 globalBlockPos);
 iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 pos);
 
 constexpr const float GRAVITY = 0.5f;
+
+struct WorldSave {
+	siv::PerlinNoise::seed_type seed;
+};
+
+// Thrown when a world fails to load
+class WorldCorruptionException : public std::runtime_error
+{
+public:
+    WorldCorruptionException(const std::string& what) : std::runtime_error(what) {}
+};
 
 class World {
 private:
@@ -39,8 +51,10 @@ private:
     std::size_t currentAtlasID{ 0 };
     double lastAtlasSwitch = 0.0f;
     siv::PerlinNoise::seed_type seed;
+	std::string worldDirectory;
 public:
-    World(siv::PerlinNoise::seed_type seed);
+    World(std::string worldDirectory);
+	~World();
     Vec3 mWaterColor = Vec3{ 68.0f, 124.0f, 245.0f } / 255.0f;
     Vec3 mFoliageColor = Vec3{ 145.0f, 189.0f, 89.0f } / 255.0f;
     Vec3 mGrassColor = Vec3{ 145.0f, 189.0f, 89.0f } / 255.0f;

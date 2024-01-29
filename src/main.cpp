@@ -8,15 +8,94 @@ License: MIT
 
 #include <GLFW/glfw3.h>
 #include <core/Game.hpp>
+#include <world/World.hpp>
 #include <util/Log.hpp>
+#include <util/IO.hpp>
 #include <core/SoundEngine.hpp>
 #include <string>
 #include <iostream>
 #include <limits>
+#include <filesystem>
+#include <functional>
+#include <fmt/format.h>
+#include <PerlinNoise.hpp>
+
+void create_world() {
+	// Get name of new world
+	std::string worldName;
+	std::cout << "Enter new world name: ";
+	std::cin >> worldName;
+	std::string worldDirectory = fmt::format("worlds/{}", worldName);
+
+	// Check it doesn't exist
+	if (std::filesystem::is_directory(worldDirectory)) {
+		std::cout << "World already exists!";
+		return;
+	}
+
+	// ask user for seed
+	std::string seedString;
+	std::cout << "Enter world seed: ";
+	std::cin >> seedString;
+	std::hash<std::string> hasher;
+    auto seed = static_cast<siv::PerlinNoise::seed_type>(hasher(seedString));
+
+	// If it doesn't exist, create world
+	std::filesystem::create_directory(worldDirectory);
+	std::filesystem::create_directory(fmt::format("{}/chunk_stacks", worldDirectory));
+	WorldSave worldSave {
+		.seed = seed
+	};
+	WriteStructToDisk(fmt::format("{}/world.data", worldDirectory), worldSave);
+	PlayerSave playerSave {
+		.pos = Vec3{0.0f, 1000.0f, 0.0f},
+		.pitch = 0.0f,
+		.yaw = -90.0f
+	};
+	WriteStructToDisk(fmt::format("{}/player.data", worldDirectory), playerSave);
+	std::cout << "Created new world!";
+}
+
+void delete_world() {
+	// Get name of world to delete
+	std::string worldName;
+	std::cout << "Enter name of world to delete: ";
+	std::cin >> worldName;
+	std::string worldDirectory = fmt::format("worlds/{}", worldName);
+
+	// Check world to delete exists
+	if (!std::filesystem::is_directory(worldDirectory)) {
+		std::cout << "World doesn't exist!";
+		return;
+	}
+
+	// Remove all its files
+	std::filesystem::remove_all(worldDirectory);
+	std::cout << "World deleted!" << std::endl;
+}
+
+void load_world() {
+	std::string worldName;
+	std::cout << "Enter world name: ";
+	std::cin >> worldName;
+	std::string worldDirectory = fmt::format("worlds/{}", worldName);
+	if (!std::filesystem::is_directory(worldDirectory)) {
+		std::cout << "World does not exist!";
+		return;
+	}
+
+	try {
+		Game game;
+		game.Run(worldDirectory);
+	} catch (const WorldCorruptionException& e) {
+		std::cout << e.what();
+	}
+}
 
 int main() {
     Log::GetLogger();
 	SoundEngine::PreloadGameSounds();
+	std::filesystem::create_directory("worlds");
 	
     try {
 		char choice;
@@ -29,20 +108,26 @@ int main() {
  \____|_|  \__,_|_|  \__||_|   |_|  
 
 Choose an option:
-C - create world
-L - load world
-D - delete world
-Q - quit
+C - Create world
+L - Load world
+D - Delete world
+Q - Quit
 Enter your choice: )";
-
-			choice = std::tolower(std::cin.get());
-			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-			std::cin.clear();
+			
+			std::cin >> choice;
+			choice = std::tolower(choice);
 
 			switch (choice) {
+				case 'c': {
+					create_world();
+					break;
+				}
 				case 'l': {
-					Game game;
-					game.Run();
+					load_world();	
+					break;
+				}
+				case 'd': {
+					delete_world();
 					break;
 				}
 				case 'q': {
@@ -53,6 +138,7 @@ Enter your choice: )";
 					break;
 				}
 			}
+
 		} while (choice != 'q');
     }
     catch (const std::runtime_error& e) {

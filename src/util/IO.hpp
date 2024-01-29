@@ -3,48 +3,33 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#ifndef PLAYER_H
-#define PLAYER_H
+#ifndef IO_H
+#define IO_H
 
-#include <core/Camera.hpp>
-#include <opengl/Window.hpp>
-#include <math/AABB.hpp>
-#include <world/Block.hpp>
+#include <fstream>
+#include <string>
+#include <world/World.hpp>
+#include <fmt/format.h>
 
-class World;
-
-enum class PlayerMovement {
-    FORWARD,
-    BACKWARD,
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN,
-    GRAVITY
+template<typename T>
+void WriteStructToDisk(const std::string& file_name, T& data){
+	std::ofstream out;
+	out.open(file_name,std::ios::binary | std::ios::trunc);
+	out.write(reinterpret_cast<char*>(&data), sizeof(T));
 };
 
-struct PlayerSave {
-	Vec3 pos;
-	float pitch;
-	float yaw;
+template<typename T>
+void ReadStructFromDisk(const std::string& file_name, T& data)
+{
+	std::ifstream in;
+	in.open(file_name,std::ios::binary);
+	if (in.fail()) {
+		throw WorldCorruptionException(fmt::format("Failed to read data from {}", file_name));
+	}
+	in.read(reinterpret_cast<char*>(&data), sizeof(T));
 };
 
-struct Player {
-    BlockID selectedBlock = SUGARCANE;
-    bool canJump = false;
-    float yVelocity = 0.0f;
-    float movementSpeed = 5.0f;
-    Camera camera{ Vec3{ 0.0f, 0.0f, 0.0f} };
-    BoundingBox boundingBox{ Vec3{0.4f, 0.95f, 0.4f}, Vec3{0.0f, -0.75f, 0.0f} };
-    void ProcessKeyInput(const World& world, const Window& window, float deltaTime);
-    void KeyCallback(int key, int scancode, int action, int mods);
-    void MouseCallback(const World& world, int button, int action, int mods);
-    void Move(const World& world, PlayerMovement direction, float deltaTime);
-    void ApplyGravity(const World&, float deltaTime);
-};
-
-
-#endif // !PLAYER_H
+#endif // !IO_H
 
 /*
 MIT License

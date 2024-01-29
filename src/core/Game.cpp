@@ -12,7 +12,6 @@ License: MIT
 #include <math/Frustum.hpp>
 #include <glad/glad.h>
 #include <stdexcept>
-#include <filesystem>
 #include <fmt/format.h>
 
 #include <imgui/imgui.h>
@@ -61,8 +60,7 @@ struct ImGUIContext {
     }
 };
 
-void Game::Run() {
-	std::filesystem::create_directory("worlds");
+void Game::Run(std::string worldDirectory) {
     srand(time(NULL));
 	mWindow.Bind();
     if (!gladLoadGL())
@@ -82,12 +80,7 @@ void Game::Run() {
     pMSAARenderer = std::make_unique<MSAARenderer>(SCREEN_WIDTH, SCREEN_HEIGHT);
     Shader framebufferShader("shaders/framebuffer.shader");
 
-    // Get random world seed and world
-	std::random_device rd; // obtain a random number from hardware
-    std::mt19937 gen(rd()); // seed the generator
-    std::uniform_int_distribution<siv::PerlinNoise::seed_type> distr(0, std::numeric_limits<siv::PerlinNoise::seed_type>::max());
-
-    pWorld = std::make_unique<World>(distr(gen));
+    pWorld = std::make_unique<World>(worldDirectory);
 
     // Crosshair
     Shader crosshairShader = Shader("shaders/crosshair.shader");

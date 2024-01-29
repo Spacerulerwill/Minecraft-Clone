@@ -7,6 +7,7 @@ License: MIT
 #include <cmath>
 #include <util/Log.hpp>
 #include <fmt/format.h>
+#include <util/IO.hpp>
 
 iVec3 GetWorldBlockPosFromGlobalPos(Vec3 globalPosition)
 {
@@ -46,9 +47,22 @@ iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 globalBlockPos)
 }
 
 
-World::World(siv::PerlinNoise::seed_type seed) : seed(seed)
+World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
 {
+	// Load world data
+	WorldSave worldSave;
+	ReadStructFromDisk(fmt::format("{}/world.data", worldDirectory), worldSave);
+	seed = worldSave.seed;
     mPerlin.reseed(seed);
+	
+	// Load player data
+	PlayerSave playerSave;
+	ReadStructFromDisk(fmt::format("{}/player.data", worldDirectory), playerSave);
+	player.camera.position = playerSave.pos;
+	player.camera.pitch = playerSave.pitch;
+	player.camera.yaw = playerSave.yaw;
+	
+	// Load texture atlases
     LOG_INFO("Loading texture atlases...");
     for (std::size_t i = 0; i < MAX_ANIMATION_FRAMES; i++) {
         mTextureAtlases[i] = TexArray2D(fmt::format("textures/atlases/atlas{}.png", i), TEXTURE_SIZE, GL_TEXTURE0);
@@ -61,7 +75,7 @@ World::World(siv::PerlinNoise::seed_type seed) : seed(seed)
         static_cast<int>(floor(playerPos[2]) / CS)
     };
 
-	LOG_INFO("Loading spawn chunks for world with seed {}...", seed);
+	LOG_INFO("Loading spawn chunks for {} (Seed: {})", worldDirectory, seed);
 	for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
         for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
 			iVec2 pos = playerChunkPos + iVec2{ x,z };
@@ -80,7 +94,7 @@ World::World(siv::PerlinNoise::seed_type seed) : seed(seed)
 
 	for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
         for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
-			auto find = mChunkStacks.find(iVec2{x,z});
+			auto find = mChunkStacks.find(playerChunkPos + iVec2{x,z});
 			ChunkStack& stack = find->second;
 			for (auto it = stack.begin(); it != stack.end(); ++it) {
 				std::shared_ptr<Chunk> chunk = *it;
@@ -88,7 +102,20 @@ World::World(siv::PerlinNoise::seed_type seed) : seed(seed)
 			}
 		}
 	}
+}
 
+World::~World() {
+	// Save to disk
+	WorldSave worldSave {
+		.seed = seed
+	};
+	WriteStructToDisk(fmt::format("{}/world.data", worldDirectory), worldSave);
+	PlayerSave playerSave {
+		.pos = player.camera.position,
+		.pitch = player.camera.pitch,
+		.yaw = player.camera.yaw
+	};
+	WriteStructToDisk(fmt::format("{}/player.data", worldDirectory), playerSave);
 }
 
 void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
