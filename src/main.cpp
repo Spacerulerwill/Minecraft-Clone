@@ -23,7 +23,9 @@ License: MIT
 #define RED "\x1b[0;31m"
 #define GREEN "\x1b[0;32m"
 #define RESET "\x1b[0m"
-
+#define WIPE_TERMINAL "\x1B[2J\x1B[H"
+#define SWITCH_TO_ALT_TERMINAL "\u001B[?1049h" 
+#define RESTORE_TERMINAL "\u001B[?1049l" 
 void create_world() {
 	// Get name of new world
 	std::string worldName;
@@ -111,6 +113,8 @@ void load_world() {
 }
 
 int main() {
+	std::cout << SWITCH_TO_ALT_TERMINAL;
+	std::cout <<  WIPE_TERMINAL; 
     Log::GetLogger();
 	SoundEngine::PreloadGameSounds();
 	std::filesystem::create_directory("worlds");
@@ -156,23 +160,27 @@ Enter your choice: )";
 					break;
 				}
 			}
-
+			std::cout << WIPE_TERMINAL;
 		} while (choice != 'q');
     }
     catch (const std::runtime_error& e) {
         LOG_CRITICAL(e.what());
-        return EXIT_FAILURE;
+        goto fail;
     }
     catch (const std::exception& e) {
         LOG_CRITICAL(e.what());
-        return EXIT_FAILURE;
+		goto fail;
     }
     catch (...) {
         LOG_CRITICAL("Unhandled exception caught!");
-        return EXIT_FAILURE;
+		goto fail; 
     }
-
+	std::cout << RESTORE_TERMINAL;
+	LOG_INFO("Exited successfully");
     return EXIT_SUCCESS;
+fail:
+	std::cout << RESTORE_TERMINAL;
+	return EXIT_FAILURE;
 }
 
 /*
