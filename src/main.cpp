@@ -23,10 +23,23 @@ License: MIT
 #define RED "\x1b[0;31m"
 #define GREEN "\x1b[0;32m"
 #define RESET "\x1b[0m"
-#define WIPE_TERMINAL "\x1B[2J\x1B[H"
-#define SWITCH_TO_ALT_TERMINAL "\u001B[?1049h" 
-#define RESTORE_TERMINAL "\u001B[?1049l" 
-void create_world() {
+
+#ifdef __linux__ 
+    #define WIPE_TERMINAL "\x1B[2J\x1B[H"
+    #define SWITCH_TO_ALT_TERMINAL "\u001B[?1049h" 
+    #define RESTORE_TERMINAL "\u001B[?1049l" 
+#else
+    #define WIPE_TERMINAL "\033[2J\033[H"
+    #define SWITCH_TO_ALT_TERMINAL ""
+    #define RESTORE_TERMINAL "" 
+#endif // __linux__
+
+struct MenuOptionResult {
+    bool success;
+    std::string msg;
+};
+
+MenuOptionResult create_world() {
 	// Get name of new world
 	std::string worldName;
 	std::cout << "Enter new world name: ";
@@ -35,8 +48,10 @@ void create_world() {
 
 	// Check it doesn't exist
 	if (std::filesystem::is_directory(worldDirectory)) {
-		std::cout << RED << "World already exists!" << RESET;
-		return;
+        return MenuOptionResult{
+            .success = false,
+            .msg = fmt::format("World {} already exists", worldName)
+        };
 	}
 
 	// ask user for seed
@@ -59,14 +74,17 @@ void create_world() {
 		.yaw = -90.0f
 	};
 	WriteStructToDisk(fmt::format("{}/player.data", worldDirectory), playerSave);
-	std::cout << GREEN << "Created new world!" << RESET;
+    return MenuOptionResult{
+        .success = true,
+        .msg = fmt::format("Created world {}!", worldName)
+    };
 }
 
-void delete_world() {
+MenuOptionResult delete_world() {
 	// Get name of world to delete
     for (const auto& entry : std::filesystem::directory_iterator("worlds")) {
 		if (entry.is_directory()){
-			std::cout << "• " << entry.path().filename().string() << std::endl;
+			std::cout << "* " << entry.path().filename().string() << std::endl;
 		}
 	}
 
@@ -77,20 +95,25 @@ void delete_world() {
 
 	// Check world to delete exists
 	if (!std::filesystem::is_directory(worldDirectory)) {
-		std::cout << RED << "World doesn't exist!" << RESET;
-		return;
+        return MenuOptionResult{
+            .success = false,
+            .msg = fmt::format("World {} doesn't exist", worldName)
+        };
 	}
 
 	// Remove all its files
 	std::filesystem::remove_all(worldDirectory);
-	std::cout << GREEN << "World deleted!" << RESET;
+    return MenuOptionResult{
+        .success = true,
+        .msg = fmt::format("Deleted world {}!", worldName)
+    };
 }
 
-void load_world() {
+MenuOptionResult load_world() {
 	// list worlds available
 	for (const auto& entry : std::filesystem::directory_iterator("worlds")) {
 		if (entry.is_directory()){
-			std::cout << "• " << entry.path().filename().string() << std::endl;
+			std::cout << "* " << entry.path().filename().string() << std::endl;
 		}
 	}
 	
@@ -100,15 +123,27 @@ void load_world() {
 	std::cin >> worldName;
 	std::string worldDirectory = fmt::format("worlds/{}", worldName);
 	if (!std::filesystem::is_directory(worldDirectory)) {
-		std::cout << RED << "World does not exist!" << RESET;
-		return;
+        return MenuOptionResult{
+            .success = false,
+            .msg = fmt::format("World {} does not exist!", worldName)
+        };
 	}
 
 	try {
+        std::cout << GREEN << fmt::format("Started playing world {}", worldName) << RESET << std::endl;
+
 		Game game;
 		game.Run(worldDirectory);
+
+        return MenuOptionResult{
+            .success = true,
+            .msg = fmt::format("Finished playing world {}", worldName)
+        };
 	} catch (const WorldCorruptionException& e) {
-		std::cout << e.what();
+        return MenuOptionResult{
+            .success = false,
+            .msg = e.what()
+        };
 	}
 }
 
@@ -120,6 +155,7 @@ int main() {
 	std::filesystem::create_directory("worlds");
 	
     try {
+        MenuOptionResult lastResult{};
 		char choice;
 		do {
 			std::cout << R"(
@@ -134,29 +170,37 @@ C - Create world
 L - Load world
 D - Delete world
 Q - Quit
-Enter your choice: )";
-			
+)";
+            
+            if (lastResult.msg != "") {
+                std::cout << (lastResult.success ? GREEN : RED) << lastResult.msg << RESET << std::endl;
+            }
+
+            std::cout << "Enter your choice: ";
 			std::cin >> choice;
 			choice = std::tolower(choice);
 
 			switch (choice) {
 				case 'c': {
-					create_world();
+					lastResult = create_world();
 					break;
 				}
 				case 'l': {
-					load_world();	
+					lastResult = load_world();	
 					break;
 				}
 				case 'd': {
-					delete_world();
+					lastResult = delete_world();
 					break;
 				}
 				case 'q': {
 					break;
 				}
 				default: {
-					std::cout << RED <<  "Invalid input!" << RESET <<  std::endl;
+                    lastResult = MenuOptionResult{
+                        .success = false,
+                        .msg = "Invalid choice!"
+                    };
 					break;
 				}
 			}
