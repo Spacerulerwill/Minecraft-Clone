@@ -20,6 +20,10 @@ License: MIT
 #include <fmt/format.h>
 #include <PerlinNoise.hpp>
 
+#define RED "\x1b[0;31m"
+#define GREEN "\x1b[0;32m"
+#define RESET "\x1b[0m"
+
 void create_world() {
 	// Get name of new world
 	std::string worldName;
@@ -29,7 +33,7 @@ void create_world() {
 
 	// Check it doesn't exist
 	if (std::filesystem::is_directory(worldDirectory)) {
-		std::cout << "World already exists!";
+		std::cout << RED << "World already exists!" << RESET;
 		return;
 	}
 
@@ -53,11 +57,17 @@ void create_world() {
 		.yaw = -90.0f
 	};
 	WriteStructToDisk(fmt::format("{}/player.data", worldDirectory), playerSave);
-	std::cout << "Created new world!";
+	std::cout << GREEN << "Created new world!" << RESET;
 }
 
 void delete_world() {
 	// Get name of world to delete
+    for (const auto& entry : std::filesystem::directory_iterator("worlds")) {
+		if (entry.is_directory()){
+			std::cout << "• " << entry.path().filename().string() << std::endl;
+		}
+	}
+
 	std::string worldName;
 	std::cout << "Enter name of world to delete: ";
 	std::cin >> worldName;
@@ -65,22 +75,30 @@ void delete_world() {
 
 	// Check world to delete exists
 	if (!std::filesystem::is_directory(worldDirectory)) {
-		std::cout << "World doesn't exist!";
+		std::cout << RED << "World doesn't exist!" << RESET;
 		return;
 	}
 
 	// Remove all its files
 	std::filesystem::remove_all(worldDirectory);
-	std::cout << "World deleted!" << std::endl;
+	std::cout << GREEN << "World deleted!" << RESET;
 }
 
 void load_world() {
+	// list worlds available
+	for (const auto& entry : std::filesystem::directory_iterator("worlds")) {
+		if (entry.is_directory()){
+			std::cout << "• " << entry.path().filename().string() << std::endl;
+		}
+	}
+	
+	// get user choice
 	std::string worldName;
 	std::cout << "Enter world name: ";
 	std::cin >> worldName;
 	std::string worldDirectory = fmt::format("worlds/{}", worldName);
 	if (!std::filesystem::is_directory(worldDirectory)) {
-		std::cout << "World does not exist!";
+		std::cout << RED << "World does not exist!" << RESET;
 		return;
 	}
 
@@ -134,7 +152,7 @@ Enter your choice: )";
 					break;
 				}
 				default: {
-					std::cout << "Invalid input!" << std::endl;
+					std::cout << RED <<  "Invalid input!" << RESET <<  std::endl;
 					break;
 				}
 			}
