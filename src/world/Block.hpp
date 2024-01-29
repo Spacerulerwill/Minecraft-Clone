@@ -29,6 +29,7 @@ enum Block : BlockID {
     TALL_GRASS,
 	SAND,
 	SUGARCANE,
+	WOOD,
     NUM_BLOCKS
 };
 

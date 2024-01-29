@@ -30,7 +30,7 @@ struct PlayerSave {
 };
 
 struct Player {
-    BlockID selectedBlock = SUGARCANE;
+    BlockID selectedBlock = WOOD;
     bool canJump = false;
     float yVelocity = 0.0f;
     float movementSpeed = 5.0f;

@@ -95,3 +95,11 @@ sugar_cane:
   opaque: false
   collision: false
   can_interact_through: false
+wood:
+  unique_faces: 1
+  break_sound_id: 4
+  place_sound_id: 4
+  model_id: 0
+  opaque: true
+  collision: true
+  can_interact_through: false
