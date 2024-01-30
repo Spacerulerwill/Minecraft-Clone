@@ -138,15 +138,14 @@ MenuOptionResult load_world() {
 }
 
 int main() {
-    Log::GetLogger();
-	SoundEngine::PreloadGameSounds();
-	std::filesystem::create_directory("worlds");
+	try{
+        Log::GetLogger();
+	    SoundEngine::PreloadGameSounds();
+	    std::filesystem::create_directory("worlds");
 	
-    try {
         MenuOptionResult lastResult{};
 		char choice;
-		do {
-			std::cout << R"(
+		std::cout << R"(
   ____            __ _      
  / ___|_ __ __ _ / _| |_  _     _   
 | |   | '__/ _` | |_| __|| |_ _| |_ 
@@ -159,7 +158,8 @@ L - Load world
 D - Delete world
 Q - Quit
 )";
-            
+
+		do {            
             if (lastResult.msg != "") {
                 std::cout << (lastResult.success ? GREEN : RED) << lastResult.msg << RESET << std::endl;
             }
