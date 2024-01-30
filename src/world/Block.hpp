@@ -30,6 +30,7 @@ enum Block : BlockID {
 	SAND,
 	SUGARCANE,
 	WOOD,
+	SAKURA_LEAVES,
     NUM_BLOCKS
 };
 

@@ -83,6 +83,7 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
             ChunkStack& chunkStack = emplace.first->second;
 			mLoadPool.push_task([&chunkStack, this] {
 				chunkStack.GenerateTerrain(this->seed, mPerlin);
+				chunkStack.UnloadToFile(this->worldDirectory);
 				for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
 					std::shared_ptr<Chunk> chunk = (*it);
 					chunk->CreateMesh();
@@ -177,8 +178,9 @@ void World::GenerateChunks()
         static_cast<int>(floor(playerPos[0]) / CS),
         static_cast<int>(floor(playerPos[2]) / CS)
     };
-
-    // unload chunks out of distance
+	
+	// Unload chunks out of distance
+	std::vector<std::unordered_map<iVec2, ChunkStack>::iterator> iteratorsToRemove;
     for (auto it = mChunkStacks.begin(); it != mChunkStacks.end();) {
         ChunkStack& stack = it->second;
 
@@ -187,12 +189,24 @@ void World::GenerateChunks()
             stackPos[0] > playerChunkPos[0] + mRenderDistance ||
             stackPos[1] < playerChunkPos[1] - mRenderDistance ||
             stackPos[1] > playerChunkPos[1] + mRenderDistance) && !stack.isBeingmMeshed) {
-            it = mChunkStacks.erase(it);
-        }
+			
+			mUnloadPool.push_task([&stack, this] {
+				stack.UnloadToFile(this->worldDirectory);				
+				for (auto stackIt = stack.begin(); stackIt != stack.end(); ++stackIt) {
+					(*stackIt)->ReleaseMemory();
+				}
+			});
+			iteratorsToRemove.push_back(it);
+			++it;
+		}
         else {
             ++it;
         }
     }
+	mUnloadPool.wait_for_tasks();
+	for (auto it : iteratorsToRemove) {
+		mChunkStacks.erase(it);
+	}
 
     std::size_t chunksBuffered = 0;
     std::size_t chunksCreated = 0;
@@ -207,13 +221,14 @@ void World::GenerateChunks()
 						ChunkStack& chunkStack = emplace.first->second;
 						chunkStack.isBeingmMeshed = true;
 						mLoadPool.push_task([&chunkStack, this] {
-								chunkStack.GenerateTerrain(seed, mPerlin);
-								for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+							chunkStack.GenerateTerrain(seed, mPerlin);
+							chunkStack.UnloadToFile(worldDirectory);
+							for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
 								std::shared_ptr<Chunk> chunk = (*it);
 								chunk->CreateMesh();
-								}
-								chunkStack.isBeingmMeshed = false;
-								});
+							}
+							chunkStack.isBeingmMeshed = false;
+						});
 						chunksCreated++;
 					}
 				}

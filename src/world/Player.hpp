@@ -30,7 +30,7 @@ struct PlayerSave {
 };
 
 struct Player {
-    BlockID selectedBlock = WOOD;
+    BlockID selectedBlock = SAKURA_LEAVES;
     bool canJump = false;
     float yVelocity = 0.0f;
     float movementSpeed = 5.0f;
@@ -42,7 +42,6 @@ struct Player {
     void Move(const World& world, PlayerMovement direction, float deltaTime);
     void ApplyGravity(const World&, float deltaTime);
 };
-
 
 #endif // !PLAYER_H
 

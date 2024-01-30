@@ -19,14 +19,16 @@ Chunk::Chunk(iVec3 pos) : mPos(pos)
     // Setup buffers
     VertexBufferLayout bufferLayout;
     bufferLayout.AddAttribute<unsigned int>(2);
+
     mVAO.AddBuffer(mVBO, bufferLayout);
     mWaterVAO.AddBuffer(mWaterVBO, bufferLayout);
     mCustomModelVAO.AddBuffer(mCustomModelVBO, bufferLayout);
 
+	// Transform it to its global position
     Vec3 globalPosition = static_cast<Vec3>(pos) * CS;
-
-    // Translate to its chunk position
     mModel *= translate(globalPosition);
+
+	// Sphere for frustum culling
     sphere = Sphere{ globalPosition + Vec3{CS_OVER_2, CS_OVER_2, CS_OVER_2}, Vec3{CS_OVER_2, CS_OVER_2, CS_OVER_2}.length() };
 }
 
@@ -129,6 +131,10 @@ void Chunk::DrawCustomModel(const Frustum& frustum, Shader& shader, int* potenti
             glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mCustomModelVertexCount));
         }
     }
+}
+
+const BlockID* Chunk::GetBlockDataPointer() const {
+	return mBlocks.data();
 }
 
 BlockID Chunk::GetBlock(iVec3 pos) const

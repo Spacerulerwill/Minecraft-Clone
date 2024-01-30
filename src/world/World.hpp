@@ -46,6 +46,7 @@ private:
     Shader customModelShader = Shader("shaders/custom_model.shader");
     siv::PerlinNoise mPerlin;
     BS::thread_pool mLoadPool;
+	BS::thread_pool mUnloadPool;
     std::array<TexArray2D, MAX_ANIMATION_FRAMES> mTextureAtlases;
     Tex2D mGrassSideMask = Tex2D("textures/block/mask/grass_side_mask.png", GL_TEXTURE1);
     std::size_t currentAtlasID{ 0 };

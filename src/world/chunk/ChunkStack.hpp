@@ -37,6 +37,7 @@ public:
     void DrawCustomModel(const Frustum& frustum, Shader& shader, int* totalChunks, int* chunksDrawn);
     iVec2 GetPosition() const;
     std::atomic<bool> isBeingmMeshed = false;
+	void UnloadToFile(const std::string& worldDirectory);
 
     std::shared_ptr<Chunk> GetChunk(std::size_t y) const;
     BlockID GetBlock(iVec3 pos) const;

@@ -12,10 +12,10 @@ License: MIT
 #include <fmt/format.h>
 
 template<typename T>
-void WriteStructToDisk(const std::string& file_name, T& data){
+void WriteStructToDisk(const std::string& file_name, const T& data){
 	std::ofstream out;
 	out.open(file_name,std::ios::binary | std::ios::trunc);
-	out.write(reinterpret_cast<char*>(&data), sizeof(T));
+	out.write(reinterpret_cast<const char*>(&data), sizeof(T));
 };
 
 template<typename T>

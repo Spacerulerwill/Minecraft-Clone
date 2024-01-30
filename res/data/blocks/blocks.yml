@@ -103,3 +103,11 @@ wood:
   opaque: true
   collision: true
   can_interact_through: false
+sakura_leaves:
+  unique_faces: 1
+  break_sound_id: 1
+  place_sound_id: 1
+  model_id: 0
+  opaque: true
+  collision: true
+  can_interact_through: false

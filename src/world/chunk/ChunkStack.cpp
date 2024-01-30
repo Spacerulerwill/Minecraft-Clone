@@ -8,6 +8,7 @@ LICENSE: MIT
 #include <world/Block.hpp>
 #include <util/Log.hpp>
 #include <random>
+#include <fstream>
 
 ChunkStack::ChunkStack(iVec2 pos) : mPos(pos)
 {
@@ -60,19 +61,22 @@ void ChunkStack::GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::Pe
 			}
             else {
                 SetBlock(iVec3{ x,height - 1,z }, GRASS);
-
-                if (height < MAX_WORLD_GEN_HEIGHT) {
-                    float rand = distribution(gen);
-                    if (rand < 0.01f) {
-                        SetBlock(iVec3{ x, height, z }, ROSE);
-                    }
-                    else if (rand < 0.02f) {
-                        SetBlock(iVec3{ x, height, z }, PINK_TULIP);
-                    }
-                    else if (rand < 0.2f) {
-                        SetBlock(iVec3{ x, height, z }, TALL_GRASS);
-                    }
-                }
+				float rand = distribution(gen);
+				if (rand < 0.01f) {
+					if (height <= MAX_WORLD_GEN_HEIGHT - 1) {
+						SetBlock(iVec3{ x, height, z }, ROSE);
+					}
+				}
+				else if (rand < 0.02f) {
+					if (height <= MAX_WORLD_GEN_HEIGHT -1) {
+						SetBlock(iVec3{ x, height, z }, PINK_TULIP);
+					}
+				}
+				else if (rand < 0.2f) {
+					if (height <= MAX_WORLD_GEN_HEIGHT - 1) {
+						SetBlock(iVec3{ x, height, z }, TALL_GRASS);
+					}
+				}	
             }
             for (int y = 0; y < height - 4; y++) {
                 SetBlock(iVec3{ x, y, z }, STONE);
@@ -105,6 +109,21 @@ void ChunkStack::GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::Pe
             }
         }
     }
+}
+
+void ChunkStack::UnloadToFile(const std::string& worldDirectory) {
+	std::ofstream out;
+	out.open(fmt::format("{}/chunk_stacks/{}.{}.stack", worldDirectory, mPos[0], mPos[1]),std::ios::binary | std::ios::trunc);
+	std::size_t chunkCount = mChunks.size();
+	out.write(reinterpret_cast<char*>(&chunkCount), sizeof(std::size_t));
+
+	for (std::size_t i = 0; i < chunkCount; i++) {
+		out.write(reinterpret_cast<const char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * CS_P3);
+	}
+
+	if (out.fail()) {
+		LOG_ERROR("Failed to write chunk stack at {}, {} to disk!", mPos[0], mPos[1]);
+	}
 }
 
 iVec2 ChunkStack::GetPosition() const

@@ -50,6 +50,7 @@ public:
     void ReleaseMemory();
     void CreateMesh();
     void BufferData();
+	const BlockID* GetBlockDataPointer() const;
     void Draw(const Frustum& frustum, Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
     void DrawWater(const Frustum& frustum, Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
     void DrawCustomModel(const Frustum& frustum, Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
