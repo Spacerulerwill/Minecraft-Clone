@@ -147,13 +147,28 @@ void ChunkStack::Unload(const std::string& worldDirectory) {
 }
 
 void ChunkStack::SaveToFile(const std::string& worldDirectory) {
-	std::ofstream out;
-	out.open(fmt::format("{}/chunk_stacks/{}.{}.stack", worldDirectory, mPos[0], mPos[1]),std::ios::binary | std::ios::trunc);
+	std::string file = fmt::format("{}/chunk_stacks/{}.{}.stack", worldDirectory, mPos[0], mPos[1]);
+	std::fstream out(file, std::ios::binary | std::ios::out | std::ios::in);
 	std::size_t chunkCount = mChunks.size();
-	out.write(reinterpret_cast<char*>(&chunkCount), sizeof(std::size_t));
 
-	for (std::size_t i = 0; i < chunkCount; i++) {
-		out.write(reinterpret_cast<const char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * CS_P3);
+	if (out.is_open()) {
+		out.write(reinterpret_cast<char*>(&chunkCount), sizeof(std::size_t));
+		for (std::size_t i = 0; i < chunkCount; i++) {
+			if (mChunks[i]->needsSaving) {
+				mChunks[i]->needsSaving = false;
+				out.write(reinterpret_cast<const char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * CS_P3);
+			} else {
+				out.seekp(sizeof(BlockID) * CS_P3, std::ios::cur);
+			}
+		}
+	} else {
+		out.clear();
+		out.open(file, std::ios::binary | std::ios::out | std::ios::trunc);
+		out.write(reinterpret_cast<char*>(&chunkCount), sizeof(std::size_t));
+		for (std::size_t i = 0; i < chunkCount; i++) {
+			mChunks[i]->needsSaving = false;
+			out.write(reinterpret_cast<const char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * CS_P3);	
+		}
 	}
 
 	if (out.fail()) {

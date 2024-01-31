@@ -145,6 +145,7 @@ BlockID Chunk::GetBlock(iVec3 pos) const
 void Chunk::SetBlock(iVec3 pos, BlockID block)
 {
     mBlocks[VoxelIndex(pos)] = block;
+	needsSaving = true;
 }
 
 /*

@@ -57,6 +57,7 @@ public:
     BlockID GetBlock(iVec3 pos) const;
     void SetBlock(iVec3 pos, BlockID block);
     std::atomic<bool> needsBuffering = false;
+	std::atomic<bool> needsSaving = false;
     bool loaded = false;
     float firstBufferTime = 0.0f;
 };
