@@ -81,6 +81,7 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
 			iVec2 pos = playerChunkPos + iVec2{ x,z };
 			auto emplace = mChunkStacks.emplace(pos, pos);
 			ChunkStack& chunkStack = emplace.first->second;
+			chunkStack.isBeingLoaded = true;
 			mLoadPool.push_task([&chunkStack, this]{
 				chunkStack.Load(this->worldDirectory, this->seed, this->mPerlin);
 			});
@@ -121,8 +122,11 @@ World::~World() {
 	// Unload all remaining chunks 
 	for (auto it = mChunkStacks.begin(); it != mChunkStacks.end(); ++it) {
 		ChunkStack& chunkStack = it->second;
-		chunkStack.Unload(worldDirectory);
+		mUnloadPool.push_task([&chunkStack, this] {
+				chunkStack.Unload(this->worldDirectory);
+				});
 	}
+	mUnloadPool.wait_for_tasks();
 }
 
 void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
@@ -195,17 +199,15 @@ void World::GenerateChunks()
         if ((stackPos[0] < playerChunkPos[0] - mRenderDistance ||
             stackPos[0] > playerChunkPos[0] + mRenderDistance ||
             stackPos[1] < playerChunkPos[1] - mRenderDistance ||
-            stackPos[1] > playerChunkPos[1] + mRenderDistance) && !stack.isBeingLoaded) {
+            stackPos[1] > playerChunkPos[1] + mRenderDistance) &&
+			!stack.isBeingLoaded) {
 			
 			mUnloadPool.push_task([&stack, this] {
 				stack.Unload(this->worldDirectory);					
 			});
 			iteratorsToRemove.push_back(it);
-			++it;
-		}
-        else {
-            ++it;
-        }
+		} 
+		++it;
     }
 
 	mUnloadPool.wait_for_tasks();
