@@ -133,7 +133,7 @@ void Chunk::DrawCustomModel(const Frustum& frustum, Shader& shader, int* potenti
     }
 }
 
-const BlockID* Chunk::GetBlockDataPointer() const {
+BlockID* Chunk::GetBlockDataPointer() {
 	return mBlocks.data();
 }
 

@@ -111,7 +111,42 @@ void ChunkStack::GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::Pe
     }
 }
 
-void ChunkStack::UnloadToFile(const std::string& worldDirectory) {
+void ChunkStack::Load(const std::string& worldDirectory, siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin) {
+	std::ifstream chunkStackFileStream(fmt::format("{}/chunk_stacks/{}.{}.stack", worldDirectory, mPos[0], mPos[1]));
+	if (chunkStackFileStream.is_open()) {
+		// chunk data found on disk, so we load that
+		// read how many chunks in chunk stack
+		std::size_t chunkCount;
+		chunkStackFileStream.read(reinterpret_cast<char*>(&chunkCount), sizeof(std::size_t));
+		
+		for (std::size_t i = 0; i < chunkCount; i++) {
+			mChunks[i]->AllocateMemory();
+			chunkStackFileStream.read(reinterpret_cast<char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * CS_P3);
+		}
+			
+	} else {
+		// no chunk stack found on disk, generate
+		GenerateTerrain(seed, perlin);
+		SaveToFile(worldDirectory);
+	}
+
+	// Mesh all chunks
+	for (auto it = mChunks.begin(); it != mChunks.end(); ++it) {
+		std::shared_ptr<Chunk> chunk = (*it);
+		chunk->CreateMesh();
+	}
+	isBeingLoaded = false;
+}
+
+void ChunkStack::Unload(const std::string& worldDirectory) {
+	SaveToFile(worldDirectory);
+
+	for (auto& chunk : mChunks) {
+		chunk->ReleaseMemory();
+	}
+}
+
+void ChunkStack::SaveToFile(const std::string& worldDirectory) {
 	std::ofstream out;
 	out.open(fmt::format("{}/chunk_stacks/{}.{}.stack", worldDirectory, mPos[0], mPos[1]),std::ios::binary | std::ios::trunc);
 	std::size_t chunkCount = mChunks.size();

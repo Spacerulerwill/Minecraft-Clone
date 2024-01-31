@@ -80,14 +80,9 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
         for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
 			iVec2 pos = playerChunkPos + iVec2{ x,z };
 			auto emplace = mChunkStacks.emplace(pos, pos);
-            ChunkStack& chunkStack = emplace.first->second;
-			mLoadPool.push_task([&chunkStack, this] {
-				chunkStack.GenerateTerrain(this->seed, mPerlin);
-				chunkStack.UnloadToFile(this->worldDirectory);
-				for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
-					std::shared_ptr<Chunk> chunk = (*it);
-					chunk->CreateMesh();
-				}
+			ChunkStack& chunkStack = emplace.first->second;
+			mLoadPool.push_task([&chunkStack, this]{
+				chunkStack.Load(this->worldDirectory, this->seed, this->mPerlin);
 			});
 		}
 	}
@@ -96,10 +91,15 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
 	for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
         for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
 			auto find = mChunkStacks.find(playerChunkPos + iVec2{x,z});
-			ChunkStack& stack = find->second;
-			for (auto it = stack.begin(); it != stack.end(); ++it) {
-				std::shared_ptr<Chunk> chunk = *it;
-				chunk->BufferData();
+			if (find == mChunkStacks.end()) {
+				// this should never happen
+				LOG_ERROR("Failed to buffer spawn chunk ({}, {})", x, z);
+			} else {
+				ChunkStack& stack = find->second;
+				for (auto it = stack.begin(); it != stack.end(); ++it) {
+					std::shared_ptr<Chunk> chunk = *it;
+					chunk->BufferData();
+				}
 			}
 		}
 	}
@@ -117,6 +117,12 @@ World::~World() {
 		.yaw = player.camera.yaw
 	};
 	WriteStructToDisk(fmt::format("{}/player.data", worldDirectory), playerSave);
+	
+	// Unload all remaining chunks 
+	for (auto it = mChunkStacks.begin(); it != mChunkStacks.end(); ++it) {
+		ChunkStack& chunkStack = it->second;
+		chunkStack.Unload(worldDirectory);
+	}
 }
 
 void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
@@ -173,6 +179,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 
 void World::GenerateChunks()
 {
+	// Detect what chunk the player is in
     Vec3 playerPos = player.camera.position;
     iVec2 playerChunkPos{
         static_cast<int>(floor(playerPos[0]) / CS),
@@ -188,13 +195,10 @@ void World::GenerateChunks()
         if ((stackPos[0] < playerChunkPos[0] - mRenderDistance ||
             stackPos[0] > playerChunkPos[0] + mRenderDistance ||
             stackPos[1] < playerChunkPos[1] - mRenderDistance ||
-            stackPos[1] > playerChunkPos[1] + mRenderDistance) && !stack.isBeingmMeshed) {
+            stackPos[1] > playerChunkPos[1] + mRenderDistance) && !stack.isBeingLoaded) {
 			
 			mUnloadPool.push_task([&stack, this] {
-				stack.UnloadToFile(this->worldDirectory);				
-				for (auto stackIt = stack.begin(); stackIt != stack.end(); ++stackIt) {
-					(*stackIt)->ReleaseMemory();
-				}
+				stack.Unload(this->worldDirectory);					
 			});
 			iteratorsToRemove.push_back(it);
 			++it;
@@ -203,11 +207,13 @@ void World::GenerateChunks()
             ++it;
         }
     }
+
 	mUnloadPool.wait_for_tasks();
 	for (auto it : iteratorsToRemove) {
 		mChunkStacks.erase(it);
 	}
-
+	
+	// Load and generate new chunks
     std::size_t chunksBuffered = 0;
     std::size_t chunksCreated = 0;
     for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
@@ -219,15 +225,9 @@ void World::GenerateChunks()
 					if (chunksCreated < mBufferPerFrame) {
 						auto emplace = mChunkStacks.emplace(pos, pos);
 						ChunkStack& chunkStack = emplace.first->second;
-						chunkStack.isBeingmMeshed = true;
-						mLoadPool.push_task([&chunkStack, this] {
-							chunkStack.GenerateTerrain(seed, mPerlin);
-							chunkStack.UnloadToFile(worldDirectory);
-							for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
-								std::shared_ptr<Chunk> chunk = (*it);
-								chunk->CreateMesh();
-							}
-							chunkStack.isBeingmMeshed = false;
+						chunkStack.isBeingLoaded = true;
+						mLoadPool.push_task([&chunkStack, this]{
+							chunkStack.Load(this->worldDirectory, this->seed, this->mPerlin);
 						});
 						chunksCreated++;
 					}
@@ -238,8 +238,8 @@ void World::GenerateChunks()
 						std::shared_ptr<Chunk> chunk = *it;
 						if (chunksBuffered < mBufferPerFrame) {
 							if (chunk->needsBuffering) {
-								chunksBuffered++;
 								chunk->BufferData();
+								chunksBuffered++;
 							}
 						}
 						else {
