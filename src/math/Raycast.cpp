@@ -10,36 +10,53 @@ License: MIT
 Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 start, Vec3 direction, float distance)
 {
     Vec3 end = start + direction * distance;
-    Vec3 normal{ 0,0,0 };
+    iVec3 normal{ 0,0,0 };
+	
+	iVec3 currentBlock {
+		static_cast<int>(floorf(start[0])),
+		static_cast<int>(floorf(start[1])),
+		static_cast<int>(floorf(start[2]))
+	};
 
-    int i = (int)floorf(start[0]);
-    int j = (int)floorf(start[1]);
-    int k = (int)floorf(start[2]);
+	const iVec3 endBlock {
+		static_cast<int>(floorf(end[0])),
+		static_cast<int>(floorf(end[1])),
+		static_cast<int>(floorf(end[2]))
+	};
 
-    const int iend = (int)floorf(end[0]);
-    const int jend = (int)floorf(end[1]);
-    const int kend = (int)floorf(end[2]);
+	const iVec3 d {
+		((start[0] < end[0]) ? 1 : ((start[0] > end[0]) ? -1 : 0)),
+        ((start[1] < end[1]) ? 1 : ((start[1] > end[1]) ? -1 : 0)),
+        ((start[2] < end[2]) ? 1 : ((start[2] > end[2]) ? -1 : 0))
+	};
 
-    const int di = ((start[0] < end[0]) ? 1 : ((start[0] > end[0]) ? -1 : 0));
-    const int dj = ((start[1] < end[1]) ? 1 : ((start[1] > end[1]) ? -1 : 0));
-    const int dk = ((start[2] < end[2]) ? 1 : ((start[2] > end[2]) ? -1 : 0));
+	const Vec3 deltat{
+		1.0f / std::abs(end[0] - start[0]),
+		1.0f / std::abs(end[1] - start[1]),
+		1.0f / std::abs(end[2] - start[2])
+	};
 
-    const float deltatx = 1.0f / std::abs(end[0] - start[0]);
-    const float deltaty = 1.0f / std::abs(end[1] - start[1]);
-    const float deltatz = 1.0f / std::abs(end[2] - start[2]);
+	const Vec3 min {
+		floorf(start[0]),
+		floorf(start[1]),
+		floorf(start[2])
+	};
 
-    const float minx = floorf(start[0]), maxx = minx + 1.0f;
-    float tx = ((start[0] > end[0]) ? (start[0] - minx) : (maxx - start[0])) * deltatx;
-    const float miny = floorf(start[1]), maxy = miny + 1.0f;
-    float ty = ((start[1] > end[1]) ? (start[1] - miny) : (maxy - start[1])) * deltaty;
-    const float minz = floorf(start[2]), maxz = minz + 1.0f;
-    float tz = ((start[2] > end[2]) ? (start[2] - minz) : (maxz - start[2])) * deltatz;
+	const Vec3 max = min + Vec3{1.0f, 1.0f, 1.0f};
+
+	Vec3 t {
+		((start[0] > end[0]) ? (start[0] - min[0]) : (max[0] - start[0])) * deltat[0],
+        ((start[1] > end[1]) ? (start[1] - min[1]) : (max[1] - start[1])) * deltat[1],
+        ((start[2] > end[2]) ? (start[2] - min[2]) : (max[2] - start[2])) * deltat[2]
+	};
+
+
 
     while (true)
     {
-        iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(iVec3{ i,j,k });
+        iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(currentBlock);
         std::shared_ptr<Chunk> chunk = world.GetChunk(chunkPos);
-        iVec3 blockPosInChunk = GetChunkBlockPosFromGlobalBlockPos(iVec3{ i,j,k });
+        iVec3 blockPosInChunk = GetChunkBlockPosFromGlobalBlockPos(currentBlock);
         if (chunk != nullptr) {
             // If we do hit a chunk, check if its air. If it's not then we stop the raycasting otherwise we continue
             BlockID block = chunk->GetBlock(blockPosInChunk);
@@ -53,9 +70,9 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
             }
         }
         // Raycasting
-        if (tx <= ty && tx <= tz)
+        if (t[0] <= t[1] && t[0] <= t[2])
         {
-            if (i == iend) {
+            if (currentBlock[0] == endBlock[0]) {
                 BlockID block = chunk != nullptr ? chunk->GetBlock(blockPosInChunk) : AIR;
                 return BlockRaycastResult{
                     chunk,
@@ -64,15 +81,15 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
                     block
                 };
             };
-            tx += deltatx;
+            t[0] += deltat[0];
             normal = iVec3{
-                -di,0,0
+                -d[0],0,0
             };
-            i += di;
+            currentBlock[0] += d[0];
         }
-        else if (ty <= tz)
+        else if (t[1] <= t[2])
         {
-            if (j == jend) {
+            if (currentBlock[1] == endBlock[1]) {
                 BlockID block = chunk != nullptr ? chunk->GetBlock(blockPosInChunk) : AIR;
                 return BlockRaycastResult{
                     chunk,
@@ -81,15 +98,15 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
                     block
                 };
             };
-            ty += deltaty;
+            t[1] += deltat[1];
             normal = iVec3{
-                0,-dj,0
+                0,-d[1],0
             };
-            j += dj;
+            currentBlock[1] += d[1];
         }
         else
         {
-            if (k == kend) {
+            if (currentBlock[2] == endBlock[2]) {
                 BlockID block = chunk != nullptr ? chunk->GetBlock(blockPosInChunk) : AIR;
                 return BlockRaycastResult{
                     chunk,
@@ -98,11 +115,11 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
                     block
                 };
             };
-            tz += deltatz;
+            t[2] += deltat[2];
             normal = iVec3{
-               0,0,-dk
+               0,0,-d[2]
             };
-            k += dk;
+            currentBlock[2] += d[2];
         }
     }
 }
