@@ -26,7 +26,7 @@ private:
     Cubemap mCubemap;
 public:
     Skybox();
-    void Draw(const Mat4& projection, const Mat4& view);
+    void Draw(const Mat4& projection, const Mat4& view, float skyboxBrightness);
 };
 
 #endif // !SKYBOX_H

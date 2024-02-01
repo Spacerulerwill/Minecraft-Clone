@@ -70,12 +70,13 @@ Skybox::Skybox()
     mVAO.AddBuffer(mVBO, bufLayout);
 }
 
-void Skybox::Draw(const Mat4& projection, const Mat4& view) {
+void Skybox::Draw(const Mat4& projection, const Mat4& view, float skyboxBrightness) {
     mShader.Bind();
     mVAO.Bind();
     mShader.SetInt("skybox", 0);
     mShader.SetMat4("projection", projection);
     mShader.SetMat4("view", view);
+	mShader.SetFloat("brightness", skyboxBrightness);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 

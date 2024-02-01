@@ -133,15 +133,19 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 {
     Mat4 perspective = player.camera.perspectiveMatrix;
     Mat4 view = player.camera.GetViewMatrix();
+	float time = static_cast<float>(glfwGetTime());
+	float ambientTerrainLight = (((0.5 * cos(time) + 0.5) * 0.8) + 0.5);
+	float skyboxBrightness = 0.5 * cos(time) + 0.5;
 
     glDepthFunc(GL_LEQUAL);
-    mSkybox.Draw(perspective, translationRemoved(view));
+    mSkybox.Draw(perspective, translationRemoved(view), skyboxBrightness);
     glDepthFunc(GL_LESS);
 
     chunkShader.Bind();
     chunkShader.SetMat4("projection", perspective);
     chunkShader.SetMat4("view", view);
     chunkShader.SetVec3("grass_color", mGrassColor);
+	chunkShader.SetFloat("ambient", ambientTerrainLight);
 
     glActiveTexture(GL_TEXTURE0);
     mTextureAtlases[currentAtlasID].Bind();
@@ -159,6 +163,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     waterShader.SetMat4("projection", perspective);
     waterShader.SetMat4("view", view);
     waterShader.SetVec3("color", mWaterColor);
+	waterShader.SetFloat("ambient", ambientTerrainLight);
     glActiveTexture(GL_TEXTURE0);
     waterShader.SetInt("tex_array", 0);
     glEnable(GL_BLEND);
@@ -175,6 +180,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     glActiveTexture(GL_TEXTURE0);
     customModelShader.SetInt("tex_array", 0);
     customModelShader.SetVec3("foliage_color", mFoliageColor);
+	customModelShader.SetFloat("ambient", ambientTerrainLight);
     for (auto& [pos, stack] : mChunkStacks) {
         stack.DrawCustomModel(frustum, customModelShader, totalChunks, chunksDrawn);
     }
