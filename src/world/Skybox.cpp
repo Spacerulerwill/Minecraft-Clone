@@ -5,6 +5,7 @@ LICENSE: MIT
 
 #include <opengl/VertexBufferLayout.hpp>
 #include <world/Skybox.hpp>
+#include <util/Log.hpp>
 
 float Skybox::sSkyboxVertices[108] = {
     -1.0f,  1.0f, -1.0f,
@@ -51,12 +52,12 @@ float Skybox::sSkyboxVertices[108] = {
 };
 
 std::array<std::string, 6> Skybox::sDaySkyboxFaces = {
-    "textures/skybox/test/yellowcloud_rt.jpg",
-    "textures/skybox/test/yellowcloud_lf.jpg",
-    "textures/skybox/test/yellowcloud_up.jpg",
-    "textures/skybox/test/yellowcloud_dn.jpg",
-    "textures/skybox/test/yellowcloud_ft.jpg",
-    "textures/skybox/test/yellowcloud_bk.jpg" 
+    "textures/skybox/day_right.jpg",
+    "textures/skybox/day_left.jpg",
+    "textures/skybox/day_top.jpg",
+    "textures/skybox/day_bottom.jpg",
+    "textures/skybox/day_front.jpg",
+    "textures/skybox/day_back.jpg" 
 };
 
 std::array<std::string, 6> Skybox::sNightSkyboxFaces = {
@@ -68,10 +69,20 @@ std::array<std::string, 6> Skybox::sNightSkyboxFaces = {
     "textures/skybox/night_back.png"
 };
 
+std::array<std::string, 6> Skybox::sTransitionSkyboxFaces = {
+	"textures/skybox/transition_right.jpg",
+    "textures/skybox/transition_left.jpg",
+    "textures/skybox/transition_top.jpg",
+    "textures/skybox/transition_bottom.jpg",
+    "textures/skybox/transition_front.jpg",
+    "textures/skybox/transition_back.jpg"
+};
+
 Skybox::Skybox()
 {
     mDayCubemap = Cubemap(sDaySkyboxFaces, GL_TEXTURE0);
 	mNightCubemap = Cubemap(sNightSkyboxFaces, GL_TEXTURE1);
+	mTransitionCubemap = Cubemap(sTransitionSkyboxFaces, GL_TEXTURE2);
 
     // Setup Buffers
     VertexBufferLayout bufLayout;
@@ -80,14 +91,16 @@ Skybox::Skybox()
     mVAO.AddBuffer(mVBO, bufLayout);
 }
 
-void Skybox::Draw(const Mat4& projection, const Mat4& view, const Mat4& model) {
+void Skybox::Draw(const Mat4& projection, const Mat4& view, const Mat4& model, float currentDayProgress) {
     mShader.Bind();
     mVAO.Bind();
     mShader.SetInt("day_skybox", 0);
 	mShader.SetInt("night_skybox", 1);
+	mShader.SetInt("transition_skybox", 2);
     mShader.SetMat4("projection", projection);
     mShader.SetMat4("view", view);
 	mShader.SetMat4("model", model);
+	mShader.SetFloat("current_day_progress", currentDayProgress);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 

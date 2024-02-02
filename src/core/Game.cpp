@@ -106,22 +106,15 @@ void Game::Run(std::string worldDirectory) {
 	
 	auto backgroundMusic = ScopedLoopingSound("sound/music.mp3"); 
     mWindow.SetVisible();
-	
-	// frame timings
-	float accumulator = 0.0f;
 
+	float worldStartTime = static_cast<float>(glfwGetTime());
     while (!mWindow.ShouldClose()) {
         float currentFrame = static_cast<float>(glfwGetTime());
+		float worldTime = currentFrame - worldStartTime;
         mDeltaTime = currentFrame - mLastFrame;
         mLastFrame = currentFrame;	
-		accumulator += mDeltaTime;
 
-		// perform physics updates
-		while (accumulator >= PHYSICS_UPDATE_TIME)
-		{
-			pWorld->player.ApplyGravity(*pWorld, mDeltaTime);
-			accumulator -= PHYSICS_UPDATE_TIME;
-		}
+		pWorld->player.ApplyGravity(*pWorld, mDeltaTime);	
 
         // Set sound engine listener to players position
         SoundEngine::GetEngine()->setListenerPosition(
@@ -149,7 +142,7 @@ void Game::Run(std::string worldDirectory) {
         int totalDrawCalls = 0;
 
         Frustum frustum = pWorld->player.camera.GetFrustum();
-        pWorld->Draw(frustum, &potentialDrawCalls, &totalDrawCalls);
+        pWorld->Draw(frustum, &potentialDrawCalls, &totalDrawCalls, worldTime);
 
         if (mIsWireFrame) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

@@ -129,16 +129,31 @@ World::~World() {
 	mUnloadPool.wait_for_tasks();
 }
 
-void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
+void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn, float time)
 {
+	float day = time / 120.0f;
+	float currentDay;
+	float currentDayProgress = std::modf(day, &currentDay);
+
     Mat4 perspective = player.camera.perspectiveMatrix;
     Mat4 view = player.camera.GetViewMatrix();
-	float time = static_cast<float>(glfwGetTime());
-	float ambientTerrainLight = 0.5;
+	float ambientTerrainLight = 1.0;
+
+	if (currentDayProgress < 0.5) {
+		ambientTerrainLight = 1.0;
+	}
+	else if (currentDayProgress < 0.575 ) {
+		ambientTerrainLight = 0.2 + (1 - ((currentDayProgress - 0.5) / 0.075)) * 0.8;
+	} 
+	else if (currentDayProgress < 0.925) {
+		ambientTerrainLight = 0.2;
+	} else {
+		ambientTerrainLight = 0.2 + ((currentDayProgress - 0.925) / 0.075) * 0.8;
+	}
 
     glDepthFunc(GL_LEQUAL);
 	Mat4 model = rotate(Vec3{0.0, 1.0, 0.0}, time * 0.01); 
-    mSkybox.Draw(perspective, translationRemoved(view), model);
+    mSkybox.Draw(perspective, translationRemoved(view), model, currentDayProgress);
     glDepthFunc(GL_LESS);
 
     chunkShader.Bind();
@@ -154,7 +169,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     glActiveTexture(GL_TEXTURE1);
     mGrassSideMask.Bind();
     chunkShader.SetInt("grass_mask", 1);
-
+ 
     for (auto& [pos, stack] : mChunkStacks) {
         stack.Draw(frustum, chunkShader, totalChunks, chunksDrawn);
     }

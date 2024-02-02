@@ -62,7 +62,7 @@ public:
     int mRenderDistance = 5;
 	int mBufferPerFrame = 20;
     Player player;
-    void Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn);
+    void Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn, float time);
     void TrySwitchToNextTextureAtlas();
     void GenerateChunks();
 
