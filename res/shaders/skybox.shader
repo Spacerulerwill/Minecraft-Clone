@@ -7,11 +7,12 @@ out vec3 TexCoords;
 
 uniform mat4 projection;
 uniform mat4 view;
+uniform mat4 model;
 
 void main()
 {
     TexCoords = aPos;
-    vec4 pos = projection * view * vec4(aPos, 1.0);
+    vec4 pos = projection * view * model * vec4(aPos, 1.0);
     gl_Position = pos.xyww;
 } 
 
@@ -22,10 +23,12 @@ out vec4 FragColor;
 
 in vec3 TexCoords;
 
-uniform samplerCube skybox;
-uniform float brightness;
+uniform samplerCube day_skybox;
+uniform samplerCube night_skybox;
 
 void main()
 {    
-    FragColor = texture(skybox, TexCoords) * brightness;
+	vec4 day = texture(day_skybox, TexCoords);
+    vec4 night = texture(night_skybox, TexCoords);
+    FragColor = day;
 }

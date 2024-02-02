@@ -50,18 +50,28 @@ float Skybox::sSkyboxVertices[108] = {
     1.0f, -1.0f,  1.0f
 };
 
-std::array<std::string, 6> Skybox::sSkyboxFaces = {
-    "textures/skybox/right.jpg",
-    "textures/skybox/left.jpg",
-    "textures/skybox/top.jpg",
-    "textures/skybox/bottom.jpg",
-    "textures/skybox/front.jpg",
-    "textures/skybox/back.jpg"
+std::array<std::string, 6> Skybox::sDaySkyboxFaces = {
+    "textures/skybox/test/yellowcloud_rt.jpg",
+    "textures/skybox/test/yellowcloud_lf.jpg",
+    "textures/skybox/test/yellowcloud_up.jpg",
+    "textures/skybox/test/yellowcloud_dn.jpg",
+    "textures/skybox/test/yellowcloud_ft.jpg",
+    "textures/skybox/test/yellowcloud_bk.jpg" 
+};
+
+std::array<std::string, 6> Skybox::sNightSkyboxFaces = {
+	"textures/skybox/night_right.png",
+    "textures/skybox/night_left.png",
+    "textures/skybox/night_top.png",
+    "textures/skybox/night_bottom.png",
+    "textures/skybox/night_front.png",
+    "textures/skybox/night_back.png"
 };
 
 Skybox::Skybox()
 {
-    mCubemap = Cubemap(sSkyboxFaces, GL_TEXTURE0);
+    mDayCubemap = Cubemap(sDaySkyboxFaces, GL_TEXTURE0);
+	mNightCubemap = Cubemap(sNightSkyboxFaces, GL_TEXTURE1);
 
     // Setup Buffers
     VertexBufferLayout bufLayout;
@@ -70,13 +80,14 @@ Skybox::Skybox()
     mVAO.AddBuffer(mVBO, bufLayout);
 }
 
-void Skybox::Draw(const Mat4& projection, const Mat4& view, float skyboxBrightness) {
+void Skybox::Draw(const Mat4& projection, const Mat4& view, const Mat4& model) {
     mShader.Bind();
     mVAO.Bind();
-    mShader.SetInt("skybox", 0);
+    mShader.SetInt("day_skybox", 0);
+	mShader.SetInt("night_skybox", 1);
     mShader.SetMat4("projection", projection);
     mShader.SetMat4("view", view);
-	mShader.SetFloat("brightness", skyboxBrightness);
+	mShader.SetMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 

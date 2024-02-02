@@ -134,11 +134,11 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     Mat4 perspective = player.camera.perspectiveMatrix;
     Mat4 view = player.camera.GetViewMatrix();
 	float time = static_cast<float>(glfwGetTime());
-	float ambientTerrainLight = (((0.5 * cos(time) + 0.5) * 0.8) + 0.5);
-	float skyboxBrightness = 0.5 * cos(time) + 0.5;
+	float ambientTerrainLight = 0.5;
 
     glDepthFunc(GL_LEQUAL);
-    mSkybox.Draw(perspective, translationRemoved(view), skyboxBrightness);
+	Mat4 model = rotate(Vec3{0.0, 1.0, 0.0}, time * 0.01); 
+    mSkybox.Draw(perspective, translationRemoved(view), model);
     glDepthFunc(GL_LESS);
 
     chunkShader.Bind();

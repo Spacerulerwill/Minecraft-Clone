@@ -87,7 +87,7 @@ void Game::Run(std::string worldDirectory) {
     int crosshair_size = 32;
     float bottom_corner_x = (SCREEN_WIDTH / 2.0f) - crosshair_size / 2.0f;
     float bottom_corner_y = (SCREEN_HEIGHT / 2.0f) - crosshair_size / 2.0f;
-
+    Tex2D crosshairTexture = Tex2D("textures/ui/crosshair.png", GL_TEXTURE2);
     float crosshairVerts[24] = {
         bottom_corner_x, bottom_corner_y, 0.0f, 0.0f, // bottom left
         bottom_corner_x + crosshair_size, bottom_corner_y, 1.0f, 0.0f, // bottom right
@@ -106,11 +106,22 @@ void Game::Run(std::string worldDirectory) {
 	
 	auto backgroundMusic = ScopedLoopingSound("sound/music.mp3"); 
     mWindow.SetVisible();
+	
+	// frame timings
+	float accumulator = 0.0f;
 
     while (!mWindow.ShouldClose()) {
         float currentFrame = static_cast<float>(glfwGetTime());
         mDeltaTime = currentFrame - mLastFrame;
-        mLastFrame = currentFrame;
+        mLastFrame = currentFrame;	
+		accumulator += mDeltaTime;
+
+		// perform physics updates
+		while (accumulator >= PHYSICS_UPDATE_TIME)
+		{
+			pWorld->player.ApplyGravity(*pWorld, mDeltaTime);
+			accumulator -= PHYSICS_UPDATE_TIME;
+		}
 
         // Set sound engine listener to players position
         SoundEngine::GetEngine()->setListenerPosition(
@@ -119,8 +130,6 @@ void Game::Run(std::string worldDirectory) {
         );
 
         ProcessKeyInput();
-
-        pWorld->player.ApplyGravity(*pWorld, mDeltaTime);
 
         if (mIsWireFrame) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -153,7 +162,6 @@ void Game::Run(std::string worldDirectory) {
 
         // Draw the crosshair
         Mat4 ortho = orthographic(0.0f, SCREEN_HEIGHT, 0.0f, SCREEN_WIDTH, -1.0f, 100.0f);
-        Tex2D crosshairTexture = Tex2D("textures/ui/crosshair.png", GL_TEXTURE2);
         glActiveTexture(GL_TEXTURE2);
         crosshairShader.Bind();
         crosshairVAO.Bind();

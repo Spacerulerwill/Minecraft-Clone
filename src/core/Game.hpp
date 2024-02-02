@@ -15,8 +15,9 @@ License: MIT
 #include <irrKlang/irrKlang.h>
 #include <util/Log.hpp>
 
-constexpr int SCREEN_WIDTH = 1280;
-constexpr int SCREEN_HEIGHT = 720;
+constexpr const int SCREEN_WIDTH = 1280;
+constexpr const int SCREEN_HEIGHT = 720;
+constexpr const float PHYSICS_UPDATE_TIME = 0.01f;
 
 struct GLFWContext {
     GLFWContext() {
