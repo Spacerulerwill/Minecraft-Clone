@@ -131,7 +131,7 @@ World::~World() {
 
 void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn, float time)
 {
-	float day = time / 120.0f;
+	float day = time / 10.0f;
 	float currentDay;
 	float currentDayProgress = std::modf(day, &currentDay);
 
