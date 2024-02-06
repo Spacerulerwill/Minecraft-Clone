@@ -11,7 +11,6 @@ License: MIT
 #include <opengl/BufferObject.hpp>
 #include <opengl/Shader.hpp>
 #include <world/chunk/ChunkMesher.hpp>
-#include <world/chunk/Constants.hpp>
 #include <world/Block.hpp>
 #include <math/Vector.hpp>
 #include <math/Matrix.hpp>

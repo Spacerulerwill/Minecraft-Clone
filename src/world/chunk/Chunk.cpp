@@ -4,7 +4,6 @@ License: MIT
 */
 
 #include <world/chunk/Chunk.hpp>
-#include <world/chunk/Constants.hpp>
 #include <world/Block.hpp>
 #include <GLFW/glfw3.h>
 #include <cmath>

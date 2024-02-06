@@ -3,15 +3,12 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 LICENSE: MIT
 */
 
-#include <world/chunk/Constants.hpp>
 #include <world/chunk/ChunkStack.hpp>
 #include <world/World.hpp>
 #include <world/Block.hpp>
 #include <util/Log.hpp>
 #include <random>
 #include <fstream>
-#include <gzip/compress.hpp>
-#include <gzip/decompress.hpp>
 
 ChunkStack::ChunkStack(iVec2 pos) : mPos(pos)
 {
