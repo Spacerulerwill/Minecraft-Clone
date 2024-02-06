@@ -45,6 +45,14 @@ private:
     Sphere sphere;
 public:
     Chunk(iVec3 pos);
+	static constexpr int SIZE_PADDED_LOG_2 = 6;
+	static constexpr int SIZE_PADDED_SQUARED_LOG_2 = SIZE_PADDED_LOG_2 * 2;
+	static constexpr int SIZE_PADDED = 1 << SIZE_PADDED_LOG_2;
+	static constexpr int SIZE_PADDED_SQUARED = 1 << SIZE_PADDED_SQUARED_LOG_2;
+	static constexpr int SIZE_PADDED_CUBED = SIZE_PADDED_SQUARED * SIZE_PADDED;
+	static constexpr int SIZE_PADDED_SUB_1 = SIZE_PADDED - 1;
+	static constexpr int SIZE = SIZE_PADDED - 2;
+	static constexpr int HALF_SIZE = SIZE / 2;
     iVec3 GetPosition() const;
     void AllocateMemory();
     void ReleaseMemory();

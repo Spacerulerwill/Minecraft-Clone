@@ -37,7 +37,6 @@ add_executable(${PROJECT_NAME}
     src/world/chunk/ChunkMesher.hpp
     src/world/chunk/ChunkStack.cpp
     src/world/chunk/ChunkStack.hpp
-    src/world/chunk/Constants.hpp
     src/world/Block.cpp
     src/world/Block.hpp
     src/world/Player.cpp
@@ -127,5 +126,5 @@ add_compile_definitions(GLFW_INCLUDE_NONE)
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W4 /wd4996 /external:W0)
 else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wpedantic -Wconversion -Wsign-conversion)
 endif()

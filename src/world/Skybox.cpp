@@ -91,7 +91,7 @@ Skybox::Skybox()
     mVAO.AddBuffer(mVBO, bufLayout);
 }
 
-void Skybox::Draw(const Mat4& projection, const Mat4& view, const Mat4& model, float currentDayProgress) {
+void Skybox::Draw(const Mat4& projection, const Mat4& view, const Mat4& model, double currentDayProgress) {
     mShader.Bind();
     mVAO.Bind();
     mShader.SetInt("day_skybox", 0);
@@ -100,7 +100,7 @@ void Skybox::Draw(const Mat4& projection, const Mat4& view, const Mat4& model, f
     mShader.SetMat4("projection", projection);
     mShader.SetMat4("view", view);
 	mShader.SetMat4("model", model);
-	mShader.SetFloat("current_day_progress", currentDayProgress);
+	mShader.SetFloat("current_day_progress", static_cast<float>(currentDayProgress));
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 

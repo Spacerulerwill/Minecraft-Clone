@@ -5,6 +5,7 @@ LICENSE: MIT
 
 #include <world/chunk/Constants.hpp>
 #include <world/chunk/ChunkStack.hpp>
+#include <world/World.hpp>
 #include <world/Block.hpp>
 #include <util/Log.hpp>
 #include <random>
@@ -14,7 +15,7 @@ LICENSE: MIT
 
 ChunkStack::ChunkStack(iVec2 pos) : mPos(pos)
 {
-    for (int y = 0; y < DEFAULT_CHUNK_STACK_HEIGHT; y++) {
+    for (int y = 0; y < ChunkStack::DEFAULT_SIZE; y++) {
         mChunks.emplace_back(std::make_shared<Chunk>(iVec3{ pos[0], y, pos[1] }));
     }
 }
@@ -47,35 +48,35 @@ void ChunkStack::GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::Pe
         mChunks.at(i)->AllocateMemory();
     }
 
-    for (int x = 0; x < CS_P; x++) {
-        for (int z = 0; z < CS_P; z++) {
-            float heightMultiplayer = perlin.octave2D_01((mPos[0] * CS + x) * 0.001f, (mPos[1] * CS + z) * 0.001f, 4, 0.5);
-            int height = MIN_WORLD_GEN_HEIGHT + (heightMultiplayer * MAX_MINUS_MIN_WORLD_GEN_HEIGHT);
+    for (int x = 0; x < Chunk::SIZE_PADDED; x++) {
+        for (int z = 0; z < Chunk::SIZE_PADDED; z++) {
+            float heightMultiplayer = perlin.octave2D_01((mPos[0] * Chunk::SIZE + x) * 0.001f, (mPos[1] * Chunk::SIZE + z) * 0.001f, 4, 0.5);
+            int height = World::MIN_GEN_HEIGHT + (heightMultiplayer * World::MAX_SUB_MIN_GEN_HEIGHT);
 
-            if (height < WATER_LEVEL) {
-                for (int y = height; y < WATER_LEVEL; y++) {
+            if (height < World::World::WATER_LEVEL) {
+                for (int y = height; y < World::World::WATER_LEVEL; y++) {
                     SetBlock(iVec3{ x,y, z }, WATER);
                 }
                 SetBlock(iVec3{ x,height - 1,z }, DIRT);
             }
-			else if (height < WATER_LEVEL + 2) {
+			else if (height < World::World::WATER_LEVEL + 2) {
 				SetBlock(iVec3{x, height-1, z}, SAND);
 			}
             else {
                 SetBlock(iVec3{ x,height - 1,z }, GRASS);
 				float rand = distribution(gen);
 				if (rand < 0.01f) {
-					if (height <= MAX_WORLD_GEN_HEIGHT - 1) {
+					if (height <= World::MAX_GEN_HEIGHT - 1) {
 						SetBlock(iVec3{ x, height, z }, ROSE);
 					}
 				}
 				else if (rand < 0.02f) {
-					if (height <= MAX_WORLD_GEN_HEIGHT -1) {
+					if (height <= World::MAX_GEN_HEIGHT -1) {
 						SetBlock(iVec3{ x, height, z }, PINK_TULIP);
 					}
 				}
 				else if (rand < 0.2f) {
-					if (height <= MAX_WORLD_GEN_HEIGHT - 1) {
+					if (height <= World::MAX_GEN_HEIGHT - 1) {
 						SetBlock(iVec3{ x, height, z }, TALL_GRASS);
 					}
 				}	
@@ -90,23 +91,23 @@ void ChunkStack::GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::Pe
         }
     }
 
-    for (std::size_t i = 0; i < DEFAULT_CHUNK_STACK_HEIGHT; i++) {
+    for (std::size_t i = 0; i < ChunkStack::DEFAULT_SIZE; i++) {
         std::shared_ptr<Chunk> currentChunk = mChunks.at(i);
         std::shared_ptr<Chunk> belowChunk = GetChunk(i - 1);
         std::shared_ptr<Chunk> aboveChunk = GetChunk(i + 1);
 
         if (belowChunk != nullptr) {
-            for (int x = 1; x < CS_P_MINUS_ONE; x++) {
-                for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-                    currentChunk->SetBlock(iVec3{ x, 0, z }, belowChunk->GetBlock(iVec3{ x, CS, z }));
+            for (int x = 1; x < Chunk::SIZE_PADDED_SUB_1; x++) {
+                for (int z = 1; z < Chunk::SIZE_PADDED_SUB_1; z++) {
+                    currentChunk->SetBlock(iVec3{ x, 0, z }, belowChunk->GetBlock(iVec3{ x, Chunk::SIZE, z }));
                 }
             }
         }
 
         if (aboveChunk != nullptr) {
-            for (int x = 1; x < CS_P_MINUS_ONE; x++) {
-                for (int z = 1; z < CS_P_MINUS_ONE; z++) {
-                    currentChunk->SetBlock(iVec3{ x, CS_P_MINUS_ONE, z }, aboveChunk->GetBlock(iVec3{ x, 1, z }));
+            for (int x = 1; x < Chunk::SIZE_PADDED_SUB_1; x++) {
+                for (int z = 1; z < Chunk::SIZE_PADDED_SUB_1; z++) {
+                    currentChunk->SetBlock(iVec3{ x, Chunk::SIZE_PADDED_SUB_1, z }, aboveChunk->GetBlock(iVec3{ x, 1, z }));
                 }
             }
         }
@@ -123,7 +124,7 @@ void ChunkStack::Load(const std::string& worldDirectory, siv::PerlinNoise::seed_
 		
 		for (std::size_t i = 0; i < chunkCount; i++) {
 			mChunks[i]->AllocateMemory();
-			chunkStackFileStream.read(reinterpret_cast<char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * CS_P3);
+			chunkStackFileStream.read(reinterpret_cast<char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED);
 		}
 			
 	} else {
@@ -138,13 +139,16 @@ void ChunkStack::Load(const std::string& worldDirectory, siv::PerlinNoise::seed_
 		chunk->CreateMesh();
 	}
 	isBeingLoaded = false;
+	isLoaded = true;
 }
 
 void ChunkStack::Unload(const std::string& worldDirectory) {
-	SaveToFile(worldDirectory);
-
-	for (auto& chunk : mChunks) {
-		chunk->ReleaseMemory();
+	if (isLoaded) {
+		isLoaded = false;
+		SaveToFile(worldDirectory);
+		for (auto& chunk : mChunks) {
+			chunk->ReleaseMemory();
+		}
 	}
 }
 
@@ -158,9 +162,9 @@ void ChunkStack::SaveToFile(const std::string& worldDirectory) {
 		for (std::size_t i = 0; i < chunkCount; i++) {
 			if (mChunks[i]->needsSaving) {
 				mChunks[i]->needsSaving = false;
-				out.write(reinterpret_cast<const char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * CS_P3);
+				out.write(reinterpret_cast<const char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED);
 			} else {
-				out.seekp(sizeof(BlockID) * CS_P3, std::ios::cur);
+				out.seekp(sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED, std::ios::cur);
 			}
 		}
 	} else {
@@ -169,7 +173,7 @@ void ChunkStack::SaveToFile(const std::string& worldDirectory) {
 		out.write(reinterpret_cast<char*>(&chunkCount), sizeof(std::size_t));
 		for (std::size_t i = 0; i < chunkCount; i++) {
 			mChunks[i]->needsSaving = false;
-			out.write(reinterpret_cast<const char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * CS_P3);	
+			out.write(reinterpret_cast<const char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED);	
 		}
 	}
 
@@ -205,11 +209,11 @@ void ChunkStack::DrawCustomModel(const Frustum& frustum, Shader& shader, int* to
 }
 
 void ChunkStack::SetBlock(iVec3 pos, BlockID block) {
-    mChunks.at(pos[1] / CS)->SetBlock(iVec3{ pos[0], 1 + pos[1] % CS, pos[2] }, block);
+    mChunks.at(pos[1] / Chunk::SIZE)->SetBlock(iVec3{ pos[0], 1 + pos[1] % Chunk::SIZE, pos[2] }, block);
 }
 
 BlockID ChunkStack::GetBlock(iVec3 pos) const {
-    return mChunks.at(pos[1] / CS)->GetBlock(iVec3{ pos[0], 1 + pos[1] % CS, pos[2] });
+    return mChunks.at(pos[1] / Chunk::SIZE)->GetBlock(iVec3{ pos[0], 1 + pos[1] % Chunk::SIZE, pos[2] });
 }
 
 std::shared_ptr<Chunk>ChunkStack::GetChunk(std::size_t y) const {

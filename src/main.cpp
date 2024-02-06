@@ -55,7 +55,8 @@ MenuOptionResult create_world() {
 	std::filesystem::create_directory(worldDirectory);
 	std::filesystem::create_directory(fmt::format("{}/chunk_stacks", worldDirectory));
 	WorldSave worldSave {
-		.seed = seed
+		.seed = seed,
+		.elapsedTime = 0.0
 	};
 	WriteStructToDisk(fmt::format("{}/world.data", worldDirectory), worldSave);
 	PlayerSave playerSave {

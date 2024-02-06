@@ -107,12 +107,10 @@ void Game::Run(std::string worldDirectory) {
 	auto backgroundMusic = ScopedLoopingSound("sound/music.mp3"); 
     mWindow.SetVisible();
 
-	float worldStartTime = static_cast<float>(glfwGetTime());
     while (!mWindow.ShouldClose()) {
-        float currentFrame = static_cast<float>(glfwGetTime());
-		float worldTime = currentFrame - worldStartTime;
-        mDeltaTime = currentFrame - mLastFrame;
-        mLastFrame = currentFrame;	
+        double currentFrame = static_cast<float>(glfwGetTime());
+        mDeltaTime = static_cast<float>(currentFrame - mLastFrame);
+        mLastFrame = static_cast<float>(currentFrame);	
 
 		pWorld->player.ApplyGravity(*pWorld, mDeltaTime);	
 
@@ -140,9 +138,8 @@ void Game::Run(std::string worldDirectory) {
 
         int potentialDrawCalls = 0;
         int totalDrawCalls = 0;
-
         Frustum frustum = pWorld->player.camera.GetFrustum();
-        pWorld->Draw(frustum, &potentialDrawCalls, &totalDrawCalls, worldTime);
+        pWorld->Draw(frustum, &potentialDrawCalls, &totalDrawCalls);
 
         if (mIsWireFrame) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -182,6 +179,7 @@ void Game::Run(std::string worldDirectory) {
         ImGui::Text(fmt::format("FPS: {}", static_cast<int>(1.0f / mDeltaTime)).c_str());
         ImGui::Text(fmt::format("Potential Draw Calls: {}", potentialDrawCalls).c_str());
         ImGui::Text(fmt::format("Total Draw Calls: {}", totalDrawCalls).c_str());
+		ImGui::Text(fmt::format("Time: {}", pWorld->currentTime).c_str());
         ImGui::Text(
             "Controls:\n"
             "Tab - Toggle mouse on screen\n"

@@ -11,7 +11,7 @@ License: MIT
 #include <util/Log.hpp>
 
 std::size_t VoxelIndex(iVec3 pos) {
-    return pos[2] + (pos[0] << CHUNK_SIZE_EXP) + (pos[1] << CHUNK_SIZE_EXP_X2);
+    return pos[2] + (pos[0] << Chunk::SIZE_PADDED_LOG_2) + (pos[1] << Chunk::SIZE_PADDED_SQUARED_LOG_2);
 }
 
 Chunk::Chunk(iVec3 pos) : mPos(pos)
@@ -25,11 +25,14 @@ Chunk::Chunk(iVec3 pos) : mPos(pos)
     mCustomModelVAO.AddBuffer(mCustomModelVBO, bufferLayout);
 
 	// Transform it to its global position
-    Vec3 globalPosition = static_cast<Vec3>(pos) * CS;
+    Vec3 globalPosition = static_cast<Vec3>(pos) * Chunk::SIZE;
     mModel *= translate(globalPosition);
 
 	// Sphere for frustum culling
-    sphere = Sphere{ globalPosition + Vec3{CS_OVER_2, CS_OVER_2, CS_OVER_2}, Vec3{CS_OVER_2, CS_OVER_2, CS_OVER_2}.length() };
+    sphere = Sphere{ 
+		globalPosition + Vec3{Chunk::HALF_SIZE, Chunk::HALF_SIZE, Chunk::HALF_SIZE}, 
+		Vec3{Chunk::HALF_SIZE, Chunk::HALF_SIZE, Chunk::HALF_SIZE}.length() 
+	};
 }
 
 iVec3 Chunk::GetPosition() const
@@ -39,7 +42,7 @@ iVec3 Chunk::GetPosition() const
 
 void Chunk::AllocateMemory()
 {
-    mBlocks.resize(CS_P3);
+    mBlocks.resize(Chunk::SIZE_PADDED_CUBED);
 }
 
 void Chunk::ReleaseMemory()

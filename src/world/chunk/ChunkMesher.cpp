@@ -21,9 +21,9 @@ inline const int CTZ(uint64_t x) {
 #endif
 
 inline const int GetAxisIndex(const int& axis, const int& a, const int& b, const int& c) {
-    if (axis == 0) return b + (a * CS_P) + (c * CS_P2);
-    else if (axis == 1) return a + (c * CS_P) + (b * CS_P2);
-    else return c + (b * CS_P) + (a * CS_P2);
+    if (axis == 0) return b + (a * Chunk::SIZE_PADDED) + (c * Chunk::SIZE_PADDED_SQUARED);
+    else if (axis == 1) return a + (c * Chunk::SIZE_PADDED) + (b * Chunk::SIZE_PADDED_SQUARED);
+    else return c + (b * Chunk::SIZE_PADDED) + (a * Chunk::SIZE_PADDED_SQUARED);
 }
 
 inline const bool SolidCheck(int voxel) {
@@ -88,33 +88,33 @@ inline ChunkMesher::ChunkVertex GetChunkVertex(uint32_t x, uint32_t y, uint32_t 
 }
 
 void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks) {
-    std::vector<uint64_t> axis_cols(CS_P2 * 3);
-    std::vector<uint64_t> col_face_masks(CS_P2 * 6);
+    std::vector<uint64_t> axis_cols(Chunk::SIZE_PADDED_SQUARED * 3);
+    std::vector<uint64_t> col_face_masks(Chunk::SIZE_PADDED_SQUARED * 6);
 
     // Step 1: Convert to binary representation for each direction
     int index = 0;
-    for (int y = 0; y < CS_P; y++) {
-        for (int x = 0; x < CS_P; x++) {
+    for (int y = 0; y < Chunk::SIZE_PADDED; y++) {
+        for (int x = 0; x < Chunk::SIZE_PADDED; x++) {
             uint64_t zb = 0;
-            for (int z = 0; z < CS_P; z++) {
+            for (int z = 0; z < Chunk::SIZE_PADDED; z++) {
                 BlockDataStruct blockData = BlockData[blocks[index]];
                 if (blockData.opaque && blockData.modelID == static_cast<ModelID>(Model::CUBE)) {
-                    axis_cols[x + (z * CS_P)] |= 1ULL << y;
-                    axis_cols[z + (y * CS_P) + (CS_P2)] |= 1ULL << x;
+                    axis_cols[x + (z * Chunk::SIZE_PADDED)] |= 1ULL << y;
+                    axis_cols[z + (y * Chunk::SIZE_PADDED) + (Chunk::SIZE_PADDED_SQUARED)] |= 1ULL << x;
                     zb |= 1ULL << z;
                 }
                 index++;
             }
-            axis_cols[y + (x * CS_P) + (CS_P2 * 2)] = zb;
+            axis_cols[y + (x * Chunk::SIZE_PADDED) + (Chunk::SIZE_PADDED_SQUARED * 2)] = zb;
         }
     }
 
     // Step 2: Visible face culling
     for (int axis = 0; axis <= 2; axis++) {
-        for (int i = 0; i < CS_P2; i++) {
-            uint64_t col = axis_cols[(CS_P2 * axis) + i];
-            col_face_masks[(CS_P2 * (axis * 2)) + i] = col & ~((col >> 1) | (1ULL << (CS_P - 1)));
-            col_face_masks[(CS_P2 * (axis * 2 + 1)) + i] = col & ~((col << 1) | 1ULL);
+        for (int i = 0; i < Chunk::SIZE_PADDED_SQUARED; i++) {
+            uint64_t col = axis_cols[(Chunk::SIZE_PADDED_SQUARED * axis) + i];
+            col_face_masks[(Chunk::SIZE_PADDED_SQUARED * (axis * 2)) + i] = col & ~((col >> 1) | (1ULL << (Chunk::SIZE_PADDED - 1)));
+            col_face_masks[(Chunk::SIZE_PADDED_SQUARED * (axis * 2 + 1)) + i] = col & ~((col << 1) | 1ULL);
         }
     }
 
@@ -123,14 +123,14 @@ void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std
         int axis = face / 2;
         int light_dir = face % 2 == 0 ? 1 : -1;
 
-        std::vector<int> merged_forward(CS_P2);
-        for (int forward = 1; forward < CS_P - 1; forward++) {
+        std::vector<int> merged_forward(Chunk::SIZE_PADDED_SQUARED);
+        for (int forward = 1; forward < Chunk::SIZE_PADDED - 1; forward++) {
             uint64_t bits_walking_right = 0;
-            int merged_right[CS_P] = { 0 };
-            for (int right = 1; right < CS_P - 1; right++) {
-                uint64_t bits_here = col_face_masks[right + (forward * CS_P) + (face * CS_P2)];
-                uint64_t bits_forward = forward >= CS ? 0 : col_face_masks[right + (forward * CS_P) + (face * CS_P2) + CS_P];
-                uint64_t bits_right = right >= CS ? 0 : col_face_masks[right + 1 + (forward * CS_P) + (face * CS_P2)];
+            int merged_right[Chunk::SIZE_PADDED] = { 0 };
+            for (int right = 1; right < Chunk::SIZE_PADDED - 1; right++) {
+                uint64_t bits_here = col_face_masks[right + (forward * Chunk::SIZE_PADDED) + (face * Chunk::SIZE_PADDED_SQUARED)];
+                uint64_t bits_forward = forward >= Chunk::SIZE ? 0 : col_face_masks[right + (forward * Chunk::SIZE_PADDED) + (face * Chunk::SIZE_PADDED_SQUARED) + Chunk::SIZE_PADDED];
+                uint64_t bits_right = right >= Chunk::SIZE ? 0 : col_face_masks[right + 1 + (forward * Chunk::SIZE_PADDED) + (face * Chunk::SIZE_PADDED_SQUARED)];
                 uint64_t bits_merging_forward = bits_here & bits_forward & ~bits_walking_right;
                 uint64_t bits_merging_right = bits_here & bits_right;
 
@@ -140,10 +140,10 @@ void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std
                     int bit_pos = CTZ(copy_front);
                     copy_front &= ~(1ULL << bit_pos);
 
-                    if (bit_pos == 0 || bit_pos == CS_P - 1) continue;
+                    if (bit_pos == 0 || bit_pos == Chunk::SIZE_PADDED - 1) continue;
 
                     if (CompareForward(blocks, axis, forward, right, bit_pos, light_dir)) {
-                        merged_forward[(right * CS_P) + bit_pos]++;
+                        merged_forward[(right * Chunk::SIZE_PADDED) + bit_pos]++;
                     }
                     else {
                         bits_merging_forward &= ~(1ULL << bit_pos);
@@ -156,23 +156,23 @@ void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std
                     bits_stopped_forward &= ~(1ULL << bit_pos);
 
                     // Discards faces from neighbor blocks
-                    if (bit_pos == 0 || bit_pos == CS_P - 1) { continue; };
+                    if (bit_pos == 0 || bit_pos == Chunk::SIZE_PADDED - 1) { continue; };
 
                     if (
                         (bits_merging_right & (1ULL << bit_pos)) != 0 &&
-                        merged_forward[(right * CS_P) + bit_pos] == merged_forward[(right + 1) * CS_P + bit_pos] &&
+                        merged_forward[(right * Chunk::SIZE_PADDED) + bit_pos] == merged_forward[(right + 1) * Chunk::SIZE_PADDED + bit_pos] &&
                         CompareRight(blocks, axis, forward, right, bit_pos, light_dir))
                     {
                         bits_walking_right |= 1ULL << bit_pos;
                         merged_right[bit_pos]++;
-                        merged_forward[(right * CS_P) + bit_pos] = 0;
+                        merged_forward[(right * Chunk::SIZE_PADDED) + bit_pos] = 0;
                         continue;
                     }
                     bits_walking_right &= ~(1ULL << bit_pos);
 
                     uint8_t mesh_left = right - merged_right[bit_pos];
                     uint8_t mesh_right = right + 1;
-                    uint8_t mesh_front = forward - merged_forward[(right * CS_P) + bit_pos];
+                    uint8_t mesh_front = forward - merged_forward[(right * Chunk::SIZE_PADDED) + bit_pos];
                     uint8_t mesh_back = forward + 1;
                     uint8_t mesh_up = bit_pos + (face % 2 == 0 ? 1 : 0);
 
@@ -196,7 +196,7 @@ void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std
                     uint32_t ao_RB = VertexAO(ao_R, ao_B, ao_RBC);
                     uint32_t ao_RF = VertexAO(ao_R, ao_F, ao_RFC);
 
-                    merged_forward[(right * CS_P) + bit_pos] = 0;
+                    merged_forward[(right * Chunk::SIZE_PADDED) + bit_pos] = 0;
                     merged_right[bit_pos] = 0;
 
                     ChunkVertex v1{}, v2{}, v3{}, v4{};
@@ -259,32 +259,32 @@ void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std
 }
 
 void ChunkMesher::BinaryGreedyMeshTransparentBlock(BlockID block, std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks) {
-    std::vector<uint64_t> axis_cols(CS_P2 * 3);
-    std::vector<uint64_t> col_face_masks(CS_P2 * 6);
+    std::vector<uint64_t> axis_cols(Chunk::SIZE_PADDED_SQUARED * 3);
+    std::vector<uint64_t> col_face_masks(Chunk::SIZE_PADDED_SQUARED * 6);
 
     // Step 1: Convert to binary representation for each direction
     int index = 0;
-    for (int y = 0; y < CS_P; y++) {
-        for (int x = 0; x < CS_P; x++) {
+    for (int y = 0; y < Chunk::SIZE_PADDED; y++) {
+        for (int x = 0; x < Chunk::SIZE_PADDED; x++) {
             uint64_t zb = 0;
-            for (int z = 0; z < CS_P; z++) {
+            for (int z = 0; z < Chunk::SIZE_PADDED; z++) {
                 if (blocks[index] == block) {
-                    axis_cols[x + (z * CS_P)] |= 1ULL << y;
-                    axis_cols[z + (y * CS_P) + (CS_P2)] |= 1ULL << x;
+                    axis_cols[x + (z * Chunk::SIZE_PADDED)] |= 1ULL << y;
+                    axis_cols[z + (y * Chunk::SIZE_PADDED) + (Chunk::SIZE_PADDED_SQUARED)] |= 1ULL << x;
                     zb |= 1ULL << z;
                 }
                 index++;
             }
-            axis_cols[y + (x * CS_P) + (CS_P2 * 2)] = zb;
+            axis_cols[y + (x * Chunk::SIZE_PADDED) + (Chunk::SIZE_PADDED_SQUARED * 2)] = zb;
         }
     }
 
     // Step 2: Visible face culling
     for (int axis = 0; axis <= 2; axis++) {
-        for (int i = 0; i < CS_P2; i++) {
-            uint64_t col = axis_cols[(CS_P2 * axis) + i];
-            col_face_masks[(CS_P2 * (axis * 2)) + i] = col & ~((col >> 1) | (1ULL << (CS_P - 1)));
-            col_face_masks[(CS_P2 * (axis * 2 + 1)) + i] = col & ~((col << 1) | 1ULL);
+        for (int i = 0; i < Chunk::SIZE_PADDED_SQUARED; i++) {
+            uint64_t col = axis_cols[(Chunk::SIZE_PADDED_SQUARED * axis) + i];
+            col_face_masks[(Chunk::SIZE_PADDED_SQUARED * (axis * 2)) + i] = col & ~((col >> 1) | (1ULL << (Chunk::SIZE_PADDED - 1)));
+            col_face_masks[(Chunk::SIZE_PADDED_SQUARED * (axis * 2 + 1)) + i] = col & ~((col << 1) | 1ULL);
         }
     }
 
@@ -293,14 +293,14 @@ void ChunkMesher::BinaryGreedyMeshTransparentBlock(BlockID block, std::vector<Ch
         int axis = face / 2;
         int light_dir = face % 2 == 0 ? 1 : -1;
 
-        std::vector<int> merged_forward(CS_P2);
-        for (int forward = 1; forward < CS_P - 1; forward++) {
+        std::vector<int> merged_forward(Chunk::SIZE_PADDED_SQUARED);
+        for (int forward = 1; forward < Chunk::SIZE_PADDED - 1; forward++) {
             uint64_t bits_walking_right = 0;
-            int merged_right[CS_P] = { 0 };
-            for (int right = 1; right < CS_P - 1; right++) {
-                uint64_t bits_here = col_face_masks[right + (forward * CS_P) + (face * CS_P2)];
-                uint64_t bits_forward = forward >= CS ? 0 : col_face_masks[right + (forward * CS_P) + (face * CS_P2) + CS_P];
-                uint64_t bits_right = right >= CS ? 0 : col_face_masks[right + 1 + (forward * CS_P) + (face * CS_P2)];
+            int merged_right[Chunk::SIZE_PADDED] = { 0 };
+            for (int right = 1; right < Chunk::SIZE_PADDED - 1; right++) {
+                uint64_t bits_here = col_face_masks[right + (forward * Chunk::SIZE_PADDED) + (face * Chunk::SIZE_PADDED_SQUARED)];
+                uint64_t bits_forward = forward >= Chunk::SIZE ? 0 : col_face_masks[right + (forward * Chunk::SIZE_PADDED) + (face * Chunk::SIZE_PADDED_SQUARED) + Chunk::SIZE_PADDED];
+                uint64_t bits_right = right >= Chunk::SIZE ? 0 : col_face_masks[right + 1 + (forward * Chunk::SIZE_PADDED) + (face * Chunk::SIZE_PADDED_SQUARED)];
                 uint64_t bits_merging_forward = bits_here & bits_forward & ~bits_walking_right;
                 uint64_t bits_merging_right = bits_here & bits_right;
 
@@ -310,10 +310,10 @@ void ChunkMesher::BinaryGreedyMeshTransparentBlock(BlockID block, std::vector<Ch
                     int bit_pos = CTZ(copy_front);
                     copy_front &= ~(1ULL << bit_pos);
 
-                    if (bit_pos == 0 || bit_pos == CS_P - 1) continue;
+                    if (bit_pos == 0 || bit_pos == Chunk::SIZE_PADDED - 1) continue;
 
                     if (CompareForward(blocks, axis, forward, right, bit_pos, light_dir)) {
-                        merged_forward[(right * CS_P) + bit_pos]++;
+                        merged_forward[(right * Chunk::SIZE_PADDED) + bit_pos]++;
                     }
                     else {
                         bits_merging_forward &= ~(1ULL << bit_pos);
@@ -326,23 +326,23 @@ void ChunkMesher::BinaryGreedyMeshTransparentBlock(BlockID block, std::vector<Ch
                     bits_stopped_forward &= ~(1ULL << bit_pos);
 
                     // Discards faces from neighbor blocks
-                    if (bit_pos == 0 || bit_pos == CS_P - 1) { continue; };
+                    if (bit_pos == 0 || bit_pos == Chunk::SIZE_PADDED - 1) { continue; };
 
                     if (
                         (bits_merging_right & (1ULL << bit_pos)) != 0 &&
-                        merged_forward[(right * CS_P) + bit_pos] == merged_forward[(right + 1) * CS_P + bit_pos] &&
+                        merged_forward[(right * Chunk::SIZE_PADDED) + bit_pos] == merged_forward[(right + 1) * Chunk::SIZE_PADDED + bit_pos] &&
                         CompareRight(blocks, axis, forward, right, bit_pos, light_dir))
                     {
                         bits_walking_right |= 1ULL << bit_pos;
                         merged_right[bit_pos]++;
-                        merged_forward[(right * CS_P) + bit_pos] = 0;
+                        merged_forward[(right * Chunk::SIZE_PADDED) + bit_pos] = 0;
                         continue;
                     }
                     bits_walking_right &= ~(1ULL << bit_pos);
 
                     uint8_t mesh_left = right - merged_right[bit_pos];
                     uint8_t mesh_right = right + 1;
-                    uint8_t mesh_front = forward - merged_forward[(right * CS_P) + bit_pos];
+                    uint8_t mesh_front = forward - merged_forward[(right * Chunk::SIZE_PADDED) + bit_pos];
                     uint8_t mesh_back = forward + 1;
                     uint8_t mesh_up = bit_pos + (face % 2 == 0 ? 1 : 0);
 
@@ -366,7 +366,7 @@ void ChunkMesher::BinaryGreedyMeshTransparentBlock(BlockID block, std::vector<Ch
                     uint32_t ao_RB = VertexAO(ao_R, ao_B, ao_RBC);
                     uint32_t ao_RF = VertexAO(ao_R, ao_F, ao_RFC);
 
-                    merged_forward[(right * CS_P) + bit_pos] = 0;
+                    merged_forward[(right * Chunk::SIZE_PADDED) + bit_pos] = 0;
                     merged_right[bit_pos] = 0;
 
                     ChunkVertex v1{}, v2{}, v3{}, v4{};
@@ -436,9 +436,9 @@ inline ChunkMesher::ChunkVertex GetCustomModelBlockVertex(uint32_t x, uint32_t y
 }
 
 void ChunkMesher::MeshCustomModelBlocks(std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks) {
-    for (int x = 1; x < CS_P_MINUS_ONE; x++) {
-        for (int y = 1; y < CS_P_MINUS_ONE; y++) {
-            for (int z = 1; z < CS_P_MINUS_ONE; z++) {
+    for (int x = 1; x < Chunk::SIZE_PADDED_SUB_1; x++) {
+        for (int y = 1; y < Chunk::SIZE_PADDED_SUB_1; y++) {
+            for (int z = 1; z < Chunk::SIZE_PADDED_SUB_1; z++) {
                 BlockID type = blocks[VoxelIndex(iVec3{ x, y, z })];
                 BlockDataStruct blockData = BlockData[type];
                 if (blockData.modelID != static_cast<ModelID>(Model::CUBE)) {

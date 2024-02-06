@@ -83,13 +83,13 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                             auto chunk = world.GetChunk(chunkPos);
                             if (chunk != nullptr) {
                                 Vec3 blockPos = raycast.blockPos;
-                                blockPos[i] = CS_P_MINUS_ONE;
+                                blockPos[i] = Chunk::SIZE_PADDED_SUB_1;
                                 chunk->SetBlock(blockPos, AIR);
                                 chunk->CreateMesh();
                                 chunk->BufferData();
                             }
                         }
-                        else if (raycast.blockPos[i] == CS) {
+                        else if (raycast.blockPos[i] == Chunk::SIZE) {
                             chunkPos[i]++;
                             auto chunk = world.GetChunk(chunkPos);
                             if (chunk != nullptr) {
@@ -114,7 +114,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                 iVec3 blockPlacePosition = raycast.blockPos + raycast.normal;
 
                 for (int i = 0; i < 3; i++) {
-                    if (blockPlacePosition[i] == CS_P_MINUS_ONE) {
+                    if (blockPlacePosition[i] == Chunk::SIZE_PADDED_SUB_1) {
                         Vec3 chunkPos = raycast.chunk->GetPosition();
                         chunkPos[i]++;
                         chunkToPlaceIn = world.GetChunk(chunkPos);
@@ -140,7 +140,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                                 raycast.chunk->CreateMesh();
                                 raycast.chunk->BufferData();
                             }
-                            blockPlacePosition[i] = CS;
+                            blockPlacePosition[i] = Chunk::SIZE;
                             goto place_block;
                         }
                     }
@@ -160,7 +160,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                     }
 
                     for (int i = 0; i < 3; i++) {
-                        if (blockPlacePosition[i] == CS) {
+                        if (blockPlacePosition[i] == Chunk::SIZE) {
                             Vec3 chunkPos = chunkToPlaceIn->GetPosition();
                             chunkPos[i]++;
                             auto adjacentChunk = world.GetChunk(chunkPos);
@@ -181,9 +181,9 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                             auto adjacentChunk = world.GetChunk(chunkPos);
                             if (adjacentChunk != nullptr) {
                                 Vec3 blockPos = blockPlacePosition;
-                                blockPos[i] = CS_P_MINUS_ONE;
+                                blockPos[i] = Chunk::SIZE_PADDED_SUB_1;
                                 adjacentChunk->SetBlock(blockPos, selectedBlock);
-                                blockPos[i] = CS;
+                                blockPos[i] = Chunk::SIZE;
                                 if ((BlockData[selectedBlock].opaque) == (BlockData[adjacentChunk->GetBlock(blockPos)].opaque)) {
                                     adjacentChunk->CreateMesh();
                                     adjacentChunk->BufferData();

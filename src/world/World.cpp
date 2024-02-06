@@ -23,10 +23,10 @@ iVec3 GetChunkPosFromGlobalBlockPos(iVec3 globalBlockPos)
     iVec3 result;
     for (int i = 0; i < 3; i++) {
         if (globalBlockPos[i] < 0) {
-            result[i] = ((globalBlockPos[i] + 1) / CS) - 1;
+            result[i] = ((globalBlockPos[i] + 1) / Chunk::SIZE) - 1;
         }
         else {
-            result[i] = globalBlockPos[i] / CS;
+            result[i] = globalBlockPos[i] / Chunk::SIZE;
         }
     }
     return result;
@@ -37,10 +37,10 @@ iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 globalBlockPos)
     iVec3 result;
     for (int i = 0; i < 3; i++) {
         if (globalBlockPos[i] >= 0) {
-            result[i] = 1 + (globalBlockPos[i] % CS);
+            result[i] = 1 + (globalBlockPos[i] % Chunk::SIZE);
         }
         else {
-            result[i] = CS_P_MINUS_ONE - (1 + (abs(globalBlockPos[i]) - 1) % CS);
+            result[i] = Chunk::SIZE_PADDED_SUB_1 - (1 + (abs(globalBlockPos[i]) - 1) % Chunk::SIZE);
         }
     }
     return result;
@@ -54,6 +54,8 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
 	ReadStructFromDisk(fmt::format("{}/world.data", worldDirectory), worldSave);
 	seed = worldSave.seed;
     mPerlin.reseed(seed);
+	worldStartTime = worldSave.elapsedTime;
+	currentTime = worldSave.elapsedTime;
 	
 	// Load player data
 	PlayerSave playerSave;
@@ -71,8 +73,8 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
 	// Load spawn chunks
 	Vec3 playerPos = player.camera.position;
     iVec2 playerChunkPos{
-        static_cast<int>(floor(playerPos[0]) / CS),
-        static_cast<int>(floor(playerPos[2]) / CS)
+        static_cast<int>(floor(playerPos[0]) / Chunk::SIZE),
+        static_cast<int>(floor(playerPos[2]) / Chunk::SIZE)
     };
 
 	LOG_INFO("Loading spawn chunks for {} (Seed: {})", worldDirectory, seed);
@@ -104,13 +106,21 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
 			}
 		}
 	}
+
+	worldLoadedTime = glfwGetTime();
 }
 
 World::~World() {
+	// Purge all queued loading tasks and allow current to finish
+	mLoadPool.purge();
+	mLoadPool.wait_for_tasks();
+
 	// Save to disk
 	WorldSave worldSave {
-		.seed = seed
+		.seed = seed,
+		.elapsedTime = currentTime
 	};
+
 	WriteStructToDisk(fmt::format("{}/world.data", worldDirectory), worldSave);
 	PlayerSave playerSave {
 		.pos = player.camera.position,
@@ -129,11 +139,13 @@ World::~World() {
 	mUnloadPool.wait_for_tasks();
 }
 
-void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn, float time)
+void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 {
-	float day = time / 10.0f;
-	float currentDay;
-	float currentDayProgress = std::modf(day, &currentDay);
+	double glfwTime = glfwGetTime();
+	currentTime = worldStartTime + glfwTime - worldLoadedTime;
+	double day = currentTime / 120.0;
+	double currentDay;
+	double currentDayProgress = std::modf(day, &currentDay);
 
     Mat4 perspective = player.camera.perspectiveMatrix;
     Mat4 view = player.camera.GetViewMatrix();
@@ -152,7 +164,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn, flo
 	}
 
     glDepthFunc(GL_LEQUAL);
-	Mat4 model = rotate(Vec3{0.0, 1.0, 0.0}, time * 0.01); 
+	Mat4 model = rotate(Vec3{0.0f, 1.0f, 0.0f}, currentTime * 0.01f); 
     mSkybox.Draw(perspective, translationRemoved(view), model, currentDayProgress);
     glDepthFunc(GL_LESS);
 
@@ -207,8 +219,8 @@ void World::GenerateChunks()
 	// Detect what chunk the player is in
     Vec3 playerPos = player.camera.position;
     iVec2 playerChunkPos{
-        static_cast<int>(floor(playerPos[0]) / CS),
-        static_cast<int>(floor(playerPos[2]) / CS)
+        static_cast<int>(floor(playerPos[0]) / Chunk::SIZE),
+        static_cast<int>(floor(playerPos[2]) / Chunk::SIZE)
     };
 	
 	// Unload chunks out of distance
@@ -224,7 +236,7 @@ void World::GenerateChunks()
 			!stack.isBeingLoaded) {
 			
 			mUnloadPool.push_task([&stack, this] {
-				stack.Unload(this->worldDirectory);					
+						stack.Unload(this->worldDirectory);	
 			});
 			iteratorsToRemove.push_back(it);
 		} 

@@ -43,20 +43,30 @@ void main()
 		float sunset_progress = (current_day_progress - 0.5) / 0.05;
 		FragColor = mix(day, transition, sunset_progress);
 	} 
-	// 0.55 - 0.575 is fade to night
-	else if (current_day_progress <= 0.575) {
-		float fade_to_night_progress = (current_day_progress - 0.55) / 0.025;
-		FragColor = mix(transition, night, fade_to_night_progress);
+	// 0.55 - 0.59 is sunet to black
+	else if (current_day_progress <= 0.59) {
+		float fade_to_black_progress = (current_day_progress - 0.55) / 0.04;
+		FragColor = transition * (1.0 - fade_to_black_progress);
 	}
-	// 0.575 - 0.925 is night time
-	else if (current_day_progress <= 0.925) { 
-		float night_progress = (current_day_progress - 0.575) / 0.35;
+	// 0.59 - 0.6 is black to night sky
+	else if (current_day_progress <= 0.6) {
+		float black_to_night_progress = (current_day_progress - 0.59) / 0.01;
+		FragColor = night * black_to_night_progress;
+	}
+	// 0.6- 0.9 is night time
+	else if (current_day_progress <= 0.9) { 
+		float night_progress = (current_day_progress - 0.6) / 0.3;
 		FragColor = night;
 	} 
-	// 0.925 - 0.95 is night to sunrise
+	// 0.9 - 0.91 is night to black
+	else if (current_day_progress <= 0.91) {
+		float night_to_black_progress = (current_day_progress - 0.90) / 0.01;
+		FragColor = night * (1.0 - night_to_black_progress); 
+	}
+	// 0.91 - 0.95 is black to sunrise
 	else if (current_day_progress <= 0.95) {
-		float night_to_sunrise_progress = (current_day_progress - 0.925) / 0.025;
-		FragColor = mix(night, transition, night_to_sunrise_progress);
+		float black_to_sunrise_progress = (current_day_progress - 0.91) / 0.04;	
+		FragColor = transition * black_to_sunrise_progress; 
 	}
 	// rest is sunrise
 	else {

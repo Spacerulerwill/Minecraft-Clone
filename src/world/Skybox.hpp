@@ -30,7 +30,7 @@ private:
 	Cubemap mTransitionCubemap;
 public:
     Skybox();
-    void Draw(const Mat4& projection, const Mat4& view, const Mat4& model, float currentDayProgress);
+    void Draw(const Mat4& projection, const Mat4& view, const Mat4& model, double currentDayProgress);
 };
 
 #endif // !SKYBOX_H
