@@ -9,6 +9,7 @@ LICENSE: MIT
 #include <util/Log.hpp>
 #include <random>
 #include <fstream>
+#include <filesystem>
 
 ChunkStack::ChunkStack(iVec2 pos) : mPos(pos)
 {
@@ -176,6 +177,7 @@ void ChunkStack::SaveToFile(const std::string& worldDirectory) {
 
 	if (out.fail()) {
 		LOG_ERROR("Failed to write chunk stack at {}, {} to disk!", mPos[0], mPos[1]);
+		std::filesystem::remove(file);
 	}
 }
 

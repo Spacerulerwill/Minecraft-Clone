@@ -54,6 +54,7 @@ private:
     double lastAtlasSwitch = 0.0f;
     siv::PerlinNoise::seed_type seed;
 	std::string worldDirectory;
+	Vec3 sunDirection {0.0f, 0.0f, 0.0f};
 public:
     World(std::string worldDirectory);
 	~World();

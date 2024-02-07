@@ -77,6 +77,7 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
         static_cast<int>(floor(playerPos[2]) / Chunk::SIZE)
     };
 
+	// Create tasks for loading spawn chunks
 	LOG_INFO("Loading spawn chunks for {} (Seed: {})", worldDirectory, seed);
 	for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
         for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
@@ -90,7 +91,8 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
 		}
 	}
 	mLoadPool.wait_for_tasks();
-
+	
+	// Bffer all chunks
 	for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
         for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
 			auto find = mChunkStacks.find(playerChunkPos + iVec2{x,z});
@@ -152,16 +154,21 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 	float ambientTerrainLight = 1.0;
 
 	if (currentDayProgress < 0.5) {
-		ambientTerrainLight = 1.0;
+		ambientTerrainLight = 0.7;
 	}
 	else if (currentDayProgress < 0.6 ) {
-		ambientTerrainLight = 0.2 + (1 - ((currentDayProgress - 0.5) / 0.1)) * 0.8;
+		ambientTerrainLight = 0.2 + (1 - ((currentDayProgress - 0.5) / 0.1)) * 0.5;
 	} 
 	else if (currentDayProgress < 0.91) {
 		ambientTerrainLight = 0.2;
 	} else {
-		ambientTerrainLight = 0.2 + ((currentDayProgress - 0.91) / 0.09) * 0.8;
+		ambientTerrainLight = 0.2 + ((currentDayProgress - 0.91) / 0.09) * 0.5;
 	}
+
+	float timeModifier = (2.0f * static_cast<float>(std::numbers::pi)) / static_cast<float>(World::DAY_DURATION);
+	sunDirection[0] = cos(currentTime * timeModifier) - sin(currentTime * timeModifier);
+	sunDirection[1] = sin(currentTime * timeModifier) + cos(currentTime * timeModifier);
+	LOG_TRACE(std::string(sunDirection));
 
     glDepthFunc(GL_LEQUAL);
 	Mat4 model = rotate(Vec3{0.0f, 1.0f, 0.0f}, currentTime * 0.01f); 
@@ -173,8 +180,8 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     chunkShader.SetMat4("view", view);
     chunkShader.SetVec3("grass_color", mGrassColor);
 	chunkShader.SetFloat("ambient", ambientTerrainLight);
-
-    glActiveTexture(GL_TEXTURE0);
+	chunkShader.SetVec3("sun_direction", sunDirection); 
+    glActiveTexture(GL_TEXTURE0); 
     mTextureAtlases[currentAtlasID].Bind();
     chunkShader.SetInt("tex_array", 0);
 

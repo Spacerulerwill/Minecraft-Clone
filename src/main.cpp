@@ -241,7 +241,9 @@ Q - Quit
 				break;
 			}
 		}
-		std::cout << (result.success ? GREEN : RED) << result.msg << RESET << std::endl;
+		if (!result.msg.empty()) {
+			std::cout << (result.success ? GREEN : RED) << result.msg << RESET << std::endl;
+		}
 	} while (choice != 'q');
 
 }

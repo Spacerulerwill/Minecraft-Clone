@@ -63,6 +63,7 @@ out vec4 FragColor;
 uniform sampler2DArray tex_array;
 uniform sampler2D grass_mask;
 uniform vec3 grass_color;
+uniform vec3 sun_direction;
 uniform float ambient;
 
 void main() {
@@ -71,7 +72,8 @@ void main() {
     if (texColor.a < 0.5) {
         discard;
     }
-
+	
+	// Is grass mask?
     if (isGrass > 0.5) {
         if(FragNormal.y == 1) {
 	    texColor.rgb *= grass_color;
@@ -82,6 +84,10 @@ void main() {
             texColor = mix(texColor, grass_mask_color, grass_mask_color.a);
         }
     }
+	
+    // direction sunlight
+    vec3 lightDir = normalize(-sun_direction);  
+    float diffuse = max(dot(FragNormal, sun_direction), 0.0);
  
-    FragColor = texColor * vec4(vec3(AOMultiplier), 1.0) * ambient;
+    FragColor = texColor * vec4(vec3(AOMultiplier), 1.0) * (ambient + (diffuse * 0.3));
 }
