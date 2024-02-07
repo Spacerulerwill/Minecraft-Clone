@@ -143,7 +143,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 {
 	double glfwTime = glfwGetTime();
 	currentTime = worldStartTime + glfwTime - worldLoadedTime;
-	double day = currentTime / 120.0;
+	double day = currentTime / World::DAY_DURATION;
 	double currentDay;
 	double currentDayProgress = std::modf(day, &currentDay);
 
@@ -154,13 +154,13 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 	if (currentDayProgress < 0.5) {
 		ambientTerrainLight = 1.0;
 	}
-	else if (currentDayProgress < 0.575 ) {
-		ambientTerrainLight = 0.2 + (1 - ((currentDayProgress - 0.5) / 0.075)) * 0.8;
+	else if (currentDayProgress < 0.6 ) {
+		ambientTerrainLight = 0.2 + (1 - ((currentDayProgress - 0.5) / 0.1)) * 0.8;
 	} 
-	else if (currentDayProgress < 0.925) {
+	else if (currentDayProgress < 0.91) {
 		ambientTerrainLight = 0.2;
 	} else {
-		ambientTerrainLight = 0.2 + ((currentDayProgress - 0.925) / 0.075) * 0.8;
+		ambientTerrainLight = 0.2 + ((currentDayProgress - 0.91) / 0.09) * 0.8;
 	}
 
     glDepthFunc(GL_LEQUAL);

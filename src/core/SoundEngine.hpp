@@ -6,9 +6,11 @@ License: MIT
 #ifndef SOUND_ENGINE_H
 #define SOUND_ENGINE_H
 
-#include <irrKlang/irrKlang.h>
-#include <stdexcept>
 #include <util/Log.hpp>
+
+#include <irrKlang/irrKlang.h>
+
+#include <stdexcept>
 #include <memory>
 #include <string>
 
@@ -44,12 +46,12 @@ public:
     SoundEngine& operator=(const SoundEngine&& arg) = delete;
 };
 
-struct ScopedLoopingSound {
+struct ScopedSound {
 	irrklang::ISound* sound = nullptr;
-	ScopedLoopingSound(const char* dir) {
-		sound = SoundEngine::GetEngine()->play2D(dir, true, false, true);
+	ScopedSound(const std::string& dir, bool looping) {
+		sound = SoundEngine::GetEngine()->play2D(dir.c_str(), looping, false, true);
 	}
-	~ScopedLoopingSound() {
+	~ScopedSound() {
 		sound->stop();
 		sound->drop();
 	}

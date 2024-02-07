@@ -3,39 +3,26 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#ifndef WINDOW_H
-#define WINDOW_H
+#ifndef CROSSHAIR_H
+#define CROSSHAIR_H
 
-#include <GLFW/glfw3.h>
+#include <opengl/VertexArray.hpp>
+#include <opengl/BufferObject.hpp>
+#include <opengl/Shader.hpp>
+#include <opengl/Texture.hpp>
 
-class Game;
-
-class Window {
-private:
-    GLFWwindow* pWindow = nullptr;
+class Crosshair {
 public:
-    Window(Game* app, int width, int height, const char* title, bool initiallyVisible);
-    ~Window();
-    void Bind() const;
-    void Unbind() const;
-    void SetShouldClose(int value);
-    bool ShouldClose() const;
-    void SetHidden();
-    void SetVisible();
-    void SetMouseEnabled();
-    void SetMouseDisabled();
-    void SwapBuffers();
-    bool IsKeyPressed(int key) const;
-    GLFWwindow* GetWindow() const;
+	Crosshair(int initialWindowWidth, int initialWindowHeight, unsigned int size);	
+	void Draw(const Mat4& ortho);
+private:
+	Shader mShader = Shader("shaders/crosshair.shader");
+	Tex2D mTexture = Tex2D("textures/ui/crosshair.png", GL_TEXTURE2);
+	VertexBuffer mVBO;
+	VertexArray mVAO;
 };
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_move_callback(GLFWwindow* window, double xposIn, double yposIn);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-
-#endif // !WINDOW_H
+#endif // !CROSSHAIR_H
 
 /*
 MIT License

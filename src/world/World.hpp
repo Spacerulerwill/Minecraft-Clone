@@ -61,6 +61,7 @@ public:
 	static constexpr int MIN_GEN_HEIGHT = Chunk::SIZE - 1;
 	static constexpr int MAX_SUB_MIN_GEN_HEIGHT = MAX_GEN_HEIGHT - MIN_GEN_HEIGHT;
 	static constexpr int WATER_LEVEL = MIN_GEN_HEIGHT + (Chunk::SIZE * 4);	
+	static constexpr double DAY_DURATION = 120.0;
     Vec3 mWaterColor = Vec3{ 68.0f, 124.0f, 245.0f } / 255.0f;
     Vec3 mFoliageColor = Vec3{ 145.0f, 189.0f, 89.0f } / 255.0f;
     Vec3 mGrassColor = Vec3{ 145.0f, 189.0f, 89.0f } / 255.0f;

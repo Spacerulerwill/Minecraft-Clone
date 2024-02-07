@@ -14,10 +14,13 @@ License: MIT
 #include <world/World.hpp>
 #include <irrKlang/irrKlang.h>
 #include <util/Log.hpp>
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+#include <imgui/imgui_internal.h>
 
-constexpr const int SCREEN_WIDTH = 1280;
-constexpr const int SCREEN_HEIGHT = 720;
-constexpr const float PHYSICS_UPDATE_TIME = 0.01f;
+constexpr int INITIAL_WINDOW_WIDTH = 1920;
+constexpr int INITIAL_WINDOW_HEIGHT = 1080;
 
 struct GLFWContext {
     GLFWContext() {
@@ -33,13 +36,50 @@ struct GLFWContext {
     }
 };
 
+struct ImGUIContext {
+    ImGUIContext(GLFWwindow* window) {
+        LOG_INFO("Creating ImGUI context");
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO();
+        (void)io;
+        io.IniFilename = NULL;
+        ImGui::StyleColorsDark();
+        ImGui_ImplGlfw_InitForOpenGL(window, true);
+        ImGui_ImplOpenGL3_Init("#version 330");
+    }
+
+    ImGUIContext(const ImGUIContext& arg) = delete;
+    ImGUIContext(const ImGUIContext&& arg) = delete;
+    ImGUIContext& operator=(const ImGUIContext& arg) = delete;
+    ImGUIContext& operator=(const ImGUIContext&& arg) = delete;
+
+    void NewFrame() const {
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+    }
+
+    void Render() const {
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    }
+
+    ~ImGUIContext() {
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+        LOG_INFO("Destroying ImGUI context");
+    }
+};
+
 class Game {
 private:
+	void ProcessKeyInput();
+	void SettingsMenu(int potentialDrawCalls, int totalDrawCalls);
 	GLFWContext glfwContext;
-    Window mWindow = Window(this, SCREEN_WIDTH, SCREEN_HEIGHT, "Craft++", false);
+    Window mWindow = Window(this, INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT, "Craft++", false);
     std::unique_ptr<MSAARenderer> pMSAARenderer = nullptr;
     std::unique_ptr<World> pWorld = nullptr;
-    void ProcessKeyInput();
     float mDeltaTime = 0.0f;
     float mLastFrame = 0.0f;
     bool mIsWireFrame = false;

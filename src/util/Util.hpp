@@ -3,39 +3,11 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
-#ifndef WINDOW_H
-#define WINDOW_H
-
-#include <GLFW/glfw3.h>
-
-class Game;
-
-class Window {
-private:
-    GLFWwindow* pWindow = nullptr;
-public:
-    Window(Game* app, int width, int height, const char* title, bool initiallyVisible);
-    ~Window();
-    void Bind() const;
-    void Unbind() const;
-    void SetShouldClose(int value);
-    bool ShouldClose() const;
-    void SetHidden();
-    void SetVisible();
-    void SetMouseEnabled();
-    void SetMouseDisabled();
-    void SwapBuffers();
-    bool IsKeyPressed(int key) const;
-    GLFWwindow* GetWindow() const;
-};
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_move_callback(GLFWwindow* window, double xposIn, double yposIn);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-
-#endif // !WINDOW_H
+/*
+ * This macro is for supressing unsued parameter warnings. This is useles for
+ * unused callback parameters when interacting with an API
+*/ 
+#define UNUSED(x) (void)(x)
 
 /*
 MIT License

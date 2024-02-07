@@ -53,10 +53,13 @@ add_executable(${PROJECT_NAME}
     src/math/AABB.hpp
     src/math/Frustum.cpp
     src/math/Frustum.hpp
+	src/ui/Crosshair.cpp
+	src/ui/Crosshair.hpp
     src/util/Log.cpp
     src/util/Log.hpp
 	src/util/IO.hpp
     src/util/Concepts.hpp
+	src/util/Util.hpp
     lib/glad.c
     lib/imgui/imgui_impl_glfw.cpp
     lib/imgui/imgui_impl_opengl3.cpp
