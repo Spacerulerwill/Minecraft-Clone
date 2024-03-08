@@ -1,12 +1,12 @@
 [submodule "submodules/spdlog"]
-	path = submodules/spdlog
+	path = lib/submodules/spdlog
 	url = https://github.com/gabime/spdlog.git
 [submodule "submodules/glfw"]
-	path = submodules/glfw
+	path = lib/submodules/glfw
 	url = https://github.com/glfw/glfw.git
 [submodule "submodules/yaml-cpp"]
-	path = submodules/yaml-cpp
+	path = lib/submodules/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp
 [submodule "submodules/fmt"]
-	path = submodules/fmt
+	path = lib/submodules/fmt
 	url = https://github.com/fmtlib/fmt
