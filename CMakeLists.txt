@@ -53,13 +53,13 @@ add_executable(${PROJECT_NAME}
     src/math/AABB.hpp
     src/math/Frustum.cpp
     src/math/Frustum.hpp
-	src/ui/Crosshair.cpp
-	src/ui/Crosshair.hpp
+    src/ui/Crosshair.cpp
+    src/ui/Crosshair.hpp
     src/util/Log.cpp
     src/util/Log.hpp
-	src/util/IO.hpp
+    src/util/IO.hpp
     src/util/Concepts.hpp
-	src/util/Util.hpp
+    src/util/Util.hpp
     lib/glad.c
     lib/imgui/imgui_impl_glfw.cpp
     lib/imgui/imgui_impl_opengl3.cpp
@@ -70,26 +70,26 @@ add_executable(${PROJECT_NAME}
     lib/imgui/imgui_widgets.cpp
 )
 
-add_subdirectory(submodules/glfw)
-add_subdirectory(submodules/spdlog)
-add_subdirectory(submodules/yaml-cpp)
-add_subdirectory(submodules/fmt)
+add_subdirectory(lib/submodules/glfw)
+add_subdirectory(lib/submodules/spdlog)
+add_subdirectory(lib/submodules/yaml-cpp)
+add_subdirectory(lib/submodules/fmt)
 
 target_include_directories(${PROJECT_NAME} 
-    SYSTEM PRIVATE submodules/glfw/include
-    SYSTEM PRIVATE submodules/spdlog/include
-    SYSTEM PRIVATE submodules/yaml-cpp/include
-    SYSTEM PRIVATE submodules/fmt/include
+    SYSTEM PRIVATE lib/submodules/glfw/include
+    SYSTEM PRIVATE lib/submodules/spdlog/include
+    SYSTEM PRIVATE lib/submodules/yaml-cpp/include
+    SYSTEM PRIVATE lib/submodules/fmt/include
     SYSTEM PRIVATE include/imgui
     SYSTEM PRIVATE include
     PUBLIC src
 )
 
 target_link_directories(${PROJECT_NAME}
-    PRIVATE submodules/glfw/src
-    PRIVATE submodules/spdlog/src
-    PRIVATE submodules/yaml-cpp/src
-    PRIVATE submodules/fmt/src
+    PRIVATE lib/submodules/glfw/src
+    PRIVATE lib/submodules/spdlog/src
+    PRIVATE lib/submodules/yaml-cpp/src
+    PRIVATE lib/submodules/fmt/src
 )
 
 target_link_libraries(${PROJECT_NAME}
