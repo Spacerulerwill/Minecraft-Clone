@@ -122,8 +122,8 @@ World::~World() {
 		.seed = seed,
 		.elapsedTime = currentTime
 	};
-
 	WriteStructToDisk(fmt::format("{}/world.data", worldDirectory), worldSave);
+
 	PlayerSave playerSave {
 		.pos = player.camera.position,
 		.pitch = player.camera.pitch,
@@ -165,10 +165,6 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 		ambientTerrainLight = 0.2 + ((currentDayProgress - 0.91) / 0.09) * 0.5;
 	}
 
-	float timeModifier = (2.0f * static_cast<float>(std::numbers::pi)) / static_cast<float>(World::DAY_DURATION);
-	sunDirection[0] = cos(currentTime * timeModifier) - sin(currentTime * timeModifier);
-	sunDirection[1] = sin(currentTime * timeModifier) + cos(currentTime * timeModifier);
-	LOG_TRACE(std::string(sunDirection));
 
     glDepthFunc(GL_LEQUAL);
 	Mat4 model = rotate(Vec3{0.0f, 1.0f, 0.0f}, currentTime * 0.01f); 
@@ -180,7 +176,6 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     chunkShader.SetMat4("view", view);
     chunkShader.SetVec3("grass_color", mGrassColor);
 	chunkShader.SetFloat("ambient", ambientTerrainLight);
-	chunkShader.SetVec3("sun_direction", sunDirection); 
     glActiveTexture(GL_TEXTURE0); 
     mTextureAtlases[currentAtlasID].Bind();
     chunkShader.SetInt("tex_array", 0);
