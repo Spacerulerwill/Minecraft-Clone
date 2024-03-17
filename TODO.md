@@ -1,5 +1,4 @@
 # TODO
-* Fix crosshair bug (doesn't blend with geometry)
 * Optimise frustum culling - it is performed 3 times per frame on the CPU unncessarily. Maybe move to the GPU in the future.
 * Add partial chunk unloading (chunk vertices are loaded on vram but not no voxels stored on ram)
 * Indirect drawing (one draw call per stack? maybe one for the whole world?)
