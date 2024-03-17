@@ -92,7 +92,7 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
 	}
 	mLoadPool.wait_for_tasks();
 	
-	// Bffer all chunks
+	// Buffer all chunks
 	for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
         for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
 			auto find = mChunkStacks.find(playerChunkPos + iVec2{x,z});
