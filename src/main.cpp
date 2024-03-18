@@ -43,9 +43,9 @@ std::uintmax_t get_size_of_directory(const std::filesystem::directory_entry& dir
 
 std::string format_bytes(uintmax_t bytes) {
     static const char* suffixes[] = { "B", "KB", "MB", "GB", "TB" };
-    int suffixIndex = 0;
+    std::size_t suffixIndex = 0;
 
-    double size = bytes;
+    std::uintmax_t size = bytes;
     while (size >= 1024 && suffixIndex < 4) {
         size /= 1024;
         suffixIndex++;
@@ -222,8 +222,7 @@ void run() {
 
     MenuOptionResult result{};
     char choice;
-    std::cout << R"(
-  ____            __ _      
+    std::cout << R"(  ____            __ _      
  / ___|_ __ __ _ / _| |_  _     _   
 | |   | '__/ _` | |_| __|| |_ _| |_ 
 | |___| | | (_| |  _| ||_   _|_   _|
