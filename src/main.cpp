@@ -31,6 +31,31 @@ struct MenuOptionResult {
     std::string msg {};
 };
 
+std::uintmax_t get_size_of_directory(const std::filesystem::directory_entry& directory_entry) {
+    std::uintmax_t size = 0;
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(directory_entry)) {
+        if (std::filesystem::is_regular_file(entry)) {
+            size += std::filesystem::file_size(entry);
+        }
+    }
+    return size;
+}
+
+std::string format_bytes(uintmax_t bytes) {
+    static const char* suffixes[] = { "B", "KB", "MB", "GB", "TB" };
+    int suffixIndex = 0;
+
+    double size = bytes;
+    while (size >= 1024 && suffixIndex < 4) {
+        size /= 1024;
+        suffixIndex++;
+    }
+
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(2) << size << suffixes[suffixIndex];
+    return oss.str();
+}
+
 MenuOptionResult create_world() {
     static std::random_device rd;
     static std::mt19937 gen(rd()); 
@@ -97,7 +122,7 @@ MenuOptionResult delete_world() {
     for (const auto& entry : std::filesystem::directory_iterator("worlds")) {
         if (entry.is_directory()){
             worldCount++;
-            std::cout << "* " << entry.path().filename().string() << std::endl;
+            std::cout << "* " << entry.path().filename().string() << ": " << format_bytes(get_size_of_directory(entry)) << std::endl;
         }
     }
 
@@ -141,7 +166,7 @@ MenuOptionResult load_world() {
     for (const auto& entry : std::filesystem::directory_iterator("worlds")) {
         if (entry.is_directory()) {
             worldCount++;
-            std::cout << "* " << entry.path().filename().string() << std::endl;
+            std::cout << "* " << entry.path().filename().string() << ": " << format_bytes(get_size_of_directory(entry)) << std::endl;
         }
     }
     
