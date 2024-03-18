@@ -55,8 +55,8 @@ public:
     Vec3 right{};
     Vec3 worldUp{ 0.0f, 1.0f, 0.0f };
 
-	float pitch = 0.0f;
-	float yaw = -90.0f;
+    float pitch = 0.0f;
+    float yaw = -90.0f;
 
     Mat4 perspectiveMatrix = perspective(radians(FOV), aspect, near, far);
     Mat4 GetViewMatrix() const;

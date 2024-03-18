@@ -24,14 +24,14 @@ Crosshair::Crosshair(int initialWindowWidth, int initialWindowHeight, unsigned i
 }
 
 void Crosshair::Draw(const Mat4& ortho) {
-	glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE1);
     mTexture.Bind();
-	mShader.Bind();
-	mVAO.Bind();
-	mShader.SetInt("screenTexture", 0);
-	mShader.SetInt("crosshair", 1);
-	mShader.SetMat4("projection", ortho);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+    mShader.Bind();
+    mVAO.Bind();
+    mShader.SetInt("screenTexture", 0);
+    mShader.SetInt("crosshair", 1);
+    mShader.SetMat4("projection", ortho);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
 /*

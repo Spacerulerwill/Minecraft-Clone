@@ -47,14 +47,14 @@ public:
 };
 
 struct ScopedSound {
-	irrklang::ISound* sound = nullptr;
-	ScopedSound(const std::string& dir, bool looping) {
-		sound = SoundEngine::GetEngine()->play2D(dir.c_str(), looping, false, true);
-	}
-	~ScopedSound() {
-		sound->stop();
-		sound->drop();
-	}
+    irrklang::ISound* sound = nullptr;
+    ScopedSound(const std::string& dir, bool looping) {
+        sound = SoundEngine::GetEngine()->play2D(dir.c_str(), looping, false, true);
+    }
+    ~ScopedSound() {
+        sound->stop();
+        sound->drop();
+    }
 };
 
 #endif // !SOUND_ENGINE_H

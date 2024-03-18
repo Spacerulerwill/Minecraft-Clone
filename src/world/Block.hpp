@@ -27,10 +27,10 @@ enum Block : BlockID {
     ROSE,
     PINK_TULIP,
     TALL_GRASS,
-	SAND,
-	SUGARCANE,
-	WOOD,
-	SAKURA_LEAVES,
+    SAND,
+    SUGARCANE,
+    WOOD,
+    SAKURA_LEAVES,
     NUM_BLOCKS
 };
 
@@ -41,7 +41,7 @@ enum class Sound : SoundID {
     STONE,
     WOOD,
     GLASS,
-	SAND,
+    SAND,
     NUM_SOUNDS
 };
 

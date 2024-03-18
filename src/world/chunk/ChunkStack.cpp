@@ -57,27 +57,27 @@ void ChunkStack::GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::Pe
                 }
                 SetBlock(iVec3{ x,height - 1,z }, DIRT);
             }
-			else if (height < World::World::WATER_LEVEL + 2) {
-				SetBlock(iVec3{x, height-1, z}, SAND);
-			}
+            else if (height < World::World::WATER_LEVEL + 2) {
+                SetBlock(iVec3{x, height-1, z}, SAND);
+            }
             else {
                 SetBlock(iVec3{ x,height - 1,z }, GRASS);
-				float rand = distribution(gen);
-				if (rand < 0.01f) {
-					if (height <= World::MAX_GEN_HEIGHT - 1) {
-						SetBlock(iVec3{ x, height, z }, ROSE);
-					}
-				}
-				else if (rand < 0.02f) {
-					if (height <= World::MAX_GEN_HEIGHT -1) {
-						SetBlock(iVec3{ x, height, z }, PINK_TULIP);
-					}
-				}
-				else if (rand < 0.2f) {
-					if (height <= World::MAX_GEN_HEIGHT - 1) {
-						SetBlock(iVec3{ x, height, z }, TALL_GRASS);
-					}
-				}	
+                float rand = distribution(gen);
+                if (rand < 0.01f) {
+                    if (height <= World::MAX_GEN_HEIGHT - 1) {
+                        SetBlock(iVec3{ x, height, z }, ROSE);
+                    }
+                }
+                else if (rand < 0.02f) {
+                    if (height <= World::MAX_GEN_HEIGHT -1) {
+                        SetBlock(iVec3{ x, height, z }, PINK_TULIP);
+                    }
+                }
+                else if (rand < 0.2f) {
+                    if (height <= World::MAX_GEN_HEIGHT - 1) {
+                        SetBlock(iVec3{ x, height, z }, TALL_GRASS);
+                    }
+                }    
             }
             for (int y = 0; y < height - 4; y++) {
                 SetBlock(iVec3{ x, y, z }, STONE);
@@ -113,72 +113,72 @@ void ChunkStack::GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::Pe
 }
 
 void ChunkStack::Load(const std::string& worldDirectory, siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin) {
-	std::ifstream chunkStackFileStream(fmt::format("{}/chunk_stacks/{}.{}.stack", worldDirectory, mPos[0], mPos[1]));
-	if (chunkStackFileStream.is_open()) {
-		// chunk data found on disk, so we load that
-		// read how many chunks in chunk stack
-		std::size_t chunkCount;
-		chunkStackFileStream.read(reinterpret_cast<char*>(&chunkCount), sizeof(std::size_t));
-		
-		for (std::size_t i = 0; i < chunkCount; i++) {
-			mChunks[i]->AllocateMemory();
-			chunkStackFileStream.read(reinterpret_cast<char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED);
-		}
-			
-	} else {
-		// no chunk stack found on disk, generate
-		GenerateTerrain(seed, perlin);
-		SaveToFile(worldDirectory);
-	}
+    std::ifstream chunkStackFileStream(fmt::format("{}/chunk_stacks/{}.{}.stack", worldDirectory, mPos[0], mPos[1]));
+    if (chunkStackFileStream.is_open()) {
+        // chunk data found on disk, so we load that
+        // read how many chunks in chunk stack
+        std::size_t chunkCount;
+        chunkStackFileStream.read(reinterpret_cast<char*>(&chunkCount), sizeof(std::size_t));
+        
+        for (std::size_t i = 0; i < chunkCount; i++) {
+            mChunks[i]->AllocateMemory();
+            chunkStackFileStream.read(reinterpret_cast<char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED);
+        }
+            
+    } else {
+        // no chunk stack found on disk, generate
+        GenerateTerrain(seed, perlin);
+        SaveToFile(worldDirectory);
+    }
 
-	// Mesh all chunks
-	for (auto it = mChunks.begin(); it != mChunks.end(); ++it) {
-		std::shared_ptr<Chunk> chunk = (*it);
-		chunk->CreateMesh();
-	}
-	isBeingLoaded = false;
-	isLoaded = true;
+    // Mesh all chunks
+    for (auto it = mChunks.begin(); it != mChunks.end(); ++it) {
+        std::shared_ptr<Chunk> chunk = (*it);
+        chunk->CreateMesh();
+    }
+    isBeingLoaded = false;
+    isLoaded = true;
 }
 
 void ChunkStack::Unload(const std::string& worldDirectory) {
-	if (isLoaded) {
-		isLoaded = false;
-		SaveToFile(worldDirectory);
-		for (auto& chunk : mChunks) {
-			chunk->ReleaseMemory();
-		}
-	}
+    if (isLoaded) {
+        isLoaded = false;
+        SaveToFile(worldDirectory);
+        for (auto& chunk : mChunks) {
+            chunk->ReleaseMemory();
+        }
+    }
 }
 
 void ChunkStack::SaveToFile(const std::string& worldDirectory) {
-	std::string file = fmt::format("{}/chunk_stacks/{}.{}.stack", worldDirectory, mPos[0], mPos[1]);
-	std::fstream out(file, std::ios::binary | std::ios::out | std::ios::in);
-	std::size_t chunkCount = mChunks.size();
+    std::string file = fmt::format("{}/chunk_stacks/{}.{}.stack", worldDirectory, mPos[0], mPos[1]);
+    std::fstream out(file, std::ios::binary | std::ios::out | std::ios::in);
+    std::size_t chunkCount = mChunks.size();
 
-	if (out.is_open()) {
-		out.write(reinterpret_cast<char*>(&chunkCount), sizeof(std::size_t));
-		for (std::size_t i = 0; i < chunkCount; i++) {
-			if (mChunks[i]->needsSaving) {
-				mChunks[i]->needsSaving = false;
-				out.write(reinterpret_cast<const char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED);
-			} else {
-				out.seekp(sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED, std::ios::cur);
-			}
-		}
-	} else {
-		out.clear();
-		out.open(file, std::ios::binary | std::ios::out | std::ios::trunc);
-		out.write(reinterpret_cast<char*>(&chunkCount), sizeof(std::size_t));
-		for (std::size_t i = 0; i < chunkCount; i++) {
-			mChunks[i]->needsSaving = false;
-			out.write(reinterpret_cast<const char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED);	
-		}
-	}
+    if (out.is_open()) {
+        out.write(reinterpret_cast<char*>(&chunkCount), sizeof(std::size_t));
+        for (std::size_t i = 0; i < chunkCount; i++) {
+            if (mChunks[i]->needsSaving) {
+                mChunks[i]->needsSaving = false;
+                out.write(reinterpret_cast<const char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED);
+            } else {
+                out.seekp(sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED, std::ios::cur);
+            }
+        }
+    } else {
+        out.clear();
+        out.open(file, std::ios::binary | std::ios::out | std::ios::trunc);
+        out.write(reinterpret_cast<char*>(&chunkCount), sizeof(std::size_t));
+        for (std::size_t i = 0; i < chunkCount; i++) {
+            mChunks[i]->needsSaving = false;
+            out.write(reinterpret_cast<const char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED);    
+        }
+    }
 
-	if (out.fail()) {
-		LOG_ERROR("Failed to write chunk stack at {}, {} to disk!", mPos[0], mPos[1]);
-		std::filesystem::remove(file);
-	}
+    if (out.fail()) {
+        LOG_ERROR("Failed to write chunk stack at {}, {} to disk!", mPos[0], mPos[1]);
+        std::filesystem::remove(file);
+    }
 }
 
 iVec2 ChunkStack::GetPosition() const

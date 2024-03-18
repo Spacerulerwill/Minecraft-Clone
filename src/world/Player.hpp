@@ -24,9 +24,9 @@ enum class PlayerMovement {
 };
 
 struct PlayerSave {
-	Vec3 pos;
-	float pitch;
-	float yaw;
+    Vec3 pos;
+    float pitch;
+    float yaw;
 };
 
 struct Player {

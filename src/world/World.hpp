@@ -27,8 +27,8 @@ iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 pos);
 constexpr const float GRAVITY = 0.5f;
 
 struct WorldSave {
-	siv::PerlinNoise::seed_type seed;
-	double elapsedTime;
+    siv::PerlinNoise::seed_type seed;
+    double elapsedTime;
 };
 
 // Thrown when a world fails to load
@@ -47,34 +47,35 @@ private:
     Shader customModelShader = Shader("shaders/custom_model.shader");
     siv::PerlinNoise mPerlin;
     BS::thread_pool mLoadPool;
-	BS::thread_pool mUnloadPool;
+    BS::thread_pool mUnloadPool;
     std::array<TexArray2D, MAX_ANIMATION_FRAMES> mTextureAtlases;
     Tex2D mGrassSideMask = Tex2D("textures/block/mask/grass_side_mask.png", GL_TEXTURE1);
     std::size_t currentAtlasID{ 0 };
     double lastAtlasSwitch = 0.0f;
     siv::PerlinNoise::seed_type seed;
-	std::string worldDirectory;
-	Vec3 sunDirection {0.0f, 0.0f, 0.0f};
+    std::string worldDirectory;
+    Vec3 sunDirection {0.0f, 0.0f, 0.0f};
 public:
     World(std::string worldDirectory);
-	~World();
-	static constexpr int MAX_GEN_HEIGHT = (ChunkStack::DEFAULT_SIZE * Chunk::SIZE) - 1;
-	static constexpr int MIN_GEN_HEIGHT = Chunk::SIZE - 1;
-	static constexpr int MAX_SUB_MIN_GEN_HEIGHT = MAX_GEN_HEIGHT - MIN_GEN_HEIGHT;
-	static constexpr int WATER_LEVEL = MIN_GEN_HEIGHT + (Chunk::SIZE * 4);	
-	static constexpr double DAY_DURATION = 120.0;
+    ~World();
+    static constexpr int MAX_GEN_HEIGHT = (ChunkStack::DEFAULT_SIZE * Chunk::SIZE) - 1;
+    static constexpr int MIN_GEN_HEIGHT = Chunk::SIZE - 1;
+    static constexpr int MAX_SUB_MIN_GEN_HEIGHT = MAX_GEN_HEIGHT - MIN_GEN_HEIGHT;
+    static constexpr int WATER_LEVEL = MIN_GEN_HEIGHT + (Chunk::SIZE * 1);    
+    static_assert(WATER_LEVEL < MAX_GEN_HEIGHT);
+    static constexpr double DAY_DURATION = 120.0;
     Vec3 mWaterColor = Vec3{ 68.0f, 124.0f, 245.0f } / 255.0f;
     Vec3 mFoliageColor = Vec3{ 145.0f, 189.0f, 89.0f } / 255.0f;
     Vec3 mGrassColor = Vec3{ 145.0f, 189.0f, 89.0f } / 255.0f;
     int mRenderDistance = 5;
-	int mBufferPerFrame = 20;
+    int mBufferPerFrame = 20;
     Player player;
     void Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn);
     void TrySwitchToNextTextureAtlas();
     void GenerateChunks();
-	double worldLoadedTime; // Time of program when world finishes loading
-	double worldStartTime; // The last saved world time when the player last closed the game
-	double currentTime; // Current world time
+    double worldLoadedTime; // Time of program when world finishes loading
+    double worldStartTime; // The last saved world time when the player last closed the game
+    double currentTime; // Current world time
     const ChunkStack* GetChunkStack(iVec2 pos) const;
     std::shared_ptr<Chunk> GetChunk(iVec3 pos) const;
     BlockID GetBlock(iVec3 pos) const;

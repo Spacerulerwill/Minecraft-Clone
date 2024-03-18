@@ -23,15 +23,15 @@ Chunk::Chunk(iVec3 pos) : mPos(pos)
     mWaterVAO.AddBuffer(mWaterVBO, bufferLayout);
     mCustomModelVAO.AddBuffer(mCustomModelVBO, bufferLayout);
 
-	// Transform it to its global position
+    // Transform it to its global position
     Vec3 globalPosition = static_cast<Vec3>(pos) * Chunk::SIZE;
     mModel *= translate(globalPosition);
 
-	// Sphere for frustum culling
+    // Sphere for frustum culling
     sphere = Sphere{ 
-		globalPosition + Vec3{Chunk::HALF_SIZE, Chunk::HALF_SIZE, Chunk::HALF_SIZE}, 
-		Vec3{Chunk::HALF_SIZE, Chunk::HALF_SIZE, Chunk::HALF_SIZE}.length() 
-	};
+        globalPosition + Vec3{Chunk::HALF_SIZE, Chunk::HALF_SIZE, Chunk::HALF_SIZE}, 
+        Vec3{Chunk::HALF_SIZE, Chunk::HALF_SIZE, Chunk::HALF_SIZE}.length() 
+    };
 }
 
 iVec3 Chunk::GetPosition() const
@@ -141,7 +141,15 @@ void Chunk::DrawCustomModel(Shader& shader, int* potentialDrawCalls, int* totalD
 }
 
 BlockID* Chunk::GetBlockDataPointer() {
-	return mBlocks.data();
+
+    
+    
+    
+    
+    
+    
+    
+    return mBlocks.data();
 }
 
 BlockID Chunk::GetBlock(iVec3 pos) const
@@ -152,7 +160,7 @@ BlockID Chunk::GetBlock(iVec3 pos) const
 void Chunk::SetBlock(iVec3 pos, BlockID block)
 {
     mBlocks[VoxelIndex(pos)] = block;
-	needsSaving = true;
+    needsSaving = true;
 }
 
 /*

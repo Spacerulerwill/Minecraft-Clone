@@ -11,44 +11,44 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
 {
     Vec3 end = start + direction * distance;
     iVec3 normal{ 0,0,0 };
-	
-	iVec3 currentBlock {
-		static_cast<int>(floorf(start[0])),
-		static_cast<int>(floorf(start[1])),
-		static_cast<int>(floorf(start[2]))
-	};
+    
+    iVec3 currentBlock {
+        static_cast<int>(floorf(start[0])),
+        static_cast<int>(floorf(start[1])),
+        static_cast<int>(floorf(start[2]))
+    };
 
-	const iVec3 endBlock {
-		static_cast<int>(floorf(end[0])),
-		static_cast<int>(floorf(end[1])),
-		static_cast<int>(floorf(end[2]))
-	};
+    const iVec3 endBlock{
+        static_cast<int>(floorf(end[0])),
+        static_cast<int>(floorf(end[1])),
+        static_cast<int>(floorf(end[2]))
+    };
 
-	const iVec3 d {
-		((start[0] < end[0]) ? 1 : ((start[0] > end[0]) ? -1 : 0)),
+    const iVec3 d {
+        ((start[0] < end[0]) ? 1 : ((start[0] > end[0]) ? -1 : 0)),
         ((start[1] < end[1]) ? 1 : ((start[1] > end[1]) ? -1 : 0)),
         ((start[2] < end[2]) ? 1 : ((start[2] > end[2]) ? -1 : 0))
-	};
+    };
 
-	const Vec3 deltat{
-		1.0f / std::abs(end[0] - start[0]),
-		1.0f / std::abs(end[1] - start[1]),
-		1.0f / std::abs(end[2] - start[2])
-	};
+    const Vec3 deltat{
+        1.0f / std::abs(end[0] - start[0]),
+        1.0f / std::abs(end[1] - start[1]),
+        1.0f / std::abs(end[2] - start[2])
+    };
 
-	const Vec3 min {
-		floorf(start[0]),
-		floorf(start[1]),
-		floorf(start[2])
-	};
+    const Vec3 min {
+        floorf(start[0]),
+        floorf(start[1]),
+        floorf(start[2])
+    };
 
-	const Vec3 max = min + Vec3{1.0f, 1.0f, 1.0f};
+    const Vec3 max = min + Vec3{1.0f, 1.0f, 1.0f};
 
-	Vec3 t {
-		((start[0] > end[0]) ? (start[0] - min[0]) : (max[0] - start[0])) * deltat[0],
+    Vec3 t {
+        ((start[0] > end[0]) ? (start[0] - min[0]) : (max[0] - start[0])) * deltat[0],
         ((start[1] > end[1]) ? (start[1] - min[1]) : (max[1] - start[1])) * deltat[1],
         ((start[2] > end[2]) ? (start[2] - min[2]) : (max[2] - start[2])) * deltat[2]
-	};
+    };
 
 
 

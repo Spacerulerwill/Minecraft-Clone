@@ -61,7 +61,7 @@ std::array<std::string, 6> Skybox::sDaySkyboxFaces = {
 };
 
 std::array<std::string, 6> Skybox::sNightSkyboxFaces = {
-	"textures/skybox/night_right.png",
+    "textures/skybox/night_right.png",
     "textures/skybox/night_left.png",
     "textures/skybox/night_top.png",
     "textures/skybox/night_bottom.png",
@@ -70,7 +70,7 @@ std::array<std::string, 6> Skybox::sNightSkyboxFaces = {
 };
 
 std::array<std::string, 6> Skybox::sTransitionSkyboxFaces = {
-	"textures/skybox/transition_right.jpg",
+    "textures/skybox/transition_right.jpg",
     "textures/skybox/transition_left.jpg",
     "textures/skybox/transition_top.jpg",
     "textures/skybox/transition_bottom.jpg",
@@ -81,8 +81,8 @@ std::array<std::string, 6> Skybox::sTransitionSkyboxFaces = {
 Skybox::Skybox()
 {
     mDayCubemap = Cubemap(sDaySkyboxFaces, GL_TEXTURE0);
-	mNightCubemap = Cubemap(sNightSkyboxFaces, GL_TEXTURE1);
-	mTransitionCubemap = Cubemap(sTransitionSkyboxFaces, GL_TEXTURE2);
+    mNightCubemap = Cubemap(sNightSkyboxFaces, GL_TEXTURE1);
+    mTransitionCubemap = Cubemap(sTransitionSkyboxFaces, GL_TEXTURE2);
 
     // Setup Buffers
     VertexBufferLayout bufLayout;
@@ -95,12 +95,12 @@ void Skybox::Draw(const Mat4& projection, const Mat4& view, const Mat4& model, d
     mShader.Bind();
     mVAO.Bind();
     mShader.SetInt("day_skybox", 0);
-	mShader.SetInt("night_skybox", 1);
-	mShader.SetInt("transition_skybox", 2);
+    mShader.SetInt("night_skybox", 1);
+    mShader.SetInt("transition_skybox", 2);
     mShader.SetMat4("projection", projection);
     mShader.SetMat4("view", view);
-	mShader.SetMat4("model", model);
-	mShader.SetFloat("current_day_progress", static_cast<float>(currentDayProgress));
+    mShader.SetMat4("model", model);
+    mShader.SetFloat("current_day_progress", static_cast<float>(currentDayProgress));
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 

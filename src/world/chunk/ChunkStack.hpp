@@ -29,7 +29,7 @@ public:
     const_iterator cbegin() const;
     const_iterator cend() const;
     size_t size() const;
-	static constexpr std::size_t DEFAULT_SIZE = 8;
+    static constexpr std::size_t DEFAULT_SIZE = 4;
     ChunkStack(iVec2 pos);
     void GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin);
     void Draw(Shader& shader, int* totalChunks, int* chunksDrawn);
@@ -37,10 +37,10 @@ public:
     void DrawCustomModel(Shader& shader, int* totalChunks, int* chunksDrawn);
     iVec2 GetPosition() const;
     std::atomic<bool> isBeingLoaded = false;
-	std::atomic<bool> isLoaded = false;
-	void Load(const std::string& worldDirectory, siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin);
-	void SaveToFile(const std::string& worldDirectory);
-	void Unload(const std::string& worldDirectory);
+    std::atomic<bool> isLoaded = false;
+    void Load(const std::string& worldDirectory, siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin);
+    void SaveToFile(const std::string& worldDirectory);
+    void Unload(const std::string& worldDirectory);
 
     std::shared_ptr<Chunk> GetChunk(std::size_t y) const;
     BlockID GetBlock(iVec3 pos) const;

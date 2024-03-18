@@ -22,7 +22,7 @@ License: MIT
 #include <stdexcept>
 
 void Game::Run(std::string worldDirectory) {
-	mWindow.Bind();
+    mWindow.Bind();
     if (!gladLoadGL())
     {
         throw std::runtime_error("Failed to load GLAD!");
@@ -34,26 +34,31 @@ void Game::Run(std::string worldDirectory) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     InitBlocks();
-	ImGUIContext imGuiContext = ImGUIContext(mWindow.GetWindow());
+    ImGUIContext imGuiContext = ImGUIContext(mWindow.GetWindow());
     pMSAARenderer = std::make_unique<MSAARenderer>(INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT);
     Shader framebufferShader("shaders/framebuffer.shader");
-	Crosshair crosshair(INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT, 32);
-    pWorld = std::make_unique<World>(worldDirectory);	
-	auto backgroundMusic = ScopedSound("sound/music.mp3", true); 
+    Crosshair crosshair(INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT, 32);
+    pWorld = std::make_unique<World>(worldDirectory);    
+    auto backgroundMusic = ScopedSound("sound/music.mp3", true); 
     Mat4 ortho = orthographic(0.0f, INITIAL_WINDOW_HEIGHT, 0.0f, INITIAL_WINDOW_WIDTH, -1.0f, 100.0f);
     mWindow.SetVisible();
     while (!mWindow.ShouldClose()) {
-		// Delta time calculations
-        double currentFrame = static_cast<float>(glfwGetTime());
+        // Delta time calculations
+        double currentFrame = glfwGetTime();
         mDeltaTime = static_cast<float>(currentFrame - mLastFrame);
-        mLastFrame = static_cast<float>(currentFrame);	
-		
-		// Input
+        mLastFrame = static_cast<float>(currentFrame);
+
+        if (currentFrame - lastFpsSwitch > 0.2) {
+            fps = static_cast<int>(1.0f / mDeltaTime);
+            lastFpsSwitch = currentFrame;
+        }
+        
+        // Input
         ProcessKeyInput();
-		glfwPollEvents();
-		
-		// World events
-		pWorld->player.ApplyGravity(*pWorld, mDeltaTime);	
+        glfwPollEvents();
+        
+        // World events
+        pWorld->player.ApplyGravity(*pWorld, mDeltaTime);    
         pWorld->GenerateChunks();
         pWorld->TrySwitchToNextTextureAtlas();
 
@@ -63,8 +68,8 @@ void Game::Run(std::string worldDirectory) {
             irrklang::vec3df((pWorld->player.camera.front))
         );
 
-		// Draw World
-        pMSAARenderer->BindMSAAFBO();	
+        // Draw World
+        pMSAARenderer->BindMSAAFBO();    
         glEnable(GL_DEPTH_TEST);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -83,34 +88,34 @@ void Game::Run(std::string worldDirectory) {
         pMSAARenderer->Draw(framebufferShader);
 
         // Draw UI
-		crosshair.Draw(ortho);	
-		imGuiContext.NewFrame();
-		SettingsMenu(potentialDrawCalls, totalDrawCalls);
-		imGuiContext.Render(); 
-        mWindow.SwapBuffers();	
-	}
+        crosshair.Draw(ortho);    
+        imGuiContext.NewFrame();
+        SettingsMenu(potentialDrawCalls, totalDrawCalls, currentFrame);
+        imGuiContext.Render(); 
+        mWindow.SwapBuffers();    
+    }
 }
 
-void Game::SettingsMenu(int potentialDrawCalls, int totalDrawCalls) {
-	ImGui::SetNextWindowSize(ImVec2{ 0,0 });
-	ImGui::SetNextWindowPos(ImVec2{ 0,0 });
-	ImGui::Begin("Settings");
-	ImGui::SliderFloat("Sensitivity", &pWorld->player.camera.mouseSensitivity, 0.0f, 1.0f);
-	ImGui::SliderInt("Render Distance", &pWorld->mRenderDistance, 5, 30);
-	ImGui::SliderInt("Chunk buffers per frame", &pWorld->mBufferPerFrame, 1, 50);
+void Game::SettingsMenu(int potentialDrawCalls, int totalDrawCalls, float currentFrame) {
+    ImGui::SetNextWindowSize(ImVec2{ 0,0 });
+    ImGui::SetNextWindowPos(ImVec2{ 0,0 });
+    ImGui::Begin("Settings");
+    ImGui::SliderFloat("Sensitivity", &pWorld->player.camera.mouseSensitivity, 0.0f, 1.0f);
+    ImGui::SliderInt("Render Distance", &pWorld->mRenderDistance, 5, 30);
+    ImGui::SliderInt("Chunk buffers per frame", &pWorld->mBufferPerFrame, 1, 50);
 
-	iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pWorld->player.camera.position);
-	iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(blockPos);
-	iVec3 chunkLocalBlockPos = GetChunkBlockPosFromGlobalBlockPos(blockPos);
+    iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pWorld->player.camera.position);
+    iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(blockPos);
+    iVec3 chunkLocalBlockPos = GetChunkBlockPosFromGlobalBlockPos(blockPos);
 
-	ImGui::Text("Block coordinates: %s", std::string(blockPos).c_str());
-	ImGui::Text("Chunk local block coordinates: %s", std::string(chunkLocalBlockPos).c_str());
-	ImGui::Text("Chunk coordinates: %s", std::string(chunkPos).c_str());
-	ImGui::Text("FPS: %d", static_cast<int>(1.0f / mDeltaTime));
-	ImGui::Text("Potential Draw Calls: %d", potentialDrawCalls);
-	ImGui::Text("Total Draw Calls: %d", totalDrawCalls);
-	ImGui::Text("Time: %f", pWorld->currentTime);
-	ImGui::End();
+    ImGui::Text("Block coordinates: %s", std::string(blockPos).c_str());
+    ImGui::Text("Chunk local block coordinates: %s", std::string(chunkLocalBlockPos).c_str());
+    ImGui::Text("Chunk coordinates: %s", std::string(chunkPos).c_str());
+    ImGui::Text("FPS: %d", fps);
+    ImGui::Text("Potential Draw Calls: %d", potentialDrawCalls);
+    ImGui::Text("Total Draw Calls: %d", totalDrawCalls);
+    ImGui::Text("Time: %f", pWorld->currentTime);
+    ImGui::End();
 }
 
 void Game::ProcessKeyInput()
@@ -122,7 +127,7 @@ void Game::ProcessKeyInput()
 
 void Game::GLFWMouseMoveCallback(GLFWwindow* window, float xposIn, float yposIn)
 {
-	UNUSED(window);
+    UNUSED(window);
 
     if (!mIsMouseVisible) {
         pWorld->player.camera.ProcessMouseMovement(xposIn, yposIn);
@@ -131,15 +136,15 @@ void Game::GLFWMouseMoveCallback(GLFWwindow* window, float xposIn, float yposIn)
 
 void Game::GLFWScrollCallback(GLFWwindow* window, float xoffset, float yoffset)
 {
-	UNUSED(window);
-	UNUSED(xoffset);
+    UNUSED(window);
+    UNUSED(xoffset);
 
     pWorld->player.camera.ProcessMouseScroll(yoffset);
 }
 
 void Game::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	UNUSED(window);
+    UNUSED(window);
 
     pWorld->player.KeyCallback(key, scancode, action, mods);
     switch (key) {
@@ -171,8 +176,8 @@ void Game::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action
 
 void Game::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-	UNUSED(window);
-	
+    UNUSED(window);
+    
     if (!mIsMouseVisible) {
         pWorld->player.MouseCallback(*pWorld, button, action, mods);
     }
@@ -180,7 +185,7 @@ void Game::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, i
 
 void Game::GLFWFramebufferResizeCallback(GLFWwindow* window, int width, int height)
 {
-	UNUSED(window);
+    UNUSED(window);
 
     glViewport(0, 0, width, height);
     pMSAARenderer.reset();

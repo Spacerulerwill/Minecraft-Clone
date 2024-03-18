@@ -19,15 +19,15 @@ class Skybox {
 private:
     static float sSkyboxVertices[108];
     static std::array<std::string, 6> sDaySkyboxFaces;
-	static std::array<std::string, 6> sNightSkyboxFaces;
-	static std::array<std::string, 6> sTransitionSkyboxFaces;
+    static std::array<std::string, 6> sNightSkyboxFaces;
+    static std::array<std::string, 6> sTransitionSkyboxFaces;
 
     VertexBuffer mVBO;
     VertexArray mVAO;
     Shader mShader = Shader("shaders/skybox.shader");
     Cubemap mDayCubemap;
-	Cubemap mNightCubemap;
-	Cubemap mTransitionCubemap;
+    Cubemap mNightCubemap;
+    Cubemap mTransitionCubemap;
 public:
     Skybox();
     void Draw(const Mat4& projection, const Mat4& view, const Mat4& model, double currentDayProgress);

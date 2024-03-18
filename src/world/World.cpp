@@ -8,6 +8,7 @@ License: MIT
 #include <util/Log.hpp>
 #include <fmt/format.h>
 #include <util/IO.hpp>
+#include <chrono>
 
 iVec3 GetWorldBlockPosFromGlobalPos(Vec3 globalPosition)
 {
@@ -49,121 +50,121 @@ iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 globalBlockPos)
 
 World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
 {
-	// Load world data
-	WorldSave worldSave;
-	ReadStructFromDisk(fmt::format("{}/world.data", worldDirectory), worldSave);
-	seed = worldSave.seed;
+    // Load world data
+    WorldSave worldSave;
+    ReadStructFromDisk(fmt::format("{}/world.data", worldDirectory), worldSave);
+    seed = worldSave.seed;
     mPerlin.reseed(seed);
-	worldStartTime = worldSave.elapsedTime;
-	currentTime = worldSave.elapsedTime;
-	
-	// Load player data
-	PlayerSave playerSave;
-	ReadStructFromDisk(fmt::format("{}/player.data", worldDirectory), playerSave);
-	player.camera.position = playerSave.pos;
-	player.camera.pitch = playerSave.pitch;
-	player.camera.yaw = playerSave.yaw;
-	
-	// Load texture atlases
+    worldStartTime = worldSave.elapsedTime;
+    currentTime = worldSave.elapsedTime;
+    
+    // Load player data
+    PlayerSave playerSave;
+    ReadStructFromDisk(fmt::format("{}/player.data", worldDirectory), playerSave);
+    player.camera.position = playerSave.pos;
+    player.camera.pitch = playerSave.pitch;
+    player.camera.yaw = playerSave.yaw;
+    
+    // Load texture atlases
     LOG_INFO("Loading texture atlases...");
     for (std::size_t i = 0; i < MAX_ANIMATION_FRAMES; i++) {
         mTextureAtlases[i] = TexArray2D(fmt::format("textures/atlases/atlas{}.png", i), TEXTURE_SIZE, GL_TEXTURE0);
     }
-	
-	// Load spawn chunks
-	Vec3 playerPos = player.camera.position;
+    
+    // Load spawn chunks
+    Vec3 playerPos = player.camera.position;
     iVec2 playerChunkPos{
         static_cast<int>(floor(playerPos[0]) / Chunk::SIZE),
         static_cast<int>(floor(playerPos[2]) / Chunk::SIZE)
     };
 
-	// Create tasks for loading spawn chunks
-	LOG_INFO("Loading spawn chunks for {} (Seed: {})", worldDirectory, seed);
-	for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
+    // Create tasks for loading spawn chunks
+    LOG_INFO("Loading spawn chunks for {} (Seed: {})", worldDirectory, seed);
+    for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
         for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
-			iVec2 pos = playerChunkPos + iVec2{ x,z };
-			auto emplace = mChunkStacks.emplace(pos, pos);
-			ChunkStack& chunkStack = emplace.first->second;
-			chunkStack.isBeingLoaded = true;
-			mLoadPool.push_task([&chunkStack, this]{
-				chunkStack.Load(this->worldDirectory, this->seed, this->mPerlin);
-			});
-		}
-	}
-	mLoadPool.wait_for_tasks();
-	
-	// Buffer all chunks
-	for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
+            iVec2 pos = playerChunkPos + iVec2{ x,z };
+            auto emplace = mChunkStacks.emplace(pos, pos);
+            ChunkStack& chunkStack = emplace.first->second;
+            chunkStack.isBeingLoaded = true;
+            mLoadPool.push_task([&chunkStack, this]{
+                chunkStack.Load(this->worldDirectory, this->seed, this->mPerlin);
+            });
+        }
+    }
+    mLoadPool.wait_for_tasks();
+    
+    // Buffer all chunks
+    for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
         for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
-			auto find = mChunkStacks.find(playerChunkPos + iVec2{x,z});
-			if (find == mChunkStacks.end()) {
-				// this should never happen
-				LOG_ERROR("Failed to buffer spawn chunk ({}, {})", x, z);
-			} else {
-				ChunkStack& stack = find->second;
-				for (auto it = stack.begin(); it != stack.end(); ++it) {
-					std::shared_ptr<Chunk> chunk = *it;
-					chunk->BufferData();
-				}
-			}
-		}
-	}
+            auto find = mChunkStacks.find(playerChunkPos + iVec2{x,z});
+            if (find == mChunkStacks.end()) {
+                // this should never happen
+                LOG_ERROR("Failed to buffer spawn chunk ({}, {})", x, z);
+            } else {
+                ChunkStack& stack = find->second;
+                for (auto it = stack.begin(); it != stack.end(); ++it) {
+                    std::shared_ptr<Chunk> chunk = *it;
+                    chunk->BufferData();
+                }
+            }
+        }
+    }
 
-	worldLoadedTime = glfwGetTime();
+    worldLoadedTime = glfwGetTime();
 }
 
 World::~World() {
-	// Purge all queued loading tasks and allow current to finish
-	mLoadPool.purge();
-	mLoadPool.wait_for_tasks();
+    // Purge all queued loading tasks and allow current to finish
+    mLoadPool.purge();
+    mLoadPool.wait_for_tasks();
 
-	// Save to disk
-	WorldSave worldSave {
-		.seed = seed,
-		.elapsedTime = currentTime
-	};
-	WriteStructToDisk(fmt::format("{}/world.data", worldDirectory), worldSave);
+    // Save to disk
+    WorldSave worldSave {
+        .seed = seed,
+        .elapsedTime = currentTime
+    };
+    WriteStructToDisk(fmt::format("{}/world.data", worldDirectory), worldSave);
 
-	PlayerSave playerSave {
-		.pos = player.camera.position,
-		.pitch = player.camera.pitch,
-		.yaw = player.camera.yaw
-	};
-	WriteStructToDisk(fmt::format("{}/player.data", worldDirectory), playerSave);
-	
-	// Unload all remaining chunks 
-	for (auto it = mChunkStacks.begin(); it != mChunkStacks.end(); ++it) {
-		ChunkStack& chunkStack = it->second;
-		mUnloadPool.push_task([&chunkStack, this] {
-				chunkStack.Unload(this->worldDirectory);
-				});
-	}
-	mUnloadPool.wait_for_tasks();
+    PlayerSave playerSave {
+        .pos = player.camera.position,
+        .pitch = player.camera.pitch,
+        .yaw = player.camera.yaw
+    };
+    WriteStructToDisk(fmt::format("{}/player.data", worldDirectory), playerSave);
+    
+    // Unload all remaining chunks 
+    for (auto it = mChunkStacks.begin(); it != mChunkStacks.end(); ++it) {
+        ChunkStack& chunkStack = it->second;
+        mUnloadPool.push_task([&chunkStack, this] {
+                chunkStack.Unload(this->worldDirectory);
+                });
+    }
+    mUnloadPool.wait_for_tasks();   
 }
 
 void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 {
-	double glfwTime = glfwGetTime();
-	currentTime = worldStartTime + glfwTime - worldLoadedTime;
-	double day = currentTime / World::DAY_DURATION;
-	double currentDay;
-	double currentDayProgress = std::modf(day, &currentDay);
+    double glfwTime = glfwGetTime();
+    currentTime = worldStartTime + glfwTime - worldLoadedTime;
+    double day = currentTime / World::DAY_DURATION;
+    double currentDay;
+    double currentDayProgress = std::modf(day, &currentDay);
 
     Mat4 perspective = player.camera.perspectiveMatrix;
     Mat4 view = player.camera.GetViewMatrix();
-	float ambientTerrainLight = 1.0;
+    float ambientTerrainLight = 1.0;
 
-	if (currentDayProgress < 0.5) {
-		ambientTerrainLight = 0.7;
-	}
-	else if (currentDayProgress < 0.6 ) {
-		ambientTerrainLight = 0.2 + (1 - ((currentDayProgress - 0.5) / 0.1)) * 0.5;
-	} 
-	else if (currentDayProgress < 0.91) {
-		ambientTerrainLight = 0.2;
-	} else {
-		ambientTerrainLight = 0.2 + ((currentDayProgress - 0.91) / 0.09) * 0.5;
-	}
+    if (currentDayProgress < 0.5) {
+        ambientTerrainLight = 0.7;
+    }
+    else if (currentDayProgress < 0.6 ) {
+        ambientTerrainLight = 0.2 + (1 - ((currentDayProgress - 0.5) / 0.1)) * 0.5;
+    } 
+    else if (currentDayProgress < 0.91) {
+        ambientTerrainLight = 0.2;
+    } else {
+        ambientTerrainLight = 0.2 + ((currentDayProgress - 0.91) / 0.09) * 0.5;
+    }
 
     // Update chunk visibilities by performing frustum culling
     for (auto& [pos, chunkStack] : mChunkStacks) {
@@ -173,7 +174,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     }
 
     glDepthFunc(GL_LEQUAL);
-	Mat4 model = rotate(Vec3{0.0f, 1.0f, 0.0f}, currentTime * 0.01f); 
+    Mat4 model = rotate(Vec3{0.0f, 1.0f, 0.0f}, currentTime * 0.01f); 
     mSkybox.Draw(perspective, translationRemoved(view), model, currentDayProgress);
     glDepthFunc(GL_LESS);
 
@@ -181,7 +182,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     chunkShader.SetMat4("projection", perspective);
     chunkShader.SetMat4("view", view);
     chunkShader.SetVec3("grass_color", mGrassColor);
-	chunkShader.SetFloat("ambient", ambientTerrainLight);
+    chunkShader.SetFloat("ambient", ambientTerrainLight);
     glActiveTexture(GL_TEXTURE0); 
     mTextureAtlases[currentAtlasID].Bind();
     chunkShader.SetInt("tex_array", 0);
@@ -198,7 +199,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     waterShader.SetMat4("projection", perspective);
     waterShader.SetMat4("view", view);
     waterShader.SetVec3("color", mWaterColor);
-	waterShader.SetFloat("ambient", ambientTerrainLight);
+    waterShader.SetFloat("ambient", ambientTerrainLight);
     glActiveTexture(GL_TEXTURE0);
     waterShader.SetInt("tex_array", 0);
     glEnable(GL_BLEND);
@@ -215,7 +216,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     glActiveTexture(GL_TEXTURE0);
     customModelShader.SetInt("tex_array", 0);
     customModelShader.SetVec3("foliage_color", mFoliageColor);
-	customModelShader.SetFloat("ambient", ambientTerrainLight);
+    customModelShader.SetFloat("ambient", ambientTerrainLight);
     for (auto& [pos, stack] : mChunkStacks) {
         stack.DrawCustomModel(customModelShader, totalChunks, chunksDrawn);
     }
@@ -224,15 +225,15 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 
 void World::GenerateChunks()
 {
-	// Detect what chunk the player is in
+    // Detect what chunk the player is in
     Vec3 playerPos = player.camera.position;
     iVec2 playerChunkPos{
         static_cast<int>(floor(playerPos[0]) / Chunk::SIZE),
         static_cast<int>(floor(playerPos[2]) / Chunk::SIZE)
     };
-	
-	// Unload chunks out of distance
-	std::vector<std::unordered_map<iVec2, ChunkStack>::iterator> iteratorsToRemove;
+    
+    // Unload chunks out of distance
+    std::vector<std::unordered_map<iVec2, ChunkStack>::iterator> iteratorsToRemove;
     for (auto it = mChunkStacks.begin(); it != mChunkStacks.end();) {
         ChunkStack& stack = it->second;
 
@@ -241,58 +242,58 @@ void World::GenerateChunks()
             stackPos[0] > playerChunkPos[0] + mRenderDistance ||
             stackPos[1] < playerChunkPos[1] - mRenderDistance ||
             stackPos[1] > playerChunkPos[1] + mRenderDistance) &&
-			!stack.isBeingLoaded) {
-			
-			mUnloadPool.push_task([&stack, this] {
-						stack.Unload(this->worldDirectory);	
-			});
-			iteratorsToRemove.push_back(it);
-		} 
-		++it;
+            !stack.isBeingLoaded) {
+            
+            mUnloadPool.push_task([&stack, this] {
+                        stack.Unload(this->worldDirectory);    
+            });
+            iteratorsToRemove.push_back(it);
+        } 
+        ++it;
     }
 
-	mUnloadPool.wait_for_tasks();
-	for (auto it : iteratorsToRemove) {
-		mChunkStacks.erase(it);
-	}
-	
-	// Load and generate new chunks
+    mUnloadPool.wait_for_tasks();
+    for (auto it : iteratorsToRemove) {
+        mChunkStacks.erase(it);
+    }
+    
+    // Load and generate new chunks
     std::size_t chunksBuffered = 0;
     std::size_t chunksCreated = 0;
     for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
         for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
-			if (chunksBuffered < mBufferPerFrame && chunksCreated < mBufferPerFrame) {
-				iVec2 pos = playerChunkPos + iVec2{ x,z };
-				auto find = mChunkStacks.find(pos);
-				if (find == mChunkStacks.end()) {
-					if (chunksCreated < mBufferPerFrame) {
-						auto emplace = mChunkStacks.emplace(pos, pos);
-						ChunkStack& chunkStack = emplace.first->second;
-						chunkStack.isBeingLoaded = true;
-						mLoadPool.push_task([&chunkStack, this]{
-							chunkStack.Load(this->worldDirectory, this->seed, this->mPerlin);
-						});
-						chunksCreated++;
-					}
-				}
-				else {
-					ChunkStack& stack = find->second;
-					for (auto it = stack.begin(); it != stack.end(); ++it) {
-						std::shared_ptr<Chunk> chunk = *it;
-						if (chunksBuffered < mBufferPerFrame) {
-							if (chunk->needsBuffering) {
-								chunk->BufferData();
-								chunksBuffered++;
-							}
-						}
-						else {
-							return;
-						}
-					}
-				}
-			} else {
-				return;
-			}
+            if (chunksBuffered < mBufferPerFrame && chunksCreated < mBufferPerFrame) {
+                iVec2 pos = playerChunkPos + iVec2{ x,z };
+                auto find = mChunkStacks.find(pos);
+                if (find == mChunkStacks.end()) {
+                    if (chunksCreated < mBufferPerFrame) {
+                        auto emplace = mChunkStacks.emplace(pos, pos);
+                        ChunkStack& chunkStack = emplace.first->second;
+                        chunkStack.isBeingLoaded = true;
+                        mLoadPool.push_task([&chunkStack, this]{
+                            chunkStack.Load(this->worldDirectory, this->seed, this->mPerlin);
+                        });
+                        chunksCreated++;
+                    }
+                }
+                else {
+                    ChunkStack& stack = find->second;
+                    for (auto it = stack.begin(); it != stack.end(); ++it) {
+                        std::shared_ptr<Chunk> chunk = *it;
+                        if (chunksBuffered < mBufferPerFrame) {
+                            if (chunk->needsBuffering) {
+                                chunk->BufferData();
+                                chunksBuffered++;
+                            }
+                        }
+                        else {
+                            return;
+                        }
+                    }
+                }
+            } else {
+                return;
+            }
         }
     }
 }
