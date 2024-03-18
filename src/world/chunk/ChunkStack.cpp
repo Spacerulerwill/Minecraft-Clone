@@ -186,24 +186,24 @@ iVec2 ChunkStack::GetPosition() const
     return mPos;
 }
 
-void ChunkStack::Draw(const Frustum& frustum, Shader& shader, int* totalChunks, int* chunksDrawn)
+void ChunkStack::Draw(Shader& shader, int* totalChunks, int* chunksDrawn)
 {
     for (auto& chunk : mChunks) {
-        chunk->Draw(frustum, shader, totalChunks, chunksDrawn);
+        chunk->Draw(shader, totalChunks, chunksDrawn);
     }
 }
 
-void ChunkStack::DrawWater(const Frustum& frustum, Shader& shader, int* totalChunks, int* chunksDrawn)
+void ChunkStack::DrawWater(Shader& shader, int* totalChunks, int* chunksDrawn)
 {
     for (auto& chunk : mChunks) {
-        chunk->DrawWater(frustum, shader, totalChunks, chunksDrawn);
+        chunk->DrawWater(shader, totalChunks, chunksDrawn);
     }
 }
 
-void ChunkStack::DrawCustomModel(const Frustum& frustum, Shader& shader, int* totalChunks, int* chunksDrawn)
+void ChunkStack::DrawCustomModel(Shader& shader, int* totalChunks, int* chunksDrawn)
 {
     for (auto& chunk : mChunks) {
-        chunk->DrawCustomModel(frustum, shader, totalChunks, chunksDrawn);
+        chunk->DrawCustomModel(shader, totalChunks, chunksDrawn);
     }
 }
 

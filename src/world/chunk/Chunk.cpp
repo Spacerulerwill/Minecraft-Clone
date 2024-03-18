@@ -96,11 +96,16 @@ void Chunk::BufferData()
     }
 }
 
-void Chunk::Draw(const Frustum& frustum, Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
+void Chunk::UpdateVisiblity(const Frustum& frustum)
+{
+    visible = sphere.IsOnFrustum(frustum);
+}
+
+void Chunk::Draw(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
 {
     if (potentialDrawCalls) (*potentialDrawCalls)++;
     if (mVertexCount > 0) {
-        if (sphere.IsOnFrustum(frustum)) {
+        if (visible) {
             if (totalDrawCalls) (*totalDrawCalls)++;
             mVAO.Bind();
             shader.SetMat4("model", mModel);;
@@ -109,11 +114,11 @@ void Chunk::Draw(const Frustum& frustum, Shader& shader, int* potentialDrawCalls
     }
 }
 
-void Chunk::DrawWater(const Frustum& frustum, Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
+void Chunk::DrawWater(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
 {
     if (potentialDrawCalls) (*potentialDrawCalls)++;
     if (mWaterVertexCount > 0) {
-        if (sphere.IsOnFrustum(frustum)) {
+        if (visible) {
             if (totalDrawCalls) (*totalDrawCalls)++;
             mWaterVAO.Bind();
             shader.SetMat4("model", mModel);
@@ -122,11 +127,11 @@ void Chunk::DrawWater(const Frustum& frustum, Shader& shader, int* potentialDraw
     }
 }
 
-void Chunk::DrawCustomModel(const Frustum& frustum, Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
+void Chunk::DrawCustomModel(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
 {
     if (potentialDrawCalls) (*potentialDrawCalls)++;
     if (mCustomModelVertexCount > 0) {
-        if (sphere.IsOnFrustum(frustum)) {
+        if (visible) {
             if (totalDrawCalls) (*totalDrawCalls)++;
             mCustomModelVAO.Bind();
             shader.SetMat4("model", mModel);

@@ -32,9 +32,9 @@ public:
 	static constexpr std::size_t DEFAULT_SIZE = 8;
     ChunkStack(iVec2 pos);
     void GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin);
-    void Draw(const Frustum& frustum, Shader& shader, int* totalChunks, int* chunksDrawn);
-    void DrawWater(const Frustum& frustum, Shader& shader, int* totalChunks, int* chunksDrawn);
-    void DrawCustomModel(const Frustum& frustum, Shader& shader, int* totalChunks, int* chunksDrawn);
+    void Draw(Shader& shader, int* totalChunks, int* chunksDrawn);
+    void DrawWater(Shader& shader, int* totalChunks, int* chunksDrawn);
+    void DrawCustomModel(Shader& shader, int* totalChunks, int* chunksDrawn);
     iVec2 GetPosition() const;
     std::atomic<bool> isBeingLoaded = false;
 	std::atomic<bool> isLoaded = false;

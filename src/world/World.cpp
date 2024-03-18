@@ -165,6 +165,12 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 		ambientTerrainLight = 0.2 + ((currentDayProgress - 0.91) / 0.09) * 0.5;
 	}
 
+    // Update chunk visibilities by performing frustum culling
+    for (auto& [pos, chunkStack] : mChunkStacks) {
+        for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+            (*it)->UpdateVisiblity(frustum);
+        }
+    }
 
     glDepthFunc(GL_LEQUAL);
 	Mat4 model = rotate(Vec3{0.0f, 1.0f, 0.0f}, currentTime * 0.01f); 
@@ -185,7 +191,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     chunkShader.SetInt("grass_mask", 1);
  
     for (auto& [pos, stack] : mChunkStacks) {
-        stack.Draw(frustum, chunkShader, totalChunks, chunksDrawn);
+        stack.Draw(chunkShader, totalChunks, chunksDrawn);
     }
 
     waterShader.Bind();
@@ -197,7 +203,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     waterShader.SetInt("tex_array", 0);
     glEnable(GL_BLEND);
     for (auto& [pos, stack] : mChunkStacks) {
-        stack.DrawWater(frustum, waterShader, totalChunks, chunksDrawn);
+        stack.DrawWater(waterShader, totalChunks, chunksDrawn);
     }
     glDisable(GL_BLEND);
 
@@ -211,7 +217,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     customModelShader.SetVec3("foliage_color", mFoliageColor);
 	customModelShader.SetFloat("ambient", ambientTerrainLight);
     for (auto& [pos, stack] : mChunkStacks) {
-        stack.DrawCustomModel(frustum, customModelShader, totalChunks, chunksDrawn);
+        stack.DrawCustomModel(customModelShader, totalChunks, chunksDrawn);
     }
     glEnable(GL_CULL_FACE);
 }
