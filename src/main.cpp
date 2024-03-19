@@ -8,6 +8,7 @@ License: MIT
 
 #include <core/Game.hpp>
 #include <core/SoundEngine.hpp>
+#include <opengl/Window.hpp>
 #include <world/World.hpp>
 #include <util/Log.hpp>
 #include <util/IO.hpp>
@@ -18,9 +19,13 @@ License: MIT
 
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <limits>
 #include <filesystem>
 #include <functional>
+#include <stdint.h>
+#include <random>
+#include <limits>
 
 #define RED "\x1b[0;31m"
 #define GREEN "\x1b[0;32m"
@@ -41,7 +46,7 @@ std::uintmax_t get_size_of_directory(const std::filesystem::directory_entry& dir
     return size;
 }
 
-std::string format_bytes(uintmax_t bytes) {
+std::string format_bytes(std::uintmax_t bytes) {
     static const char* suffixes[] = { "B", "KB", "MB", "GB", "TB" };
     std::size_t suffixIndex = 0;
 

@@ -27,6 +27,7 @@ void Game::Run(std::string worldDirectory) {
     {
         throw std::runtime_error("Failed to load GLAD!");
     }
+    glViewport(0, 0, INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT);
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_POLYGON_SMOOTH);
     glEnable(GL_CULL_FACE);
