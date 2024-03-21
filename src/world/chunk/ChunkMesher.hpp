@@ -9,15 +9,22 @@ License: MIT
 #include <vector>
 #include <cstdint>
 #include <world/Block.hpp>
+#include <functional>
 
 namespace ChunkMesher {
+    typedef bool (*ChunkMeshFilterCallback)(BlockID);
+
     struct ChunkVertex {
         uint32_t data1;
         uint32_t data2;
     };
 
-    void BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks);
-    void BinaryGreedyMeshTransparentBlock(BlockID block, std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks);
+    inline bool IsOpaqueCube(BlockID blockID) {
+        BlockDataStruct blockData = BlockData[blockID];
+        return blockData.opaque && blockData.modelID == static_cast<ModelID>(Model::CUBE);
+    }
+
+    void BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks, ChunkMeshFilterCallback condition);
     void MeshCustomModelBlocks(std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks);
 };
 

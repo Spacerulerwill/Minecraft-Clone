@@ -76,7 +76,7 @@ MenuOptionResult create_world() {
             .msg = "World name cannot be empty"
         };
     }
-    std::string worldDirectory = fmt::format("worlds/{}", worldName);
+    const std::string worldDirectory = fmt::format("worlds/{}", worldName);
 
     // Check it doesn't exist
     if (std::filesystem::is_directory(worldDirectory)) {
@@ -104,12 +104,12 @@ MenuOptionResult create_world() {
     // If it doesn't exist, create world
     std::filesystem::create_directory(worldDirectory);
     std::filesystem::create_directory(fmt::format("{}/chunk_stacks", worldDirectory));
-    WorldSave worldSave {
+    const WorldSave worldSave {
         .seed = seed,
         .elapsedTime = 0.0
     };
     WriteStructToDisk(fmt::format("{}/world.data", worldDirectory), worldSave);
-    PlayerSave playerSave {
+    const PlayerSave playerSave {
         .pos = Vec3{0.0f, 1000.0f, 0.0f},
         .pitch = 0.0f,
         .yaw = -90.0f
@@ -147,7 +147,7 @@ MenuOptionResult delete_world() {
             .msg = "World name cannot be empty"
         };
     }
-    std::string worldDirectory = fmt::format("worlds/{}", worldName);
+    const std::string worldDirectory = fmt::format("worlds/{}", worldName);
 
     // Check world to delete exists
     if (!std::filesystem::is_directory(worldDirectory)) {
@@ -194,7 +194,7 @@ MenuOptionResult load_world() {
         };
     }
 
-    std::string worldDirectory = fmt::format("worlds/{}", worldName);
+    const std::string worldDirectory = fmt::format("worlds/{}", worldName);
     // if its not a directory, it cannot be a world so return error
     if (!std::filesystem::is_directory(worldDirectory)) {
         return MenuOptionResult{

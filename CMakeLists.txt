@@ -7,8 +7,6 @@ project(MinecraftClone VERSION 1.0)
 
 add_executable(${PROJECT_NAME} 
     src/main.cpp
-    src/core/Application.cpp
-    src/core/Application.hpp
     src/core/Game.cpp
     src/core/Game.hpp
     src/core/Camera.cpp

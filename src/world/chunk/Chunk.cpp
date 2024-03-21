@@ -61,9 +61,9 @@ void Chunk::CreateMesh() {
     mCustomModelVertexCount = 0;
 
     // Mesh
-    ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks);
-    ChunkMesher::BinaryGreedyMeshTransparentBlock(GLASS, mVertices, mBlocks);
-    ChunkMesher::BinaryGreedyMeshTransparentBlock(WATER, mWaterVertices, mBlocks);
+    ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks, ChunkMesher::IsOpaqueCube);
+    ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks, [](BlockID block) { return block == GLASS; });
+    ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks, [](BlockID block) { return block == WATER; });
     ChunkMesher::MeshCustomModelBlocks(mCustomModelVertices, mBlocks);
     needsBuffering = true;
 }
