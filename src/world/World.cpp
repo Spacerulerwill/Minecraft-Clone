@@ -88,18 +88,19 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
             if (radius < mChunkLoadDistance) {
                 auto emplace = mChunkStacks.emplace(pos, pos);
                 ChunkStack& chunkStack = emplace.first->second;
+                chunkStack.state = ChunkStackState::LOADED;
                 mTaskPool.push_task([this, &chunkStack]() {
                     chunkStack.GenerateTerrain(seed, mPerlin);
                     for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
                         std::shared_ptr<Chunk> chunk = *it;
                         chunk->CreateMesh();
                     }
-                    chunkStack.state = ChunkStackState::LOADED;
                     });
             }
             else if (radius < totalRenderDistance) {
                 auto emplace = mChunkStacks.emplace(pos, pos);
                 ChunkStack& chunkStack = emplace.first->second;
+                chunkStack.state = ChunkStackState::PARTIALLY_LOADED;
                 mTaskPool.push_task([this, &chunkStack]() {
                     chunkStack.GenerateTerrain(seed, mPerlin);
                     for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
@@ -107,7 +108,6 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
                         chunk->CreateMesh();
                         chunk->ReleaseMemory();
                     } 
-                    chunkStack.state = ChunkStackState::PARTIALLY_LOADED;
                     });
             }
         }
@@ -124,6 +124,9 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
 }
 
 World::~World() {
+    mTaskPool.purge();
+    mTaskPool.wait_for_tasks();
+
     // Save to disk
     WorldSave worldSave {
         .seed = seed,
@@ -231,6 +234,7 @@ void World::GenerateChunks()
         static_cast<int>(floor(playerPos[0]) / Chunk::SIZE),
         static_cast<int>(floor(playerPos[2]) / Chunk::SIZE)
     };
+
     // Unload chunks out of distance
     for (auto it = mChunkStacks.begin(); it != mChunkStacks.end();) {
         ChunkStack& stack = it->second;
@@ -242,14 +246,13 @@ void World::GenerateChunks()
             if (!stack.taskFlag.test_and_set()) {
                 if (stack.state == ChunkStackState::UNLOADED) {
                     it = mChunkStacks.erase(it);
-                    stack.taskFlag.clear();
                 }
                 else {
+                    stack.state = ChunkStackState::UNLOADED;
                     mTaskPool.push_task([this, &stack]() {
                         for (auto it = stack.begin(); it != stack.end(); ++it) {
                             (*it)->ReleaseMemory();
                         }
-                        stack.state = ChunkStackState::UNLOADED;
                         stack.taskFlag.clear();
                         });
                     ++it;
@@ -260,6 +263,7 @@ void World::GenerateChunks()
             ++it;
         }
     }
+    
     // Iterate over our chunk circle
     for (int x = -totalRenderDistance; x <= totalRenderDistance; x++) {
         for (int z = -totalRenderDistance; z <= totalRenderDistance; z++) {
@@ -273,6 +277,7 @@ void World::GenerateChunks()
                     auto emplace = mChunkStacks.emplace(pos, pos);
                     ChunkStack& chunkStack = emplace.first->second;
                     if (!chunkStack.taskFlag.test_and_set()) {
+                        chunkStack.state = ChunkStackState::LOADED;
                         mTaskPool.push_task([this, &chunkStack]() {
                             chunkStack.GenerateTerrain(seed, mPerlin);
                             for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
@@ -280,7 +285,6 @@ void World::GenerateChunks()
                                 chunk->CreateMesh();
                             }
                             chunkStack.taskFlag.clear();
-                            chunkStack.state = ChunkStackState::LOADED;
                             });
                     } 
                 }
@@ -289,12 +293,11 @@ void World::GenerateChunks()
                     ChunkStack& stack = find->second;
                     if (stack.state != ChunkStackState::UNLOADED) {
                         if (stack.state == ChunkStackState::PARTIALLY_LOADED) {
+                            stack.state = ChunkStackState::LOADED;
                             if (!stack.taskFlag.test_and_set()) {
                                 mTaskPool.push_task([this, &stack]() {
                                     stack.GenerateTerrain(seed, mPerlin);
-                                    stack.state = ChunkStackState::LOADED;
                                     stack.taskFlag.clear();
-                                    stack.state = ChunkStackState::LOADED;
                                     });
                             }
                         }
@@ -323,8 +326,8 @@ void World::GenerateChunks()
                 if (find == mChunkStacks.end()) {
                     auto emplace = mChunkStacks.emplace(pos, pos);
                     ChunkStack& chunkStack = emplace.first->second;
-
                     if (!chunkStack.taskFlag.test_and_set()) {
+                        chunkStack.state = ChunkStackState::PARTIALLY_LOADED;
                         mTaskPool.push_task([this, &chunkStack]() {
                             chunkStack.GenerateTerrain(seed, mPerlin);
                             for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
@@ -335,7 +338,6 @@ void World::GenerateChunks()
                                 (*it)->ReleaseMemory();
                             }
                             chunkStack.taskFlag.clear();
-                            chunkStack.state = ChunkStackState::PARTIALLY_LOADED;
                             });
                     }
                 }
@@ -345,12 +347,12 @@ void World::GenerateChunks()
                     if (stack.state != ChunkStackState::UNLOADED) {
                         if (stack.state == ChunkStackState::LOADED) {
                             if (!stack.taskFlag.test_and_set()) {
+                                stack.state = ChunkStackState::PARTIALLY_LOADED;
                                 mTaskPool.push_task([this, &stack]() {
                                     for (auto it = stack.begin(); it != stack.end(); ++it) {
                                         (*it)->ReleaseMemory();
                                     }
                                     stack.taskFlag.clear();
-                                    stack.state = ChunkStackState::PARTIALLY_LOADED;
                                     });
                             };
                         }

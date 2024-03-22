@@ -120,20 +120,6 @@ iVec2 ChunkStack::GetPosition() const
 void ChunkStack::Draw(Shader& shader, int* totalChunks, int* chunksDrawn)
 {
     for (auto& chunk : mChunks) {
-        switch (state) {
-        case ChunkStackState::UNLOADED: {
-            shader.SetVec3("chunkColor", Vec3{0.0f, 0.0f, 0.0f});
-            break;
-            }
-        case ChunkStackState::PARTIALLY_LOADED: {
-            shader.SetVec3("chunkColor", Vec3{ 1.0f, 0.0f, 0.0f });
-            break;
-        }
-        case ChunkStackState::LOADED: {
-            shader.SetVec3("chunkColor", Vec3{ 0.0f, 1.0f, 0.0f });
-            break;
-        }
-        }
         chunk->Draw(shader, totalChunks, chunksDrawn);
     }
 }
@@ -141,20 +127,6 @@ void ChunkStack::Draw(Shader& shader, int* totalChunks, int* chunksDrawn)
 void ChunkStack::DrawWater(Shader& shader, int* totalChunks, int* chunksDrawn)
 {
     for (auto& chunk : mChunks) {
-        switch (state) {
-        case ChunkStackState::UNLOADED: {
-            shader.SetVec3("chunkColor", Vec3{ 0.0f, 0.0f, 0.0f });
-            break;
-        }
-        case ChunkStackState::PARTIALLY_LOADED: {
-            shader.SetVec3("chunkColor", Vec3{ 1.0f, 0.0f, 0.0f });
-            break;
-        }
-        case ChunkStackState::LOADED: {
-            shader.SetVec3("chunkColor", Vec3{ 0.0f, 1.0f, 0.0f });
-            break;
-        }
-        }
         chunk->DrawWater(shader, totalChunks, chunksDrawn);
     }
 }
@@ -162,20 +134,6 @@ void ChunkStack::DrawWater(Shader& shader, int* totalChunks, int* chunksDrawn)
 void ChunkStack::DrawCustomModel(Shader& shader, int* totalChunks, int* chunksDrawn)
 {
     for (auto& chunk : mChunks) {
-        switch (state) {
-        case ChunkStackState::UNLOADED: {
-            shader.SetVec3("chunkColor", Vec3{ 0.0f, 0.0f, 0.0f });
-            break;
-        }
-        case ChunkStackState::PARTIALLY_LOADED: {
-            shader.SetVec3("chunkColor", Vec3{ 1.0f, 0.0f, 0.0f });
-            break;
-        }
-        case ChunkStackState::LOADED: {
-            shader.SetVec3("chunkColor", Vec3{ 0.0f, 1.0f, 0.0f });
-            break;
-        }
-        }
         chunk->DrawCustomModel(shader, totalChunks, chunksDrawn);
     }
 }

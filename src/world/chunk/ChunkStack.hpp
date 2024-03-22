@@ -45,7 +45,7 @@ public:
     std::shared_ptr<Chunk> GetChunk(std::size_t y) const;
     BlockID GetBlock(iVec3 pos) const;
     void SetBlock(iVec3 pos, BlockID block);
-    std::atomic<ChunkStackState> state = ChunkStackState::UNLOADED;
+    ChunkStackState state = ChunkStackState::UNLOADED;
     std::atomic_flag taskFlag = ATOMIC_FLAG_INIT;
 };
 
