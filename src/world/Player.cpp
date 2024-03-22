@@ -8,6 +8,7 @@ License: MIT
 #include <math/Raycast.hpp>
 #include <core/SoundEngine.hpp>
 #include <util/Log.hpp>
+#include <util/Util.hpp>
 
 void Player::ProcessKeyInput(const World& world, const Window& window, float deltaTime)
 {
@@ -39,6 +40,10 @@ void Player::ProcessKeyInput(const World& world, const Window& window, float del
 
 void Player::KeyCallback(int key, int scancode, int action, int mods)
 {
+    UNUSED(scancode);
+    UNUSED(mods);
+    UNUSED(action);
+
     switch (key) {
     case GLFW_KEY_X: {
         selectedBlock--;
@@ -59,6 +64,8 @@ void Player::KeyCallback(int key, int scancode, int action, int mods)
 
 void Player::MouseCallback(const World& world, int button, int action, int mods)
 {
+    UNUSED(mods);
+
     switch (button) {
     case GLFW_MOUSE_BUTTON_1: {
         if (action == GLFW_PRESS) {

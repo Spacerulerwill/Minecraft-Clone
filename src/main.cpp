@@ -79,12 +79,20 @@ MenuOptionResult create_world() {
     const std::string worldDirectory = fmt::format("worlds/{}", worldName);
 
     // Check it doesn't exist
-    if (std::filesystem::is_directory(worldDirectory)) {
+    try {
+        if (std::filesystem::is_directory(worldDirectory)) {
+            return MenuOptionResult{
+                .success = false,
+                .msg = fmt::format("World {} already exists", worldName)
+            };
+        }
+    }
+    catch (...) {
         return MenuOptionResult{
             .success = false,
-            .msg = fmt::format("World {} already exists", worldName)
+            .msg = fmt::format("Cannot create world with name: {}", worldName)
         };
-    }
+    };
 
     // Ask user for seed
     std::string seedString;
@@ -150,12 +158,19 @@ MenuOptionResult delete_world() {
     const std::string worldDirectory = fmt::format("worlds/{}", worldName);
 
     // Check world to delete exists
-    if (!std::filesystem::is_directory(worldDirectory)) {
+    try {
+        if (!std::filesystem::is_directory(worldDirectory)) {
+            return MenuOptionResult{
+                .success = false,
+                .msg = fmt::format("World {} doesn't exist", worldName)
+            };
+        }
+    } catch (...) {
         return MenuOptionResult{
             .success = false,
-            .msg = fmt::format("World {} doesn't exist", worldName)
+            .msg = fmt::format("Cannot create world with name: {}", worldName)
         };
-    }
+    };
 
     // Remove all its files
     std::filesystem::remove_all(worldDirectory);
@@ -196,12 +211,20 @@ MenuOptionResult load_world() {
 
     const std::string worldDirectory = fmt::format("worlds/{}", worldName);
     // if its not a directory, it cannot be a world so return error
-    if (!std::filesystem::is_directory(worldDirectory)) {
+    try {
+        if (!std::filesystem::is_directory(worldDirectory)) {
+            return MenuOptionResult{
+                .success = false,
+                .msg = fmt::format("World {} does not exist", worldName)
+            };
+        }
+    }
+    catch (...) {
         return MenuOptionResult{
             .success = false,
-            .msg = fmt::format("World {} does not exist", worldName)
+            .msg = fmt::format("Cannot create world with name: {}", worldName)
         };
-    }
+    };
 
     std::cout << GREEN << fmt::format("Started playing world {}", worldName) << RESET << std::endl;
     try {
@@ -274,7 +297,6 @@ Q - Quit
             std::cout << (result.success ? GREEN : RED) << result.msg << RESET << std::endl;
         }
     } while (choice != 'q');
-
 }
 
 int main() {

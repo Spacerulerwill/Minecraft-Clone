@@ -70,54 +70,60 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
     for (std::size_t i = 0; i < MAX_ANIMATION_FRAMES; i++) {
         mTextureAtlases[i] = TexArray2D(fmt::format("textures/atlases/atlas{}.png", i), TEXTURE_SIZE, GL_TEXTURE0);
     }
-    
+
     // Load spawn chunks
+    LOG_INFO("Loading spawn chunks...");
     Vec3 playerPos = player.camera.position;
     iVec2 playerChunkPos{
         static_cast<int>(floor(playerPos[0]) / Chunk::SIZE),
         static_cast<int>(floor(playerPos[2]) / Chunk::SIZE)
     };
 
-    // Create tasks for loading spawn chunks
-    LOG_INFO("Loading spawn chunks for {} (Seed: {})", worldDirectory, seed);
-    for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
-        for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
+    // Load all chunks
+    int totalRenderDistance = mChunkLoadDistance + mChunkPartialLoadDistance;
+    for (int x = -totalRenderDistance; x <= totalRenderDistance; x++) {
+        for (int z = -totalRenderDistance; z <= totalRenderDistance; z++) {
+            int radius = static_cast<int>(std::round(std::sqrtf(x * x + z * z)));
             iVec2 pos = playerChunkPos + iVec2{ x,z };
-            auto emplace = mChunkStacks.emplace(pos, pos);
-            ChunkStack& chunkStack = emplace.first->second;
-            chunkStack.isBeingLoaded = true;
-            mLoadPool.push_task([&chunkStack, this]{
-                chunkStack.Load(this->worldDirectory, this->seed, this->mPerlin);
-            });
-        }
-    }
-    mLoadPool.wait_for_tasks();
-    
-    // Buffer all chunks
-    for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
-        for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
-            auto find = mChunkStacks.find(playerChunkPos + iVec2{x,z});
-            if (find == mChunkStacks.end()) {
-                // this should never happen
-                LOG_ERROR("Failed to buffer spawn chunk ({}, {})", x, z);
-            } else {
-                ChunkStack& stack = find->second;
-                for (auto it = stack.begin(); it != stack.end(); ++it) {
-                    std::shared_ptr<Chunk> chunk = *it;
-                    chunk->BufferData();
-                }
+            if (radius < mChunkLoadDistance) {
+                auto emplace = mChunkStacks.emplace(pos, pos);
+                ChunkStack& chunkStack = emplace.first->second;
+                mTaskPool.push_task([this, &chunkStack]() {
+                    chunkStack.GenerateTerrain(seed, mPerlin);
+                    for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+                        std::shared_ptr<Chunk> chunk = *it;
+                        chunk->CreateMesh();
+                    }
+                    chunkStack.state = ChunkStackState::LOADED;
+                    });
+            }
+            else if (radius < totalRenderDistance) {
+                auto emplace = mChunkStacks.emplace(pos, pos);
+                ChunkStack& chunkStack = emplace.first->second;
+                mTaskPool.push_task([this, &chunkStack]() {
+                    chunkStack.GenerateTerrain(seed, mPerlin);
+                    for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+                        std::shared_ptr<Chunk> chunk = *it;
+                        chunk->CreateMesh();
+                        chunk->ReleaseMemory();
+                    } 
+                    chunkStack.state = ChunkStackState::PARTIALLY_LOADED;
+                    });
             }
         }
     }
+    mTaskPool.wait_for_tasks();
 
+    // Buffer all chunks
+    for (auto& [pos, stack] : mChunkStacks) {
+        for (auto it = stack.begin(); it != stack.end(); ++it) {
+            (*it)->BufferData();
+        }
+    }
     worldLoadedTime = glfwGetTime();
 }
 
 World::~World() {
-    // Purge all queued loading tasks and allow current to finish
-    mLoadPool.purge();
-    mLoadPool.wait_for_tasks();
-
     // Save to disk
     WorldSave worldSave {
         .seed = seed,
@@ -130,16 +136,7 @@ World::~World() {
         .pitch = player.camera.pitch,
         .yaw = player.camera.yaw
     };
-    WriteStructToDisk(fmt::format("{}/player.data", worldDirectory), playerSave);
-    
-    // Unload all remaining chunks 
-    for (auto it = mChunkStacks.begin(); it != mChunkStacks.end(); ++it) {
-        ChunkStack& chunkStack = it->second;
-        mUnloadPool.push_task([&chunkStack, this] {
-                chunkStack.Unload(this->worldDirectory);
-                });
-    }
-    mUnloadPool.wait_for_tasks();   
+    WriteStructToDisk(fmt::format("{}/player.data", worldDirectory), playerSave);   
 }
 
 void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
@@ -152,18 +149,18 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 
     Mat4 perspective = player.camera.perspectiveMatrix;
     Mat4 view = player.camera.GetViewMatrix();
-    float ambientTerrainLight = 1.0;
+    float ambientTerrainLight = 1.0f;
 
     if (currentDayProgress < 0.5) {
-        ambientTerrainLight = 0.7;
+        ambientTerrainLight = 0.7f;
     }
-    else if (currentDayProgress < 0.6 ) {
-        ambientTerrainLight = 0.2 + (1 - ((currentDayProgress - 0.5) / 0.1)) * 0.5;
+    else if (currentDayProgress < 0.6f ) {
+        ambientTerrainLight = 0.2f + (1.0f - ((static_cast<float>(currentDayProgress) - 0.5f) / 0.1f)) * 0.5f;
     } 
-    else if (currentDayProgress < 0.91) {
-        ambientTerrainLight = 0.2;
+    else if (currentDayProgress < 0.91f) {
+        ambientTerrainLight = 0.2f;
     } else {
-        ambientTerrainLight = 0.2 + ((currentDayProgress - 0.91) / 0.09) * 0.5;
+        ambientTerrainLight = 0.2f + ((static_cast<float>(currentDayProgress) - 0.91f) / 0.09f) * 0.5f;
     }
 
     // Update chunk visibilities by performing frustum culling
@@ -225,59 +222,88 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 
 void World::GenerateChunks()
 {
+    int totalRenderDistance = mChunkLoadDistance + mChunkPartialLoadDistance;
+    int chunksBuffered = 0;
+
     // Detect what chunk the player is in
     Vec3 playerPos = player.camera.position;
     iVec2 playerChunkPos{
         static_cast<int>(floor(playerPos[0]) / Chunk::SIZE),
         static_cast<int>(floor(playerPos[2]) / Chunk::SIZE)
     };
-    
+
     // Unload chunks out of distance
     std::vector<std::unordered_map<iVec2, ChunkStack>::iterator> iteratorsToRemove;
     for (auto it = mChunkStacks.begin(); it != mChunkStacks.end();) {
         ChunkStack& stack = it->second;
 
         iVec2 stackPos = stack.GetPosition();
-        if ((stackPos[0] < playerChunkPos[0] - mRenderDistance ||
-            stackPos[0] > playerChunkPos[0] + mRenderDistance ||
-            stackPos[1] < playerChunkPos[1] - mRenderDistance ||
-            stackPos[1] > playerChunkPos[1] + mRenderDistance) &&
-            !stack.isBeingLoaded) {
-            
-            mUnloadPool.push_task([&stack, this] {
-                        stack.Unload(this->worldDirectory);    
-            });
-            iteratorsToRemove.push_back(it);
-        } 
-        ++it;
-    }
+        if ((stackPos[0] < playerChunkPos[0] - totalRenderDistance ||
+            stackPos[0] > playerChunkPos[0] + totalRenderDistance ||
+            stackPos[1] < playerChunkPos[1] - totalRenderDistance ||
+            stackPos[1] > playerChunkPos[1] + totalRenderDistance)) {
 
-    mUnloadPool.wait_for_tasks();
-    for (auto it : iteratorsToRemove) {
-        mChunkStacks.erase(it);
-    }
-    
-    // Load and generate new chunks
-    std::size_t chunksBuffered = 0;
-    std::size_t chunksCreated = 0;
-    for (int x = -mRenderDistance; x <= mRenderDistance; x++) {
-        for (int z = -mRenderDistance; z <= mRenderDistance; z++) {
-            if (chunksBuffered < mBufferPerFrame && chunksCreated < mBufferPerFrame) {
-                iVec2 pos = playerChunkPos + iVec2{ x,z };
-                auto find = mChunkStacks.find(pos);
-                if (find == mChunkStacks.end()) {
-                    if (chunksCreated < mBufferPerFrame) {
-                        auto emplace = mChunkStacks.emplace(pos, pos);
-                        ChunkStack& chunkStack = emplace.first->second;
-                        chunkStack.isBeingLoaded = true;
-                        mLoadPool.push_task([&chunkStack, this]{
-                            chunkStack.Load(this->worldDirectory, this->seed, this->mPerlin);
-                        });
-                        chunksCreated++;
-                    }
+            if (!stack.taskFlag.test_and_set()) {
+
+                if (stack.state == ChunkStackState::UNLOADED) {
+                    it = mChunkStacks.erase(it);
+                    stack.taskFlag.clear();
                 }
                 else {
+                    mTaskPool.push_task([this, &stack]() {
+                        for (auto it = stack.begin(); it != stack.end(); ++it) {
+                            (*it)->ReleaseMemory();
+                        }
+                        stack.taskFlag.clear();
+                        stack.state = ChunkStackState::UNLOADED;
+                        });
+                    ++it;
+                }
+            }
+        }
+        else {
+            ++it;
+        }
+    }
+
+    for (int x = -totalRenderDistance; x <= totalRenderDistance; x++) {
+        for (int z = -totalRenderDistance; z <= totalRenderDistance; z++) {
+            int radius = static_cast<int>(std::roundf(std::sqrt(x * x + z * z)));
+            // If our chunk is in loading distance
+            if (radius < mChunkLoadDistance) {
+                iVec2 pos = playerChunkPos + iVec2{ x,z };
+                auto find = mChunkStacks.find(pos);
+                // If we have no chunk, we load it as fully loaded
+                if (find == mChunkStacks.end()) {
+                    auto emplace = mChunkStacks.emplace(pos, pos);
+                    ChunkStack& chunkStack = emplace.first->second;
+                    if (!chunkStack.taskFlag.test_and_set()) {
+                        mTaskPool.push_task([this, &chunkStack]() {
+                            chunkStack.GenerateTerrain(seed, mPerlin);
+                            for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+                                std::shared_ptr<Chunk> chunk = *it;
+                                chunk->CreateMesh();
+                            }
+                            chunkStack.taskFlag.clear();
+                            chunkStack.state = ChunkStackState::LOADED;
+                            });
+                    } 
+                }
+                // Otherwise if its partially loaded, load it to fully loaded
+                else {
                     ChunkStack& stack = find->second;
+                    if (stack.state == ChunkStackState::PARTIALLY_LOADED) {
+                        if (!stack.taskFlag.test_and_set()) {
+                            mTaskPool.push_task([this, &stack]() {
+                                stack.GenerateTerrain(seed, mPerlin);
+                                stack.state = ChunkStackState::LOADED;
+                                stack.taskFlag.clear();
+                                stack.state = ChunkStackState::LOADED;
+                                });
+                        }
+                    }
+
+                    // Buffer it if needed
                     for (auto it = stack.begin(); it != stack.end(); ++it) {
                         std::shared_ptr<Chunk> chunk = *it;
                         if (chunksBuffered < mBufferPerFrame) {
@@ -291,8 +317,60 @@ void World::GenerateChunks()
                         }
                     }
                 }
-            } else {
-                return;
+            }
+            // If our chunk is in partial loading distance
+            else if (radius < totalRenderDistance) {
+                iVec2 pos = playerChunkPos + iVec2{ x,z };
+                auto find = mChunkStacks.find(pos);
+                // If we have no chunk, load it is as partially loaded
+                if (find == mChunkStacks.end()) {
+                    auto emplace = mChunkStacks.emplace(pos, pos);
+                    ChunkStack& chunkStack = emplace.first->second;
+
+                    if (!chunkStack.taskFlag.test_and_set()) {
+                        mTaskPool.push_task([this, &chunkStack]() {
+                            chunkStack.GenerateTerrain(seed, mPerlin);
+                            for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+                                std::shared_ptr<Chunk> chunk = *it;
+                                chunk->CreateMesh();
+                            }
+                            for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+                                (*it)->ReleaseMemory();
+                            }
+                            chunkStack.taskFlag.clear();
+                            chunkStack.state = ChunkStackState::PARTIALLY_LOADED;
+                            });
+                    }
+                }
+                // If we have a chunk and it's fully loaded - convert it to partially loaded
+                else {
+                    ChunkStack& stack = find->second;
+                    if (stack.state == ChunkStackState::LOADED) {
+                        if (!stack.taskFlag.test_and_set()) {
+                            mTaskPool.push_task([this, &stack]() {
+                                for (auto it = stack.begin(); it != stack.end(); ++it) {
+                                    (*it)->ReleaseMemory();
+                                }
+                                stack.taskFlag.clear();
+                                stack.state = ChunkStackState::PARTIALLY_LOADED;
+                                });
+                        };
+                    }
+
+                    // Buffer it if needed
+                    for (auto it = stack.begin(); it != stack.end(); ++it) {
+                        std::shared_ptr<Chunk> chunk = *it;
+                        if (chunksBuffered < mBufferPerFrame) {
+                            if (chunk->needsBuffering) {
+                                chunk->BufferData();
+                                chunksBuffered++;
+                            }
+                        }
+                        else {
+                            return;
+                        }
+                    }
+                }
             }
         }
     }

@@ -4,7 +4,7 @@ License: MIT
 */
 
 /*
- * This macro is for supressing unsued parameter warnings. This is useles for
+ * This macro is for supressing unsued parameter warnings. This is useful for
  * unused callback parameters when interacting with an API
 */ 
 #define UNUSED(x) (void)(x)

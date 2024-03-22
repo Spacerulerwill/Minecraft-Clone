@@ -50,8 +50,6 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
         ((start[2] > end[2]) ? (start[2] - min[2]) : (max[2] - start[2])) * deltat[2]
     };
 
-
-
     while (true)
     {
         iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(currentBlock);

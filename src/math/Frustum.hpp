@@ -12,7 +12,7 @@ License: MIT
 
 struct Plane
 {
-    Vec3 normal = { 0.f, 1.f, 0.f }; // unit vector
+    Vec3 normal = { 0.f, 1.f, 0.f };   // unit vector
     GLfloat     distance = 0.f;        // Distance with origin
 
     Plane() = default;
@@ -50,42 +50,6 @@ struct Sphere {
 
     bool IsOnFrustum(const Frustum& frustum);
 };
-
-/*
-struct BoundingVolume
-{
-    virtual bool isOnFrustum(const Frustum& camFrustum) const = 0;
-
-    virtual bool isOnOrForwardPlane(const Plane& plane) const = 0;
-};
-
-struct Sphere : public BoundingVolume
-{
-    Sphere() = default;
-    Vec3 center{ 0.f, 0.f, 0.f };
-    GLfloat radius{ 0.f };
-
-    Sphere(const Vec3& inCenter, float inRadius)
-        : BoundingVolume{}, center{ inCenter }, radius{ inRadius }
-    {}
-
-    bool isOnOrForwardPlane(const Plane& plane) const final
-    {
-        return plane.getSignedDistanceToPlane(center) > -radius;
-    }
-
-    bool isOnFrustum(const Frustum& camFrustum) const final
-    {
-        //Check Firstly the result that have the most chance to failure to avoid to call all functions.
-        return (isOnOrForwardPlane(camFrustum.leftFace) &&
-            isOnOrForwardPlane(camFrustum.rightFace) &&
-            isOnOrForwardPlane(camFrustum.farFace) &&
-            isOnOrForwardPlane(camFrustum.nearFace) &&
-            isOnOrForwardPlane(camFrustum.topFace) &&
-            isOnOrForwardPlane(camFrustum.bottomFace));
-    };
-};
-*/
 
 #endif // !FRUSTUM_H
 

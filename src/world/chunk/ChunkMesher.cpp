@@ -88,10 +88,8 @@ inline ChunkMesher::ChunkVertex GetChunkVertex(uint32_t x, uint32_t y, uint32_t 
 }
 
 void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks, ChunkMeshFilterCallback condition) {
+    // Step 1: Convert to binary column representation for each direction
     std::vector<uint64_t> axis_cols(Chunk::SIZE_PADDED_SQUARED * 3);
-    std::vector<uint64_t> col_face_masks(Chunk::SIZE_PADDED_SQUARED * 6);
-
-    // Step 1: Convert to binary representation for each direction
     int index = 0;
     for (int y = 0; y < Chunk::SIZE_PADDED; y++) {
         for (int x = 0; x < Chunk::SIZE_PADDED; x++) {
@@ -108,7 +106,9 @@ void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std
         }
     }
 
+
     // Step 2: Visible face culling
+    std::vector<uint64_t> col_face_masks(Chunk::SIZE_PADDED_SQUARED * 6);
     for (int axis = 0; axis <= 2; axis++) {
         for (int i = 0; i < Chunk::SIZE_PADDED_SQUARED; i++) {
             uint64_t col = axis_cols[(Chunk::SIZE_PADDED_SQUARED * axis) + i];

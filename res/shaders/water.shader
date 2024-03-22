@@ -35,8 +35,9 @@ out vec4 FragColor;
 uniform sampler2DArray tex_array;
 uniform vec3 color;
 uniform float ambient;
+uniform vec3 chunkColor;
 
 void main() {
     vec4 texColor = texture(tex_array, TexCoords); 
-    FragColor = texColor * vec4(color, 1.0) * ambient;
+    FragColor = texColor * vec4(chunkColor, 1.0) * vec4(color, 1.0) * ambient;
  }

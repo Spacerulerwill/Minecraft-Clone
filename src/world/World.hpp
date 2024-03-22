@@ -46,8 +46,7 @@ private:
     Shader waterShader = Shader("shaders/water.shader");
     Shader customModelShader = Shader("shaders/custom_model.shader");
     siv::PerlinNoise mPerlin;
-    BS::thread_pool mLoadPool;
-    BS::thread_pool mUnloadPool;
+    BS::thread_pool mTaskPool;
     std::array<TexArray2D, MAX_ANIMATION_FRAMES> mTextureAtlases;
     Tex2D mGrassSideMask = Tex2D("textures/block/mask/grass_side_mask.png", GL_TEXTURE1);
     std::size_t currentAtlasID{ 0 };
@@ -67,7 +66,8 @@ public:
     Vec3 mWaterColor = Vec3{ 68.0f, 124.0f, 245.0f } / 255.0f;
     Vec3 mFoliageColor = Vec3{ 145.0f, 189.0f, 89.0f } / 255.0f;
     Vec3 mGrassColor = Vec3{ 145.0f, 189.0f, 89.0f } / 255.0f;
-    int mRenderDistance = 5;
+    int mChunkLoadDistance = 3;
+    int mChunkPartialLoadDistance = 1;
     int mBufferPerFrame = 20;
     Player player;
     void Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn);

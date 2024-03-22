@@ -75,15 +75,18 @@ struct ImGUIContext {
 class Game {
 private:
     void ProcessKeyInput();
-    void SettingsMenu(int potentialDrawCalls, int totalDrawCalls, float currentFrame);
+    void SettingsMenu(int potentialDrawCalls, int totalDrawCalls);
     GLFWContext glfwContext;
     Window mWindow = Window(this, INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT, "Craft++", false);
     std::unique_ptr<MSAARenderer> pMSAARenderer = nullptr;
     std::unique_ptr<World> pWorld = nullptr;
-    float mDeltaTime = 0.0f;
-    float mLastFrame = 0.0f;
+
     bool mIsWireFrame = false;
     bool mIsMouseVisible = false;
+
+    float mDeltaTime = 0.0f;
+    float mLastFrame = 0.0f;
+
     int fps = 0;
     double lastFpsSwitch = 0.0f;
 public:

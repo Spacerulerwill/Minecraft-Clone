@@ -64,6 +64,7 @@ uniform sampler2DArray tex_array;
 uniform sampler2D grass_mask;
 uniform vec3 grass_color;
 uniform float ambient;
+uniform vec3 chunkColor;
 
 void main() {
     vec4 texColor = texture(tex_array, TexCoords);
@@ -84,5 +85,5 @@ void main() {
         }
     }
  
-    FragColor = texColor * vec4(vec3(AOMultiplier), 1.0) * ambient;
+    FragColor = texColor * vec4(vec3(AOMultiplier), 1.0) * ambient * vec4(chunkColor, 1.0);
 }

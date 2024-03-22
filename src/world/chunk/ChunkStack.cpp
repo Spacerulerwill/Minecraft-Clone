@@ -112,75 +112,6 @@ void ChunkStack::GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::Pe
     }
 }
 
-void ChunkStack::Load(const std::string& worldDirectory, siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin) {
-    std::ifstream chunkStackFileStream(fmt::format("{}/chunk_stacks/{}.{}.stack", worldDirectory, mPos[0], mPos[1]));
-    if (chunkStackFileStream.is_open()) {
-        // chunk data found on disk, so we load that
-        // read how many chunks in chunk stack
-        std::size_t chunkCount;
-        chunkStackFileStream.read(reinterpret_cast<char*>(&chunkCount), sizeof(std::size_t));
-        
-        for (std::size_t i = 0; i < chunkCount; i++) {
-            mChunks[i]->AllocateMemory();
-            chunkStackFileStream.read(reinterpret_cast<char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED);
-        }
-            
-    } else {
-        // no chunk stack found on disk, generate
-        GenerateTerrain(seed, perlin);
-        SaveToFile(worldDirectory);
-    }
-
-    // Mesh all chunks
-    for (auto it = mChunks.begin(); it != mChunks.end(); ++it) {
-        std::shared_ptr<Chunk> chunk = (*it);
-        chunk->CreateMesh();
-    }
-    isBeingLoaded = false;
-    isLoaded = true;
-}
-
-void ChunkStack::Unload(const std::string& worldDirectory) {
-    if (isLoaded) {
-        isLoaded = false;
-        SaveToFile(worldDirectory);
-        for (auto& chunk : mChunks) {
-            chunk->ReleaseMemory();
-        }
-    }
-}
-
-void ChunkStack::SaveToFile(const std::string& worldDirectory) {
-    std::string file = fmt::format("{}/chunk_stacks/{}.{}.stack", worldDirectory, mPos[0], mPos[1]);
-    std::fstream out(file, std::ios::binary | std::ios::out | std::ios::in);
-    std::size_t chunkCount = mChunks.size();
-
-    if (out.is_open()) {
-        out.write(reinterpret_cast<char*>(&chunkCount), sizeof(std::size_t));
-        for (std::size_t i = 0; i < chunkCount; i++) {
-            if (mChunks[i]->needsSaving) {
-                mChunks[i]->needsSaving = false;
-                out.write(reinterpret_cast<const char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED);
-            } else {
-                out.seekp(sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED, std::ios::cur);
-            }
-        }
-    } else {
-        out.clear();
-        out.open(file, std::ios::binary | std::ios::out | std::ios::trunc);
-        out.write(reinterpret_cast<char*>(&chunkCount), sizeof(std::size_t));
-        for (std::size_t i = 0; i < chunkCount; i++) {
-            mChunks[i]->needsSaving = false;
-            out.write(reinterpret_cast<const char*>(mChunks[i]->GetBlockDataPointer()), sizeof(BlockID) * Chunk::SIZE_PADDED_CUBED);    
-        }
-    }
-
-    if (out.fail()) {
-        LOG_ERROR("Failed to write chunk stack at {}, {} to disk!", mPos[0], mPos[1]);
-        std::filesystem::remove(file);
-    }
-}
-
 iVec2 ChunkStack::GetPosition() const
 {
     return mPos;
@@ -189,6 +120,20 @@ iVec2 ChunkStack::GetPosition() const
 void ChunkStack::Draw(Shader& shader, int* totalChunks, int* chunksDrawn)
 {
     for (auto& chunk : mChunks) {
+        switch (state) {
+        case ChunkStackState::UNLOADED: {
+            shader.SetVec3("chunkColor", Vec3{0.0f, 0.0f, 0.0f});
+            break;
+            }
+        case ChunkStackState::PARTIALLY_LOADED: {
+            shader.SetVec3("chunkColor", Vec3{ 1.0f, 0.0f, 0.0f });
+            break;
+        }
+        case ChunkStackState::LOADED: {
+            shader.SetVec3("chunkColor", Vec3{ 0.0f, 1.0f, 0.0f });
+            break;
+        }
+        }
         chunk->Draw(shader, totalChunks, chunksDrawn);
     }
 }
@@ -196,6 +141,20 @@ void ChunkStack::Draw(Shader& shader, int* totalChunks, int* chunksDrawn)
 void ChunkStack::DrawWater(Shader& shader, int* totalChunks, int* chunksDrawn)
 {
     for (auto& chunk : mChunks) {
+        switch (state) {
+        case ChunkStackState::UNLOADED: {
+            shader.SetVec3("chunkColor", Vec3{ 0.0f, 0.0f, 0.0f });
+            break;
+        }
+        case ChunkStackState::PARTIALLY_LOADED: {
+            shader.SetVec3("chunkColor", Vec3{ 1.0f, 0.0f, 0.0f });
+            break;
+        }
+        case ChunkStackState::LOADED: {
+            shader.SetVec3("chunkColor", Vec3{ 0.0f, 1.0f, 0.0f });
+            break;
+        }
+        }
         chunk->DrawWater(shader, totalChunks, chunksDrawn);
     }
 }
@@ -203,12 +162,26 @@ void ChunkStack::DrawWater(Shader& shader, int* totalChunks, int* chunksDrawn)
 void ChunkStack::DrawCustomModel(Shader& shader, int* totalChunks, int* chunksDrawn)
 {
     for (auto& chunk : mChunks) {
+        switch (state) {
+        case ChunkStackState::UNLOADED: {
+            shader.SetVec3("chunkColor", Vec3{ 0.0f, 0.0f, 0.0f });
+            break;
+        }
+        case ChunkStackState::PARTIALLY_LOADED: {
+            shader.SetVec3("chunkColor", Vec3{ 1.0f, 0.0f, 0.0f });
+            break;
+        }
+        case ChunkStackState::LOADED: {
+            shader.SetVec3("chunkColor", Vec3{ 0.0f, 1.0f, 0.0f });
+            break;
+        }
+        }
         chunk->DrawCustomModel(shader, totalChunks, chunksDrawn);
     }
 }
 
 void ChunkStack::SetBlock(iVec3 pos, BlockID block) {
-    mChunks.at(pos[1] / Chunk::SIZE)->SetBlock(iVec3{ pos[0], 1 + pos[1] % Chunk::SIZE, pos[2] }, block);
+    mChunks.at(pos[1] / Chunk::SIZE)->SetBlock(iVec3{ pos[0], 1 + pos[1] % Chunk::SIZE, pos[2 ] }, block);
 }
 
 BlockID ChunkStack::GetBlock(iVec3 pos) const {

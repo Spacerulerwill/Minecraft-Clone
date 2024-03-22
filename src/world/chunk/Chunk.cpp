@@ -63,7 +63,7 @@ void Chunk::CreateMesh() {
     // Mesh
     ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks, ChunkMesher::IsOpaqueCube);
     ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks, [](BlockID block) { return block == GLASS; });
-    ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks, [](BlockID block) { return block == WATER; });
+    ChunkMesher::BinaryGreedyMesh(mWaterVertices, mBlocks, [](BlockID block) { return block == WATER; });
     ChunkMesher::MeshCustomModelBlocks(mCustomModelVertices, mBlocks);
     needsBuffering = true;
 }
@@ -89,11 +89,7 @@ void Chunk::BufferData()
     std::vector<ChunkMesher::ChunkVertex>().swap(mCustomModelVertices);
 
     needsBuffering = false;
-
-    if (loaded == false) {
-        firstBufferTime = static_cast<float>(glfwGetTime());
-        loaded = true;
-    }
+    loaded = true;
 }
 
 void Chunk::UpdateVisiblity(const Frustum& frustum)
@@ -108,7 +104,7 @@ void Chunk::Draw(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
         if (visible) {
             if (totalDrawCalls) (*totalDrawCalls)++;
             mVAO.Bind();
-            shader.SetMat4("model", mModel);;
+            shader.SetMat4("model", mModel);
             glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mVertexCount));
         }
     }
@@ -141,14 +137,6 @@ void Chunk::DrawCustomModel(Shader& shader, int* potentialDrawCalls, int* totalD
 }
 
 BlockID* Chunk::GetBlockDataPointer() {
-
-    
-    
-    
-    
-    
-    
-    
     return mBlocks.data();
 }
 

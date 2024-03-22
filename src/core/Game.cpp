@@ -44,6 +44,11 @@ void Game::Run(std::string worldDirectory) {
     Mat4 ortho = orthographic(0.0f, INITIAL_WINDOW_HEIGHT, 0.0f, INITIAL_WINDOW_WIDTH, -1.0f, 100.0f);
     mWindow.SetVisible();
     while (!mWindow.ShouldClose()) {
+        // World events
+        pWorld->player.ApplyGravity(*pWorld, mDeltaTime);
+        pWorld->GenerateChunks();
+        pWorld->TrySwitchToNextTextureAtlas();
+
         // Delta time calculations
         double currentFrame = glfwGetTime();
         mDeltaTime = static_cast<float>(currentFrame - mLastFrame);
@@ -57,11 +62,6 @@ void Game::Run(std::string worldDirectory) {
         // Input
         ProcessKeyInput();
         glfwPollEvents();
-        
-        // World events
-        pWorld->player.ApplyGravity(*pWorld, mDeltaTime);    
-        pWorld->GenerateChunks();
-        pWorld->TrySwitchToNextTextureAtlas();
 
         // Set sound engine listener to players position
         SoundEngine::GetEngine()->setListenerPosition(
@@ -91,18 +91,19 @@ void Game::Run(std::string worldDirectory) {
         // Draw UI
         crosshair.Draw(ortho);    
         imGuiContext.NewFrame();
-        SettingsMenu(potentialDrawCalls, totalDrawCalls, currentFrame);
+        SettingsMenu(potentialDrawCalls, totalDrawCalls);
         imGuiContext.Render(); 
         mWindow.SwapBuffers();    
     }
 }
 
-void Game::SettingsMenu(int potentialDrawCalls, int totalDrawCalls, float currentFrame) {
+void Game::SettingsMenu(int potentialDrawCalls, int totalDrawCalls) {
     ImGui::SetNextWindowSize(ImVec2{ 0,0 });
     ImGui::SetNextWindowPos(ImVec2{ 0,0 });
     ImGui::Begin("Settings");
     ImGui::SliderFloat("Sensitivity", &pWorld->player.camera.mouseSensitivity, 0.0f, 1.0f);
-    ImGui::SliderInt("Render Distance", &pWorld->mRenderDistance, 5, 30);
+    ImGui::SliderInt("Chunk Load Distance", &pWorld->mChunkLoadDistance, 5, 30);
+    ImGui::SliderInt("Chunk Partial Load Distance", &pWorld->mChunkPartialLoadDistance, 5, 30);
     ImGui::SliderInt("Chunk buffers per frame", &pWorld->mBufferPerFrame, 1, 50);
 
     iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pWorld->player.camera.position);
