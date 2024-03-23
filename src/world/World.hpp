@@ -19,6 +19,7 @@ License: MIT
 #include <BS_thread_pool.hpp>
 #include <array>
 #include <stdexcept>
+#include <concurrentqueue.h>
 
 iVec3 GetWorldBlockPosFromGlobalPos(Vec3 globalPosition);
 iVec3 GetChunkPosFromGlobalBlockPos(iVec3 globalBlockPos);
@@ -54,6 +55,7 @@ private:
     siv::PerlinNoise::seed_type seed;
     std::string worldDirectory;
     Vec3 sunDirection {0.0f, 0.0f, 0.0f};
+    moodycamel::ConcurrentQueue<std::shared_ptr<Chunk>> mChunkBufferQueue;
 public:
     World(std::string worldDirectory);
     ~World();

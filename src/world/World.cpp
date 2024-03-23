@@ -246,6 +246,7 @@ void World::GenerateChunks()
             if (!stack.taskFlag.test_and_set()) {
                 if (stack.state == ChunkStackState::UNLOADED) {
                     it = mChunkStacks.erase(it);
+                    stack.taskFlag.clear(); 
                 }
                 else {
                     stack.state = ChunkStackState::UNLOADED;
@@ -286,15 +287,15 @@ void World::GenerateChunks()
                             }
                             chunkStack.taskFlag.clear();
                             });
-                    } 
+                    }
                 }
                 // Otherwise if its partially loaded, load it to fully loaded
                 else {
                     ChunkStack& stack = find->second;
                     if (stack.state != ChunkStackState::UNLOADED) {
                         if (stack.state == ChunkStackState::PARTIALLY_LOADED) {
-                            stack.state = ChunkStackState::LOADED;
                             if (!stack.taskFlag.test_and_set()) {
+                                stack.state = ChunkStackState::LOADED;
                                 mTaskPool.push_task([this, &stack]() {
                                     stack.GenerateTerrain(seed, mPerlin);
                                     stack.taskFlag.clear();
@@ -316,7 +317,7 @@ void World::GenerateChunks()
                             }
                         }
                     }
-                    }
+                }
             }
             // If our chunk is in partial loading distance
             else if (radius < totalRenderDistance) {

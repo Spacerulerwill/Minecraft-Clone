@@ -18,6 +18,7 @@ LICENSE: MIT
 #include <memory>
 
 enum class ChunkStackState {
+    NOT_INITIALISED,
     UNLOADED,
     PARTIALLY_LOADED,
     LOADED
@@ -45,7 +46,7 @@ public:
     std::shared_ptr<Chunk> GetChunk(std::size_t y) const;
     BlockID GetBlock(iVec3 pos) const;
     void SetBlock(iVec3 pos, BlockID block);
-    ChunkStackState state = ChunkStackState::UNLOADED;
+    ChunkStackState state = ChunkStackState::NOT_INITIALISED;
     std::atomic_flag taskFlag = ATOMIC_FLAG_INIT;
 };
 
