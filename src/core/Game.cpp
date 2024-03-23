@@ -102,9 +102,9 @@ void Game::SettingsMenu(int potentialDrawCalls, int totalDrawCalls) {
     ImGui::SetNextWindowPos(ImVec2{ 0,0 });
     ImGui::Begin("Settings");
     ImGui::SliderFloat("Sensitivity", &pWorld->player.camera.mouseSensitivity, 0.0f, 1.0f);
-    ImGui::SliderInt("Chunk Load Distance", &pWorld->mChunkLoadDistance, 5, 30);
-    ImGui::SliderInt("Chunk Partial Load Distance", &pWorld->mChunkPartialLoadDistance, 5, 30);
-    ImGui::SliderInt("Chunk buffers per frame", &pWorld->mBufferPerFrame, 1, 50);
+    ImGui::SliderInt("Chunk Load Distance", &pWorld->mChunkLoadDistance, 3, 30, "%d", ImGuiSliderFlags_NoInput);
+    ImGui::SliderInt("Chunk Partial Load Distance", &pWorld->mChunkPartialLoadDistance, 3, 30, "%d", ImGuiSliderFlags_NoInput);
+    ImGui::SliderInt("Chunk buffers per frame", &pWorld->mBufferPerFrame, 1, 50, "%d", ImGuiSliderFlags_NoInput);
 
     iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pWorld->player.camera.position);
     iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(blockPos);

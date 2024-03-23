@@ -47,7 +47,7 @@ public:
     BlockID GetBlock(iVec3 pos) const;
     void SetBlock(iVec3 pos, BlockID block);
     ChunkStackState state = ChunkStackState::NOT_INITIALISED;
-    std::atomic_flag taskFlag = ATOMIC_FLAG_INIT;
+    std::atomic<bool> is_in_task = false;
 };
 
 #endif // !CHUNK_STACK_H

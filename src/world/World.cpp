@@ -236,33 +236,27 @@ void World::GenerateChunks()
     };
 
     // Unload chunks out of distance
+    std::vector<std::unordered_map<iVec2, ChunkStack>::iterator> iteratorsToRemove;
     for (auto it = mChunkStacks.begin(); it != mChunkStacks.end();) {
         ChunkStack& stack = it->second;
         iVec2 stackPos = stack.GetPosition();
         if ((stackPos[0] < playerChunkPos[0] - totalRenderDistance ||
             stackPos[0] > playerChunkPos[0] + totalRenderDistance ||
             stackPos[1] < playerChunkPos[1] - totalRenderDistance ||
-            stackPos[1] > playerChunkPos[1] + totalRenderDistance)) {
-            if (!stack.taskFlag.test_and_set()) {
-                if (stack.state == ChunkStackState::UNLOADED) {
-                    it = mChunkStacks.erase(it);
-                    stack.taskFlag.clear(); 
-                }
-                else {
-                    stack.state = ChunkStackState::UNLOADED;
-                    mTaskPool.push_task([this, &stack]() {
-                        for (auto it = stack.begin(); it != stack.end(); ++it) {
-                            (*it)->ReleaseMemory();
-                        }
-                        stack.taskFlag.clear();
-                        });
-                    ++it;
-                }
-            }
-        }
-        else {
-            ++it;
-        }
+            stackPos[1] > playerChunkPos[1] + totalRenderDistance) &&
+            !stack.is_in_task) {
+            mUnloadPool.push_task([&stack, this] {
+                for (auto it = stack.begin(); it != stack.end(); ++it) {
+                    (*it)->ReleaseMemory();
+                }   
+            });
+            iteratorsToRemove.push_back(it);
+        } 
+        ++it;
+    }
+    mUnloadPool.wait_for_tasks();
+    for (auto it : iteratorsToRemove) {
+        mChunkStacks.erase(it);
     }
     
     // Iterate over our chunk circle
@@ -276,16 +270,17 @@ void World::GenerateChunks()
                 // If we have no chunk, we load it as fully loaded
                 if (find == mChunkStacks.end()) {
                     auto emplace = mChunkStacks.emplace(pos, pos);
-                    ChunkStack& chunkStack = emplace.first->second;
-                    if (!chunkStack.taskFlag.test_and_set()) {
-                        chunkStack.state = ChunkStackState::LOADED;
-                        mTaskPool.push_task([this, &chunkStack]() {
-                            chunkStack.GenerateTerrain(seed, mPerlin);
-                            for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+                    ChunkStack& stack = emplace.first->second;
+                    if (!stack.is_in_task) {
+                        stack.is_in_task = true;
+                        stack.state = ChunkStackState::LOADED;
+                        mTaskPool.push_task([this, &stack]() {
+                            stack.GenerateTerrain(seed, mPerlin);
+                            for (auto it = stack.begin(); it != stack.end(); ++it) {
                                 std::shared_ptr<Chunk> chunk = *it;
                                 chunk->CreateMesh();
                             }
-                            chunkStack.taskFlag.clear();
+                            stack.is_in_task = false;
                             });
                     }
                 }
@@ -294,11 +289,12 @@ void World::GenerateChunks()
                     ChunkStack& stack = find->second;
                     if (stack.state != ChunkStackState::UNLOADED) {
                         if (stack.state == ChunkStackState::PARTIALLY_LOADED) {
-                            if (!stack.taskFlag.test_and_set()) {
+                            if (!stack.is_in_task) {
+                                stack.is_in_task = true;
                                 stack.state = ChunkStackState::LOADED;
                                 mTaskPool.push_task([this, &stack]() {
                                     stack.GenerateTerrain(seed, mPerlin);
-                                    stack.taskFlag.clear();
+                                    stack.is_in_task = false;
                                     });
                             }
                         }
@@ -326,19 +322,20 @@ void World::GenerateChunks()
                 // If we have no chunk, load it is as partially loaded
                 if (find == mChunkStacks.end()) {
                     auto emplace = mChunkStacks.emplace(pos, pos);
-                    ChunkStack& chunkStack = emplace.first->second;
-                    if (!chunkStack.taskFlag.test_and_set()) {
-                        chunkStack.state = ChunkStackState::PARTIALLY_LOADED;
-                        mTaskPool.push_task([this, &chunkStack]() {
-                            chunkStack.GenerateTerrain(seed, mPerlin);
-                            for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+                    ChunkStack& stack = emplace.first->second;
+                    if (!stack.is_in_task) {
+                        stack.is_in_task = true;
+                        stack.state = ChunkStackState::PARTIALLY_LOADED;
+                        mTaskPool.push_task([this, &stack]() {
+                            stack.GenerateTerrain(seed, mPerlin);
+                            for (auto it = stack.begin(); it != stack.end(); ++it) {
                                 std::shared_ptr<Chunk> chunk = *it;
                                 chunk->CreateMesh();
                             }
-                            for (auto it = chunkStack.begin(); it != chunkStack.end(); ++it) {
+                            for (auto it = stack.begin(); it != stack.end(); ++it) {
                                 (*it)->ReleaseMemory();
                             }
-                            chunkStack.taskFlag.clear();
+                            stack.is_in_task = false;
                             });
                     }
                 }
@@ -347,13 +344,14 @@ void World::GenerateChunks()
                     ChunkStack& stack = find->second;
                     if (stack.state != ChunkStackState::UNLOADED) {
                         if (stack.state == ChunkStackState::LOADED) {
-                            if (!stack.taskFlag.test_and_set()) {
+                            if (!stack.is_in_task) {
+                                stack.is_in_task = true;
                                 stack.state = ChunkStackState::PARTIALLY_LOADED;
                                 mTaskPool.push_task([this, &stack]() {
                                     for (auto it = stack.begin(); it != stack.end(); ++it) {
                                         (*it)->ReleaseMemory();
                                     }
-                                    stack.taskFlag.clear();
+                                    stack.is_in_task = false;
                                     });
                             };
                         }
@@ -401,7 +399,7 @@ const ChunkStack* World::GetChunkStack(iVec2 pos) const
 std::shared_ptr<Chunk> World::GetChunk(iVec3 pos) const
 {
     const ChunkStack* chunkStack = GetChunkStack(iVec2{ pos[0], pos[2] });
-    if (chunkStack == nullptr) {
+    if (chunkStack == nullptr || chunkStack->state != ChunkStackState::LOADED) {
         return nullptr;
     }
     return chunkStack->GetChunk(pos[1]);
