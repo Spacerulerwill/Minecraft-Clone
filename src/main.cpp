@@ -23,7 +23,7 @@ License: MIT
 #include <limits>
 #include <filesystem>
 #include <functional>
-#include <stdint.h>
+#include <cstdint>
 #include <random>
 #include <limits>
 

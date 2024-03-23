@@ -240,11 +240,9 @@ void World::GenerateChunks()
     for (auto it = mChunkStacks.begin(); it != mChunkStacks.end();) {
         ChunkStack& stack = it->second;
         iVec2 stackPos = stack.GetPosition();
-        if ((stackPos[0] < playerChunkPos[0] - totalRenderDistance ||
-            stackPos[0] > playerChunkPos[0] + totalRenderDistance ||
-            stackPos[1] < playerChunkPos[1] - totalRenderDistance ||
-            stackPos[1] > playerChunkPos[1] + totalRenderDistance) &&
-            !stack.is_in_task) {
+        iVec2 distFromPlayer = stackPos - playerChunkPos;
+        int dist = static_cast<int>(std::roundf(distFromPlayer.length()));
+        if (dist > totalRenderDistance && !stack.is_in_task) {
             mUnloadPool.push_task([&stack, this] {
                 for (auto it = stack.begin(); it != stack.end(); ++it) {
                     (*it)->ReleaseMemory();
