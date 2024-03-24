@@ -28,6 +28,7 @@ class ChunkStack {
 private:
     iVec2 mPos{};
     std::vector<std::shared_ptr<Chunk>> mChunks;
+    void SaveToFile(const std::string& worldDirectory);
 public:
     using iterator = std::vector<std::shared_ptr<Chunk>>::iterator;
     using const_iterator = std::vector<std::shared_ptr<Chunk>>::const_iterator;
@@ -46,7 +47,10 @@ public:
     std::shared_ptr<Chunk> GetChunk(std::size_t y) const;
     BlockID GetBlock(iVec3 pos) const;
     void SetBlock(iVec3 pos, BlockID block);
-    ChunkStackState state = ChunkStackState::NOT_INITIALISED;
+    void FullyLoad(const std::string& worldDirectory, siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin);
+    void PartiallyLoad(const std::string& worldDirectory, siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin);
+    void Unload(const std::string& worldDirectory);;
+    std::atomic<ChunkStackState> state = ChunkStackState::NOT_INITIALISED;
     std::atomic<bool> is_in_task = false;
 };
 

@@ -94,46 +94,37 @@ void Chunk::BufferData()
 
 void Chunk::UpdateVisiblity(const Frustum& frustum)
 {
-    visible = sphere.IsOnFrustum(frustum);
+    visible = (mVertexCount > 0 && mWaterVertexCount > 0 && mCustomModelVertexCount > 0) || sphere.IsOnFrustum(frustum);
 }
 
 void Chunk::Draw(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
 {
     if (potentialDrawCalls) (*potentialDrawCalls)++;
-    if (mVertexCount > 0) {
-        if (visible) {
-            if (totalDrawCalls) (*totalDrawCalls)++;
-            mVAO.Bind();
-            shader.SetMat4("model", mModel);
-            glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mVertexCount));
-        }
-    }
+    if (!visible) return;
+    if (totalDrawCalls) (*totalDrawCalls)++;
+    mVAO.Bind();
+    shader.SetMat4("model", mModel);
+    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mVertexCount));
 }
 
 void Chunk::DrawWater(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
 {
     if (potentialDrawCalls) (*potentialDrawCalls)++;
-    if (mWaterVertexCount > 0) {
-        if (visible) {
-            if (totalDrawCalls) (*totalDrawCalls)++;
-            mWaterVAO.Bind();
-            shader.SetMat4("model", mModel);
-            glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mWaterVertexCount));
-        }
-    }
+    if (!visible) return;
+    if (totalDrawCalls) (*totalDrawCalls)++;
+    mWaterVAO.Bind();
+    shader.SetMat4("model", mModel);
+    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mWaterVertexCount));
 }
 
 void Chunk::DrawCustomModel(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
 {
     if (potentialDrawCalls) (*potentialDrawCalls)++;
-    if (mCustomModelVertexCount > 0) {
-        if (visible) {
-            if (totalDrawCalls) (*totalDrawCalls)++;
-            mCustomModelVAO.Bind();
-            shader.SetMat4("model", mModel);
-            glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mCustomModelVertexCount));
-        }
-    }
+    if (!visible) return;
+    if (totalDrawCalls) (*totalDrawCalls)++;
+    mCustomModelVAO.Bind();
+    shader.SetMat4("model", mModel);
+    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mCustomModelVertexCount));
 }
 
 BlockID* Chunk::GetBlockDataPointer() {
