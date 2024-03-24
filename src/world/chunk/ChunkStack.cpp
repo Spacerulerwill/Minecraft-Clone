@@ -177,6 +177,7 @@ void ChunkStack::FullyLoad(const std::string& worldDirectory, siv::PerlinNoise::
 
 void ChunkStack::PartiallyLoad(const std::string& worldDirectory, siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin) {
     if (state == ChunkStackState::LOADED) {
+        SaveToFile(worldDirectory);
         for (auto& chunk : mChunks) {
             chunk->ReleaseMemory();
         }
@@ -211,7 +212,7 @@ void ChunkStack::PartiallyLoad(const std::string& worldDirectory, siv::PerlinNoi
 }
 
 void ChunkStack::Unload(const std::string& worldDirectory) {
-    if (state == ChunkStackState::LOADED || state == ChunkStackState::PARTIALLY_LOADED) {
+    if (state == ChunkStackState::LOADED) {
         SaveToFile(worldDirectory);
         for (auto& chunk : mChunks) {
             chunk->needsBuffering = false;
