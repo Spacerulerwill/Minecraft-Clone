@@ -66,7 +66,6 @@ public:
     void SetBlock(iVec3 pos, BlockID block);
     std::atomic<bool> needsBuffering = false;
     std::atomic<bool> needsSaving = false;
-    bool loaded = false;
     bool visible = true;
 };
 

@@ -41,7 +41,7 @@ iVec3 Chunk::GetPosition() const
 
 void Chunk::AllocateMemory()
 {
-    mBlocks.resize(Chunk::SIZE_PADDED_CUBED);
+    mBlocks.resize(Chunk::SIZE_PADDED_CUBED, AIR);
 }
 
 void Chunk::ReleaseMemory()
@@ -89,7 +89,6 @@ void Chunk::BufferData()
     std::vector<ChunkMesher::ChunkVertex>().swap(mCustomModelVertices);
 
     needsBuffering = false;
-    loaded = true;
 }
 
 void Chunk::UpdateVisiblity(const Frustum& frustum)

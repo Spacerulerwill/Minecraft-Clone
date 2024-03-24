@@ -93,7 +93,7 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
                     chunkStack.FullyLoad(worldDirectory, seed, mPerlin);
                     });
             }
-            else if (radius < totalRenderDistance) {
+            else if (radius <= totalRenderDistance) {
                 auto emplace = mChunkStacks.emplace(pos, pos);
                 ChunkStack& chunkStack = emplace.first->second;
                 chunkStack.state = ChunkStackState::PARTIALLY_LOADED;
@@ -261,7 +261,7 @@ void World::GenerateChunks()
         for (int z = -totalRenderDistance; z <= totalRenderDistance; z++) {
             int radius = static_cast<int>(std::roundf(sqrtf(x * x + z * z)));
             // If stack is outside our max radius - skip
-            if (radius >= totalRenderDistance) {
+            if (radius > totalRenderDistance) {
                 continue;
             }
 
@@ -369,7 +369,7 @@ BlockID World::GetBlock(iVec3 pos) const
 {
     iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
     std::shared_ptr<Chunk> chunk = GetChunk(chunkPos);
-    if (chunk != nullptr && chunk->loaded) {
+    if (chunk != nullptr) {
         iVec3 blockPos = GetChunkBlockPosFromGlobalBlockPos(pos);
         return chunk->GetBlock(blockPos);
     }
@@ -381,7 +381,7 @@ void World::SetBlock(iVec3 pos, BlockID block)
     iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
     std::shared_ptr<Chunk> chunk = GetChunk(chunkPos);
 
-    if (chunk != nullptr && chunk->loaded) {
+    if (chunk != nullptr) {
         iVec3 blockPos = GetChunkBlockPosFromGlobalBlockPos(pos);
         chunk->SetBlock(blockPos, block);
     }
@@ -392,7 +392,7 @@ void World::SetBlockAndRemesh(iVec3 pos, BlockID block)
     iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
     std::shared_ptr<Chunk> chunk = GetChunk(chunkPos);
 
-    if (chunk != nullptr && chunk->loaded) {
+    if (chunk != nullptr) {
         iVec3 blockPos = GetChunkBlockPosFromGlobalBlockPos(pos);
         chunk->SetBlock(blockPos, block);
         chunk->CreateMesh();

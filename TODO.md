@@ -1,5 +1,4 @@
 # TODO
-* Add partial chunk unloading (chunk vertices are loaded on vram but not no voxels stored on ram)
 * Indirect drawing (one draw call per stack? maybe one for the whole world?)
 * Convert chunk stacks to use deque's allowing for infinite vertical build height
 * Add rotatable block directions
