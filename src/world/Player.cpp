@@ -40,9 +40,7 @@ void Player::ProcessKeyInput(const World& world, const Window& window, float del
 
 void Player::KeyCallback(int key, int scancode, int action, int mods)
 {
-    UNUSED(scancode);
-    UNUSED(mods);
-    UNUSED(action);
+    UNUSED(scancode, mods, action);
 
     switch (key) {
     case GLFW_KEY_X: {

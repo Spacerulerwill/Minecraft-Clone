@@ -112,17 +112,25 @@ MenuOptionResult create_world() {
     // If it doesn't exist, create world
     std::filesystem::create_directory(worldDirectory);
     std::filesystem::create_directory(fmt::format("{}/chunk_stacks", worldDirectory));
-    const WorldSave worldSave {
+    if (!WriteStructToDisk(fmt::format("{}/world.data", worldDirectory), WorldSave{
         .seed = seed,
         .elapsedTime = 0.0
+        })) {
+        return MenuOptionResult{
+            .success = false,
+            .msg = fmt::format("Failed to create world {}! Couldn't write world data to disk", worldName)
+        };
     };
-    WriteStructToDisk(fmt::format("{}/world.data", worldDirectory), worldSave);
-    const PlayerSave playerSave {
+    if (!WriteStructToDisk(fmt::format("{}/player.data", worldDirectory), PlayerSave{
         .pos = Vec3{0.0f, 1000.0f, 0.0f},
         .pitch = 0.0f,
         .yaw = -90.0f
+        })) {
+        return MenuOptionResult{
+            .success = false,
+            .msg = fmt::format("Failed to create world {}! Couldn't write player data to disk", worldName)
+        };
     };
-    WriteStructToDisk(fmt::format("{}/player.data", worldDirectory), playerSave);
     return MenuOptionResult{
         .success = true,
         .msg = fmt::format("Created world {}!", worldName)

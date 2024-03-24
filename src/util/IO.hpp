@@ -12,21 +12,20 @@ License: MIT
 #include <fmt/format.h>
 
 template<typename T>
-void WriteStructToDisk(const std::string& file_name, const T& data){
+bool WriteStructToDisk(const std::string& file_name, const T& data){
     std::ofstream out;
     out.open(file_name,std::ios::binary | std::ios::trunc);
     out.write(reinterpret_cast<const char*>(&data), sizeof(T));
+    return out.good();
 };
 
 template<typename T>
-void ReadStructFromDisk(const std::string& file_name, T& data)
+bool ReadStructFromDisk(const std::string& file_name, T& data)
 {
     std::ifstream in;
     in.open(file_name,std::ios::binary);
-    if (in.fail()) {
-        throw WorldCorruptionException(fmt::format("Failed to read data from {}", file_name));
-    }
     in.read(reinterpret_cast<char*>(&data), sizeof(T));
+    return in.good();
 };
 
 #endif // !IO_H

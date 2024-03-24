@@ -45,6 +45,8 @@ public:
     void DrawCustomModel(Shader& shader, int* totalChunks, int* chunksDrawn);
     iVec2 GetPosition() const;
     std::shared_ptr<Chunk> GetChunk(std::size_t y) const;
+    BlockID RawGetBlock(iVec3 pos) const;
+    void RawSetBlock(iVec3 pos, BlockID block);
     BlockID GetBlock(iVec3 pos) const;
     void SetBlock(iVec3 pos, BlockID block);
     void FullyLoad(const std::string& worldDirectory, siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin);

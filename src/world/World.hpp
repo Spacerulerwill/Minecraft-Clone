@@ -69,7 +69,6 @@ public:
     Vec3 mGrassColor = Vec3{ 145.0f, 189.0f, 89.0f } / 255.0f;
     int mChunkLoadDistance = 3;
     int mChunkPartialLoadDistance = 1;
-    int mBufferPerFrame = 20;
     Player player;
     void Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn);
     void TrySwitchToNextTextureAtlas();

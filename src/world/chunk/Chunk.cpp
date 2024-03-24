@@ -42,11 +42,13 @@ iVec3 Chunk::GetPosition() const
 void Chunk::AllocateMemory()
 {
     mBlocks.resize(Chunk::SIZE_PADDED_CUBED, AIR);
+    allocated = true;
 }
 
 void Chunk::ReleaseMemory()
 {
     std::vector<BlockID>().swap(mBlocks);
+    allocated = false;
 }
 
 void Chunk::CreateMesh() {
@@ -126,19 +128,32 @@ void Chunk::DrawCustomModel(Shader& shader, int* potentialDrawCalls, int* totalD
     glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mCustomModelVertexCount));
 }
 
-BlockID* Chunk::GetBlockDataPointer() {
-    return mBlocks.data();
+BlockID Chunk::RawGetBlock(iVec3 pos) const
+{
+    return mBlocks[VoxelIndex(pos)];
+}
+
+void Chunk::RawSetBlock(iVec3 pos, BlockID block)
+{
+    mBlocks[VoxelIndex(pos)] = block;
+    needsSaving = true;
 }
 
 BlockID Chunk::GetBlock(iVec3 pos) const
 {
+    if (!allocated || pos[0] < 0 || pos[0] >= SIZE_PADDED || pos[1] < 0 || pos[1] >= SIZE_PADDED || pos[2] < 0 || pos[2] >= SIZE_PADDED) return AIR;
     return mBlocks[VoxelIndex(pos)];
 }
 
 void Chunk::SetBlock(iVec3 pos, BlockID block)
 {
+    if (!allocated || pos[0] < 0 || pos[0] >= SIZE_PADDED || pos[1] < 0 || pos[1] >= SIZE_PADDED || pos[2] < 0 || pos[2] >= SIZE_PADDED) return;
     mBlocks[VoxelIndex(pos)] = block;
     needsSaving = true;
+}
+
+BlockID* Chunk::GetBlockDataPointer() {
+    return mBlocks.data();
 }
 
 /*

@@ -52,7 +52,10 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
 {
     // Load world data
     WorldSave worldSave;
-    ReadStructFromDisk(fmt::format("{}/world.data", worldDirectory), worldSave);
+    if (!ReadStructFromDisk(fmt::format("{}/world.data", worldDirectory), worldSave)) {
+        throw WorldCorruptionException("Could not read world data from disk. World may be corrupted!");
+    }
+
     seed = worldSave.seed;
     mPerlin.reseed(seed);
     worldStartTime = worldSave.elapsedTime;
@@ -60,7 +63,9 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
     
     // Load player data
     PlayerSave playerSave;
-    ReadStructFromDisk(fmt::format("{}/player.data", worldDirectory), playerSave);
+    if (!ReadStructFromDisk(fmt::format("{}/player.data", worldDirectory), playerSave)) {
+        throw WorldCorruptionException("Could not read player data from disk. World may be corrupted!");
+    }
     player.camera.position = playerSave.pos;
     player.camera.pitch = playerSave.pitch;
     player.camera.yaw = playerSave.yaw;
@@ -119,18 +124,20 @@ World::~World() {
     mTaskPool.wait_for_tasks();
 
     // Save to disk
-    WorldSave worldSave {
+    if (!WriteStructToDisk(fmt::format("{}/world.data", worldDirectory), WorldSave{
         .seed = seed,
         .elapsedTime = currentTime
-    };
-    WriteStructToDisk(fmt::format("{}/world.data", worldDirectory), worldSave);
+        })) {
+        LOG_ERROR("Failed to write save world data");
+    }
 
-    PlayerSave playerSave {
+    if (!WriteStructToDisk(fmt::format("{}/player.data", worldDirectory), PlayerSave {
         .pos = player.camera.position,
         .pitch = player.camera.pitch,
         .yaw = player.camera.yaw
+        })) {
+        LOG_ERROR("Failed to write player data");
     };
-    WriteStructToDisk(fmt::format("{}/player.data", worldDirectory), playerSave);  
 
     // Unload all remaining chunks 
     for (auto& [pos, stack] : mChunkStacks) {

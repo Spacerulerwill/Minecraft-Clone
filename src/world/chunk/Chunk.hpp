@@ -62,10 +62,17 @@ public:
     void Draw(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
     void DrawWater(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
     void DrawCustomModel(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
+    // Get block in chunk - does not perform boundary checks or check whether the chunk is allocated/loaded. Dangerous!
+    BlockID RawGetBlock(iVec3 pos) const;
+    // Set block in chunk - does not perform boundary checks or check whether the chunk is allocated/loaded. Dangerous!
+    void RawSetBlock(iVec3 pos, BlockID block);
+    // Get block in chunk with boundary checks and allocation check
     BlockID GetBlock(iVec3 pos) const;
+    // Set block in chunk with boundary checks and allocation check
     void SetBlock(iVec3 pos, BlockID block);
     std::atomic<bool> needsBuffering = false;
     std::atomic<bool> needsSaving = false;
+    std::atomic<bool> allocated = false;
     bool visible = true;
 };
 
