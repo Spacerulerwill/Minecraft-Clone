@@ -40,7 +40,7 @@ void Game::Run(std::string worldDirectory) {
     Shader framebufferShader("shaders/framebuffer.shader");
     Crosshair crosshair(INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT, 32);
     pWorld = std::make_unique<World>(worldDirectory);    
-    auto backgroundMusic = ScopedSound("sound/music.mp3", true); 
+    ScopedSound backgroundMusic("sound/music.mp3", true); 
     Mat4 ortho = orthographic(0.0f, INITIAL_WINDOW_HEIGHT, 0.0f, INITIAL_WINDOW_WIDTH, -1.0f, 100.0f);
     mWindow.SetVisible();
     while (!mWindow.ShouldClose()) {
@@ -102,8 +102,9 @@ void Game::SettingsMenu(int potentialDrawCalls, int totalDrawCalls) {
     ImGui::SetNextWindowPos(ImVec2{ 0,0 });
     ImGui::Begin("Settings");
     ImGui::SliderFloat("Sensitivity", &pWorld->player.camera.mouseSensitivity, 0.0f, 1.0f);
-    ImGui::SliderInt("Chunk Load Distance", &pWorld->mChunkLoadDistance, 3, 30, "%d", ImGuiSliderFlags_NoInput);
-    ImGui::SliderInt("Chunk Partial Load Distance", &pWorld->mChunkPartialLoadDistance, 3, 30, "%d", ImGuiSliderFlags_NoInput);
+    ImGui::SliderInt("Chunk load distance", &pWorld->mChunkLoadDistance, 3, 30, "%d", ImGuiSliderFlags_NoInput);
+    ImGui::SliderInt("Chunk partial load distance", &pWorld->mChunkPartialLoadDistance, 3, 30, "%d", ImGuiSliderFlags_NoInput);
+    ImGui::SliderInt("Max tasks per frame", &pWorld->mMaxTasksPerFrame, 1, 50, "%d", ImGuiSliderFlags_NoInput);
 
     iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pWorld->player.camera.position);
     iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(blockPos);
@@ -113,8 +114,8 @@ void Game::SettingsMenu(int potentialDrawCalls, int totalDrawCalls) {
     ImGui::Text("Chunk local block coordinates: %s", std::string(chunkLocalBlockPos).c_str());
     ImGui::Text("Chunk coordinates: %s", std::string(chunkPos).c_str());
     ImGui::Text("FPS: %d", fps);
-    ImGui::Text("Potential Draw Calls: %d", potentialDrawCalls);
-    ImGui::Text("Total Draw Calls: %d", totalDrawCalls);
+    ImGui::Text("Potential draw calls: %d", potentialDrawCalls);
+    ImGui::Text("Total draw calls: %d", totalDrawCalls);
     ImGui::Text("Time: %f", pWorld->currentTime);
     ImGui::End();
 }

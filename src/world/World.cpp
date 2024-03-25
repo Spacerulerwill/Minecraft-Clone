@@ -233,7 +233,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 void World::GenerateChunks()
 {
     int totalRenderDistance = mChunkLoadDistance + mChunkPartialLoadDistance;
-    int chunksBuffered = 0;
+    int tasks = 0;
 
     // Detect what chunk the player is in
     Vec3 playerPos = player.camera.position;
@@ -250,11 +250,16 @@ void World::GenerateChunks()
         iVec2 distFromPlayer = stackPos - playerChunkPos;
         int dist = static_cast<int>(std::roundf(distFromPlayer.length()));
         if (dist > totalRenderDistance && !stack.is_in_task) {
-            mUnloadPool.push_task([&stack, this] {
-                stack.Unload(worldDirectory);
-                stack.is_in_task = false;
-            });
-            iteratorsToRemove.push_back(it);
+            if (tasks < mMaxTasksPerFrame) {
+                tasks++;
+                mUnloadPool.push_task([&stack, this] {
+                    stack.Unload(worldDirectory);
+                    });
+                iteratorsToRemove.push_back(it);
+            }
+            else {
+                return;
+            }
         } 
         ++it;
     }
@@ -279,29 +284,47 @@ void World::GenerateChunks()
             if (radius < mChunkLoadDistance) {
                 // If no chunk found, create chunk and fully load
                 if (find == mChunkStacks.end()) {
-                    auto emplace = mChunkStacks.emplace(pos, pos);
-                    ChunkStack& stack = emplace.first->second;
-                    stack.is_in_task = true;
-                    mTaskPool.push_task([this, &stack] {
-                        stack.FullyLoad(worldDirectory, seed, mPerlin);
-                        stack.is_in_task = false;
-                        });
-                }
-                else {
-                    // If chunk is found, upgrade from partially loaded to fully loaded
-                    ChunkStack& stack = find->second;
-                    if (stack.state == ChunkStackState::PARTIALLY_LOADED && !stack.is_in_task) {
+                    if (tasks < mMaxTasksPerFrame) {
+                        auto emplace = mChunkStacks.emplace(pos, pos);
+                        ChunkStack& stack = emplace.first->second;
+                        tasks++;
                         stack.is_in_task = true;
                         mTaskPool.push_task([this, &stack] {
                             stack.FullyLoad(worldDirectory, seed, mPerlin);
                             stack.is_in_task = false;
                             });
                     }
+                    else {
+                        return;
+                    }
+                }
+                else {
+                    // If chunk is found, upgrade from partially loaded to fully loaded
+                    ChunkStack& stack = find->second;
+                    if (stack.state == ChunkStackState::PARTIALLY_LOADED && !stack.is_in_task) {
+                        if (tasks < mMaxTasksPerFrame) {
+                            tasks++;
+                            stack.is_in_task = true;
+                            mTaskPool.push_task([this, &stack] {
+                                stack.FullyLoad(worldDirectory, seed, mPerlin);
+                                stack.is_in_task = false;
+                                });
+                        }
+                        else {
+                            return;
+                        }
+                    }
 
                     // Buffer any chunks in it if necessary
                     for (auto& chunk : stack) {
                         if (chunk->needsBuffering) {
-                            chunk->BufferData();
+                            if (tasks < mMaxTasksPerFrame) {
+                                tasks++;
+                                chunk->BufferData();
+                            }
+                            else {
+                                return;
+                            }
                         }
                     }
                 }
@@ -310,31 +333,47 @@ void World::GenerateChunks()
             else {
                 // If no chunk found, create chunk and partially load
                 if (find == mChunkStacks.end()) {
-                    auto emplace = mChunkStacks.emplace(pos, pos);
-                    ChunkStack& stack = emplace.first->second;
-                    stack.is_in_task = true;
-                    mTaskPool.push_task([this, &stack] {
-                        stack.PartiallyLoad(worldDirectory, seed, mPerlin);
-                        stack.is_in_task = false;
-                        });
+                    if (tasks < mMaxTasksPerFrame) {
+                        auto emplace = mChunkStacks.emplace(pos, pos);
+                        ChunkStack& stack = emplace.first->second;
+                        tasks++;
+                        stack.is_in_task = true;
+                        mTaskPool.push_task([this, &stack] {
+                            stack.PartiallyLoad(worldDirectory, seed, mPerlin);
+                            stack.is_in_task = false;
+                            });
+                    }
+                    else {
+                        return;
+                    }
                 }
                 else {
                     // If chunk is found, downgrade from loaded loaded to partially loaded
                     ChunkStack& stack = find->second;
-                    if (stack.state == ChunkStackState::LOADED) {
-                        if (!stack.is_in_task) {
+                    if (stack.state == ChunkStackState::LOADED && !stack.is_in_task) {
+                        if (tasks < mMaxTasksPerFrame) {
+                            tasks++;
                             stack.is_in_task = true;
                             mTaskPool.push_task([this, &stack] {
                                 stack.PartiallyLoad(worldDirectory, seed, mPerlin);
                                 stack.is_in_task = false;
                                 });
                         }
+                        else {
+                            return;
+                        }
                     }
 
                     // Buffer any chunks in it if necessary
                     for (auto& chunk : stack) {
                         if (chunk->needsBuffering) {
-                            chunk->BufferData();
+                            if (tasks < mMaxTasksPerFrame) {
+                                tasks++;
+                                chunk->BufferData();
+                            }
+                            else {
+                                return;
+                            }
                         }    
                     }
                 }
