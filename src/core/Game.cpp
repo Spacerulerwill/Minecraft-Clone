@@ -45,7 +45,7 @@ void Game::Run(std::string worldDirectory) {
     mWindow.SetVisible();
     while (!mWindow.ShouldClose()) {
         // World events
-        pWorld->player.ApplyGravity(*pWorld, mDeltaTime);
+        pWorld->mPlayer.ApplyGravity(*pWorld, mDeltaTime);
         pWorld->GenerateChunks();
         pWorld->TrySwitchToNextTextureAtlas();
 
@@ -65,8 +65,8 @@ void Game::Run(std::string worldDirectory) {
 
         // Set sound engine listener to players position
         SoundEngine::GetEngine()->setListenerPosition(
-            irrklang::vec3df((pWorld->player.camera.position)),
-            irrklang::vec3df((pWorld->player.camera.front))
+            irrklang::vec3df((pWorld->mPlayer.camera.position)),
+            irrklang::vec3df((pWorld->mPlayer.camera.front))
         );
 
         // Draw World
@@ -76,7 +76,7 @@ void Game::Run(std::string worldDirectory) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         int potentialDrawCalls = 0;
         int totalDrawCalls = 0;
-        Frustum frustum = pWorld->player.camera.GetFrustum();
+        Frustum frustum = pWorld->mPlayer.camera.GetFrustum();
         if (mIsWireFrame)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         else 
@@ -101,12 +101,12 @@ void Game::SettingsMenu(int potentialDrawCalls, int totalDrawCalls) {
     ImGui::SetNextWindowSize(ImVec2{ 0,0 });
     ImGui::SetNextWindowPos(ImVec2{ 0,0 });
     ImGui::Begin("Settings");
-    ImGui::SliderFloat("Sensitivity", &pWorld->player.camera.mouseSensitivity, 0.0f, 1.0f);
+    ImGui::SliderFloat("Sensitivity", &pWorld->mPlayer.camera.mouseSensitivity, 0.0f, 1.0f);
     ImGui::SliderInt("Chunk load distance", &pWorld->mChunkLoadDistance, 3, 30, "%d", ImGuiSliderFlags_NoInput);
     ImGui::SliderInt("Chunk partial load distance", &pWorld->mChunkPartialLoadDistance, 3, 30, "%d", ImGuiSliderFlags_NoInput);
     ImGui::SliderInt("Max tasks per frame", &pWorld->mMaxTasksPerFrame, 1, 50, "%d", ImGuiSliderFlags_NoInput);
 
-    iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pWorld->player.camera.position);
+    iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pWorld->mPlayer.camera.position);
     iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(blockPos);
     iVec3 chunkLocalBlockPos = GetChunkBlockPosFromGlobalBlockPos(blockPos);
 
@@ -116,14 +116,14 @@ void Game::SettingsMenu(int potentialDrawCalls, int totalDrawCalls) {
     ImGui::Text("FPS: %d", fps);
     ImGui::Text("Potential draw calls: %d", potentialDrawCalls);
     ImGui::Text("Total draw calls: %d", totalDrawCalls);
-    ImGui::Text("Time: %f", pWorld->currentTime);
+    ImGui::Text("Time: %f", pWorld->mCurrentTime);
     ImGui::End();
 }
 
 void Game::ProcessKeyInput()
 {
     if (!mIsMouseVisible) {
-        pWorld->player.ProcessKeyInput(*pWorld, mWindow, mDeltaTime);
+        pWorld->mPlayer.ProcessKeyInput(*pWorld, mWindow, mDeltaTime);
     }
 }
 
@@ -132,7 +132,7 @@ void Game::GLFWMouseMoveCallback(GLFWwindow* window, float xposIn, float yposIn)
     UNUSED(window);
 
     if (!mIsMouseVisible) {
-        pWorld->player.camera.ProcessMouseMovement(xposIn, yposIn);
+        pWorld->mPlayer.camera.ProcessMouseMovement(xposIn, yposIn);
     }
 }
 
@@ -140,14 +140,14 @@ void Game::GLFWScrollCallback(GLFWwindow* window, float xoffset, float yoffset)
 {
     UNUSED(window, xoffset);
 
-    pWorld->player.camera.ProcessMouseScroll(yoffset);
+    pWorld->mPlayer.camera.ProcessMouseScroll(yoffset);
 }
 
 void Game::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     UNUSED(window);
 
-    pWorld->player.KeyCallback(key, scancode, action, mods);
+    pWorld->mPlayer.KeyCallback(key, scancode, action, mods);
     switch (key) {
     case GLFW_KEY_ESCAPE: {
         mWindow.SetShouldClose(GLFW_TRUE);
@@ -167,7 +167,7 @@ void Game::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action
             }
             else {
                 mWindow.SetMouseDisabled();
-                pWorld->player.camera.isFirstMouseInput = true;
+                pWorld->mPlayer.camera.isFirstMouseInput = true;
             }
         }
         break;
@@ -180,7 +180,7 @@ void Game::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, i
     UNUSED(window);
     
     if (!mIsMouseVisible) {
-        pWorld->player.MouseCallback(*pWorld, button, action, mods);
+        pWorld->mPlayer.MouseCallback(*pWorld, button, action, mods);
     }
 }
 

@@ -10,7 +10,8 @@ License: MIT
 #include <util/Log.hpp>
 
 std::size_t VoxelIndex(iVec3 pos) {
-    return pos[2] + (pos[0] << Chunk::SIZE_PADDED_LOG_2) + (pos[1] << Chunk::SIZE_PADDED_SQUARED_LOG_2);
+    //return pos[2] + (pos[0] << Chunk::SIZE_PADDED_LOG_2) + (pos[1] << Chunk::SIZE_PADDED_SQUARED_LOG_2);
+    return pos[1] + (pos[0] << Chunk::SIZE_PADDED_LOG_2) + (pos[2] << Chunk::SIZE_PADDED_SQUARED_LOG_2);
 }
 
 Chunk::Chunk(iVec3 pos) : mPos(pos)
@@ -101,7 +102,7 @@ void Chunk::UpdateVisiblity(const Frustum& frustum)
 void Chunk::Draw(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
 {
     if (potentialDrawCalls) (*potentialDrawCalls)++;
-    if (!visible) return;
+    if (!visible || mVertexCount == 0) return;
     if (totalDrawCalls) (*totalDrawCalls)++;
     mVAO.Bind();
     shader.SetMat4("model", mModel);
@@ -111,7 +112,7 @@ void Chunk::Draw(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
 void Chunk::DrawWater(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
 {
     if (potentialDrawCalls) (*potentialDrawCalls)++;
-    if (!visible) return;
+    if (!visible || mWaterVertexCount == 0) return;
     if (totalDrawCalls) (*totalDrawCalls)++;
     mWaterVAO.Bind();
     shader.SetMat4("model", mModel);
@@ -121,7 +122,7 @@ void Chunk::DrawWater(Shader& shader, int* potentialDrawCalls, int* totalDrawCal
 void Chunk::DrawCustomModel(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls)
 {
     if (potentialDrawCalls) (*potentialDrawCalls)++;
-    if (!visible) return;
+    if (!visible || mCustomModelVertexCount == 0) return;
     if (totalDrawCalls) (*totalDrawCalls)++;
     mCustomModelVAO.Bind();
     shader.SetMat4("model", mModel);

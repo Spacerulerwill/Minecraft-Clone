@@ -22,7 +22,7 @@ void main()
 	float((data.y >> 12)&uint(255))
     );
 
-    gl_Position = projection * view * model * vec4(x, y, z, 1.0);
+    gl_Position = projection * view * model * vec4(x, z, y, 1.0);
 }
 
 #shader fragment

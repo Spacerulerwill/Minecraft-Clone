@@ -48,7 +48,7 @@ iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 globalBlockPos)
 }
 
 
-World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
+World::World(std::string worldDirectory) : mWorldDirectory(worldDirectory)
 {
     // Load world data
     WorldSave worldSave;
@@ -56,19 +56,19 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
         throw WorldCorruptionException("Could not read world data from disk. World may be corrupted!");
     }
 
-    seed = worldSave.seed;
-    mPerlin.reseed(seed);
-    worldStartTime = worldSave.elapsedTime;
-    currentTime = worldSave.elapsedTime;
+    mSeed = worldSave.seed;
+    mPerlin.reseed(mSeed);
+    mWorldStartTime = worldSave.elapsedTime;
+    mCurrentTime = worldSave.elapsedTime;
     
     // Load player data
     PlayerSave playerSave;
     if (!ReadStructFromDisk(fmt::format("{}/player.data", worldDirectory), playerSave)) {
         throw WorldCorruptionException("Could not read player data from disk. World may be corrupted!");
     }
-    player.camera.position = playerSave.pos;
-    player.camera.pitch = playerSave.pitch;
-    player.camera.yaw = playerSave.yaw;
+    mPlayer.camera.position = playerSave.pos;
+    mPlayer.camera.pitch = playerSave.pitch;
+    mPlayer.camera.yaw = playerSave.yaw;
     
     // Load texture atlases
     LOG_INFO("Loading texture atlases...");
@@ -78,7 +78,7 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
 
     // Load spawn chunks
     LOG_INFO("Loading spawn chunks...");
-    Vec3 playerPos = player.camera.position;
+    Vec3 playerPos = mPlayer.camera.position;
     iVec2 playerChunkPos{
         static_cast<int>(floor(playerPos[0]) / Chunk::SIZE),
         static_cast<int>(floor(playerPos[2]) / Chunk::SIZE)
@@ -95,7 +95,7 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
                 ChunkStack& chunkStack = emplace.first->second;
                 chunkStack.state = ChunkStackState::LOADED;
                 mTaskPool.push_task([this, worldDirectory, &chunkStack]() {
-                    chunkStack.FullyLoad(worldDirectory, seed, mPerlin);
+                    chunkStack.FullyLoad(worldDirectory, mSeed, mPerlin);
                     });
             }
             else if (radius <= totalRenderDistance) {
@@ -103,7 +103,7 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
                 ChunkStack& chunkStack = emplace.first->second;
                 chunkStack.state = ChunkStackState::PARTIALLY_LOADED;
                 mTaskPool.push_task([this, worldDirectory, &chunkStack]() {
-                    chunkStack.PartiallyLoad(worldDirectory, seed, mPerlin);
+                    chunkStack.PartiallyLoad(worldDirectory, mSeed, mPerlin);
                     });
             }
         }
@@ -116,7 +116,7 @@ World::World(std::string worldDirectory) : worldDirectory(worldDirectory)
             (*it)->BufferData();
         }
     }
-    worldLoadedTime = glfwGetTime();
+    mWorldLoadedTime = glfwGetTime();
 }
 
 World::~World() {
@@ -124,17 +124,17 @@ World::~World() {
     mTaskPool.wait_for_tasks();
 
     // Save to disk
-    if (!WriteStructToDisk(fmt::format("{}/world.data", worldDirectory), WorldSave{
-        .seed = seed,
-        .elapsedTime = currentTime
+    if (!WriteStructToDisk(fmt::format("{}/world.data", mWorldDirectory), WorldSave{
+        .seed = mSeed,
+        .elapsedTime = mCurrentTime
         })) {
         LOG_ERROR("Failed to write save world data");
     }
 
-    if (!WriteStructToDisk(fmt::format("{}/player.data", worldDirectory), PlayerSave {
-        .pos = player.camera.position,
-        .pitch = player.camera.pitch,
-        .yaw = player.camera.yaw
+    if (!WriteStructToDisk(fmt::format("{}/player.data", mWorldDirectory), PlayerSave {
+        .pos = mPlayer.camera.position,
+        .pitch = mPlayer.camera.pitch,
+        .yaw = mPlayer.camera.yaw
         })) {
         LOG_ERROR("Failed to write player data");
     };
@@ -142,7 +142,7 @@ World::~World() {
     // Unload all remaining chunks 
     for (auto& [pos, stack] : mChunkStacks) {
         mUnloadPool.push_task([&stack, this] {
-            stack.Unload(worldDirectory);
+            stack.Unload(mWorldDirectory);
             });
 
     }
@@ -152,13 +152,13 @@ World::~World() {
 void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
 {
     double glfwTime = glfwGetTime();
-    currentTime = worldStartTime + glfwTime - worldLoadedTime;
-    double day = currentTime / World::DAY_DURATION;
+    mCurrentTime = mWorldStartTime + glfwTime - mWorldLoadedTime;
+    double day = mCurrentTime / World::DAY_DURATION;
     double currentDay;
     double currentDayProgress = std::modf(day, &currentDay);
 
-    Mat4 perspective = player.camera.perspectiveMatrix;
-    Mat4 view = player.camera.GetViewMatrix();
+    Mat4 perspective = mPlayer.camera.perspectiveMatrix;
+    Mat4 view = mPlayer.camera.GetViewMatrix();
     float ambientTerrainLight = 1.0f;
 
     if (currentDayProgress < 0.5) {
@@ -181,51 +181,51 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     }
 
     glDepthFunc(GL_LEQUAL);
-    Mat4 model = rotate(Vec3{0.0f, 1.0f, 0.0f}, currentTime * 0.01f); 
+    Mat4 model = rotate(Vec3{0.0f, 1.0f, 0.0f}, mCurrentTime * 0.01f); 
     mSkybox.Draw(perspective, translationRemoved(view), model, currentDayProgress);
     glDepthFunc(GL_LESS);
 
-    chunkShader.Bind();
-    chunkShader.SetMat4("projection", perspective);
-    chunkShader.SetMat4("view", view);
-    chunkShader.SetVec3("grass_color", mGrassColor);
-    chunkShader.SetFloat("ambient", ambientTerrainLight);
+    mChunkShader.Bind();
+    mChunkShader.SetMat4("projection", perspective);
+    mChunkShader.SetMat4("view", view);
+    mChunkShader.SetVec3("grass_color", mGrassColor);
+    mChunkShader.SetFloat("ambient", ambientTerrainLight);
     glActiveTexture(GL_TEXTURE0); 
-    mTextureAtlases[currentAtlasID].Bind();
-    chunkShader.SetInt("tex_array", 0);
+    mTextureAtlases[mCurrentAtlasID].Bind();
+    mChunkShader.SetInt("tex_array", 0);
 
     glActiveTexture(GL_TEXTURE1);
     mGrassSideMask.Bind();
-    chunkShader.SetInt("grass_mask", 1);
+    mChunkShader.SetInt("grass_mask", 1);
  
     for (auto& [pos, stack] : mChunkStacks) {
-        stack.Draw(chunkShader, totalChunks, chunksDrawn);
+        stack.Draw(mChunkShader, totalChunks, chunksDrawn);
     }
 
-    waterShader.Bind();
-    waterShader.SetMat4("projection", perspective);
-    waterShader.SetMat4("view", view);
-    waterShader.SetVec3("color", mWaterColor);
-    waterShader.SetFloat("ambient", ambientTerrainLight);
+    mWaterShader.Bind();
+    mWaterShader.SetMat4("projection", perspective);
+    mWaterShader.SetMat4("view", view);
+    mWaterShader.SetVec3("color", mWaterColor);
+    mWaterShader.SetFloat("ambient", ambientTerrainLight);
     glActiveTexture(GL_TEXTURE0);
-    waterShader.SetInt("tex_array", 0);
+    mWaterShader.SetInt("tex_array", 0);
     glEnable(GL_BLEND);
     for (auto& [pos, stack] : mChunkStacks) {
-        stack.DrawWater(waterShader, totalChunks, chunksDrawn);
+        stack.DrawWater(mWaterShader, totalChunks, chunksDrawn);
     }
     glDisable(GL_BLEND);
 
     // Draw custom models
     glDisable(GL_CULL_FACE);
-    customModelShader.Bind();
-    customModelShader.SetMat4("projection", perspective);
-    customModelShader.SetMat4("view", view);
+    mCustomModelShader.Bind();
+    mCustomModelShader.SetMat4("projection", perspective);
+    mCustomModelShader.SetMat4("view", view);
     glActiveTexture(GL_TEXTURE0);
-    customModelShader.SetInt("tex_array", 0);
-    customModelShader.SetVec3("foliage_color", mFoliageColor);
-    customModelShader.SetFloat("ambient", ambientTerrainLight);
+    mCustomModelShader.SetInt("tex_array", 0);
+    mCustomModelShader.SetVec3("foliage_color", mFoliageColor);
+    mCustomModelShader.SetFloat("ambient", ambientTerrainLight);
     for (auto& [pos, stack] : mChunkStacks) {
-        stack.DrawCustomModel(customModelShader, totalChunks, chunksDrawn);
+        stack.DrawCustomModel(mCustomModelShader, totalChunks, chunksDrawn);
     }
     glEnable(GL_CULL_FACE);
 }
@@ -236,7 +236,7 @@ void World::GenerateChunks()
     int tasks = 0;
 
     // Detect what chunk the player is in
-    Vec3 playerPos = player.camera.position;
+    Vec3 playerPos = mPlayer.camera.position;
     iVec2 playerChunkPos{
         static_cast<int>(floor(playerPos[0]) / Chunk::SIZE),
         static_cast<int>(floor(playerPos[2]) / Chunk::SIZE)
@@ -253,12 +253,12 @@ void World::GenerateChunks()
             if (tasks < mMaxTasksPerFrame) {
                 tasks++;
                 mUnloadPool.push_task([&stack, this] {
-                    stack.Unload(worldDirectory);
+                    stack.Unload(mWorldDirectory);
                     });
                 iteratorsToRemove.push_back(it);
             }
             else {
-                return;
+                break;
             }
         } 
         ++it;
@@ -266,6 +266,10 @@ void World::GenerateChunks()
     mUnloadPool.wait_for_tasks();
     for (auto it : iteratorsToRemove) {
         mChunkStacks.erase(it);
+    }
+
+    if (tasks >= mMaxTasksPerFrame) {
+        return;
     }
     
     // Iterate over our chunk circle
@@ -290,7 +294,7 @@ void World::GenerateChunks()
                         tasks++;
                         stack.is_in_task = true;
                         mTaskPool.push_task([this, &stack] {
-                            stack.FullyLoad(worldDirectory, seed, mPerlin);
+                            stack.FullyLoad(mWorldDirectory, mSeed, mPerlin);
                             stack.is_in_task = false;
                             });
                     }
@@ -306,7 +310,7 @@ void World::GenerateChunks()
                             tasks++;
                             stack.is_in_task = true;
                             mTaskPool.push_task([this, &stack] {
-                                stack.FullyLoad(worldDirectory, seed, mPerlin);
+                                stack.FullyLoad(mWorldDirectory, mSeed, mPerlin);
                                 stack.is_in_task = false;
                                 });
                         }
@@ -339,7 +343,7 @@ void World::GenerateChunks()
                         tasks++;
                         stack.is_in_task = true;
                         mTaskPool.push_task([this, &stack] {
-                            stack.PartiallyLoad(worldDirectory, seed, mPerlin);
+                            stack.PartiallyLoad(mWorldDirectory, mSeed, mPerlin);
                             stack.is_in_task = false;
                             });
                     }
@@ -355,7 +359,7 @@ void World::GenerateChunks()
                             tasks++;
                             stack.is_in_task = true;
                             mTaskPool.push_task([this, &stack] {
-                                stack.PartiallyLoad(worldDirectory, seed, mPerlin);
+                                stack.PartiallyLoad(mWorldDirectory, mSeed, mPerlin);
                                 stack.is_in_task = false;
                                 });
                         }
@@ -385,11 +389,11 @@ void World::GenerateChunks()
 void World::TrySwitchToNextTextureAtlas()
 {
     double currentTime = glfwGetTime();
-    if (currentTime - lastAtlasSwitch > 0.2) {
-        currentAtlasID = (currentAtlasID + 1) % MAX_ANIMATION_FRAMES;
+    if (currentTime - mLastAtlasSwitch > 0.2) {
+        mCurrentAtlasID = (mCurrentAtlasID + 1) % MAX_ANIMATION_FRAMES;
         glActiveTexture(GL_TEXTURE0);
-        mTextureAtlases[currentAtlasID].Bind();
-        lastAtlasSwitch = currentTime;
+        mTextureAtlases[mCurrentAtlasID].Bind();
+        mLastAtlasSwitch = currentTime;
     }
 }
 

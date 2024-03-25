@@ -50,7 +50,7 @@ void ChunkStack::GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::Pe
         for (int z = 0; z < Chunk::SIZE_PADDED; z++) {
             float heightMultiplayer = perlin.octave2D_01((mPos[0] * Chunk::SIZE + x) * 0.001f, (mPos[1] * Chunk::SIZE + z) * 0.001f, 4, 0.5);
             int height = World::MIN_GEN_HEIGHT + (heightMultiplayer * World::MAX_SUB_MIN_GEN_HEIGHT);
-
+            
             if (height < World::World::WATER_LEVEL) {
                 for (int y = height; y < World::World::WATER_LEVEL; y++) {
                     RawSetBlock(iVec3{ x,y, z }, WATER);
@@ -85,10 +85,10 @@ void ChunkStack::GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::Pe
             for (int y = height - 4; y < height - 1; y++) {
                 RawSetBlock(iVec3{ x, y, z }, DIRT);
             }
-            RawSetBlock(iVec3{ x, 0, z }, BEDROCK);
+            RawSetBlock(iVec3{ x, 0, z }, BEDROCK);         
         }
     }
-
+    
     for (std::size_t i = 0; i < ChunkStack::DEFAULT_SIZE; i++) {
         std::shared_ptr<Chunk> currentChunk = mChunks.at(i);
         std::shared_ptr<Chunk> belowChunk = GetChunk(i - 1);

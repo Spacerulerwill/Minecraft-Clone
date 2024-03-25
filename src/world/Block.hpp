@@ -52,12 +52,12 @@ enum class Model : ModelID {
 };
 
 enum BlockFaces {
-    TOP_FACE,
-    BOTTOM_FACE,
-    RIGHT_FACE,
-    LEFT_FACE,
+    FRONT_FACE,
     BACK_FACE,
-    FRONT_FACE
+    LEFT_FACE,
+    RIGHT_FACE,
+    TOP_FACE,
+    BOTTOM_FACE
 };
 
 struct BlockDataStruct {

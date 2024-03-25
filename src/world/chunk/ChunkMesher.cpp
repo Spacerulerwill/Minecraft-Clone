@@ -73,10 +73,10 @@ inline const bool CompareRight(const std::vector<BlockID>& blocks, int axis, int
 
 inline const void InsertQuad(std::vector<ChunkMesher::ChunkVertex>& vertices, ChunkMesher::ChunkVertex v1, ChunkMesher::ChunkVertex v2, ChunkMesher::ChunkVertex v3, ChunkMesher::ChunkVertex v4, bool flipped) {
     if (flipped) {
-        vertices.insert(vertices.end(), { v1, v2, v4, v4, v2, v3 });
+        vertices.insert(vertices.end(), { v3, v2, v4, v4, v2, v1 });
     }
     else {
-        vertices.insert(vertices.end(), { v1, v2, v3, v3, v4, v1 });
+        vertices.insert(vertices.end(), { v1, v4, v3, v3, v2, v1});
     }
 }
 
@@ -201,39 +201,39 @@ void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std
                     ChunkVertex v1{}, v2{}, v3{}, v4{};
                     switch (face) {
                     case 0: {
-                        TextureID texZ = blockData.faces[TOP_FACE];
-                        v1 = GetChunkVertex(mesh_left, mesh_up, mesh_front, ao_LF, 0, 0, texZ, face, isGrass);
-                        v2 = GetChunkVertex(mesh_left, mesh_up, mesh_back, ao_LB, 0, mesh_back - mesh_front, texZ, face, isGrass);
-                        v3 = GetChunkVertex(mesh_right, mesh_up, mesh_back, ao_RB, mesh_right - mesh_left, mesh_back - mesh_front, texZ, face, isGrass);
-                        v4 = GetChunkVertex(mesh_right, mesh_up, mesh_front, ao_RF, mesh_right - mesh_left, 0, texZ, face, isGrass);
+                        TextureID texZ = blockData.faces[BACK_FACE];
+                        v1 = GetChunkVertex(mesh_left, mesh_up, mesh_front, ao_LF, 0, mesh_back - mesh_front, texZ, face, isGrass);
+                        v2 = GetChunkVertex(mesh_left, mesh_up, mesh_back, ao_LB, 0, 0, texZ, face, isGrass);
+                        v3 = GetChunkVertex(mesh_right, mesh_up, mesh_back, ao_RB, mesh_right - mesh_left, 0, texZ, face, isGrass);
+                        v4 = GetChunkVertex(mesh_right, mesh_up, mesh_front, ao_RF, mesh_right - mesh_left, mesh_back - mesh_front, texZ, face, isGrass);
                         break;
                     }
                     case 1: {
-                        TextureID texZ = blockData.faces[BOTTOM_FACE];
-                        v1 = GetChunkVertex(mesh_left, mesh_up, mesh_back, ao_LB, 0, mesh_back - mesh_front, texZ, face, isGrass);
-                        v2 = GetChunkVertex(mesh_left, mesh_up, mesh_front, ao_LF, 0, 0, texZ, face, isGrass);
-                        v3 = GetChunkVertex(mesh_right, mesh_up, mesh_front, ao_RF, mesh_right - mesh_left, 0, texZ, face, isGrass);
-                        v4 = GetChunkVertex(mesh_right, mesh_up, mesh_back, ao_RB, mesh_right - mesh_left, mesh_back - mesh_front, texZ, face, isGrass);
+                        TextureID texZ = blockData.faces[FRONT_FACE];
+                        v1 = GetChunkVertex(mesh_left, mesh_up, mesh_back, ao_LB, 0, 0, texZ, face, isGrass);
+                        v2 = GetChunkVertex(mesh_left, mesh_up, mesh_front, ao_LF, 0, mesh_back - mesh_front, texZ, face, isGrass);
+                        v3 = GetChunkVertex(mesh_right, mesh_up, mesh_front, ao_RF, mesh_right - mesh_left, mesh_back - mesh_front, texZ, face, isGrass);
+                        v4 = GetChunkVertex(mesh_right, mesh_up, mesh_back, ao_RB, mesh_right - mesh_left, 0, texZ, face, isGrass);
                         break;
                     }
                     case 2: {
                         TextureID texZ = blockData.faces[RIGHT_FACE];
-                        v1 = GetChunkVertex(mesh_up, mesh_front, mesh_left, ao_LF, 0, mesh_back - mesh_front, texZ, face, isGrass);
-                        v2 = GetChunkVertex(mesh_up, mesh_back, mesh_left, ao_LB, 0, 0, texZ, face, isGrass);
-                        v3 = GetChunkVertex(mesh_up, mesh_back, mesh_right, ao_RB, mesh_right - mesh_left, 0, texZ, face, isGrass);
-                        v4 = GetChunkVertex(mesh_up, mesh_front, mesh_right, ao_RF, mesh_right - mesh_left, mesh_back - mesh_front, texZ, face, isGrass);
+                        v1 = GetChunkVertex(mesh_up, mesh_front, mesh_left, ao_LF, mesh_back - mesh_front, mesh_right - mesh_left, texZ, face, isGrass);
+                        v2 = GetChunkVertex(mesh_up, mesh_back, mesh_left, ao_LB, 0, mesh_right - mesh_left, texZ, face, isGrass);
+                        v3 = GetChunkVertex(mesh_up, mesh_back, mesh_right, ao_RB, 0, 0, texZ, face, isGrass);
+                        v4 = GetChunkVertex(mesh_up, mesh_front, mesh_right, ao_RF, mesh_back - mesh_front, 0, texZ, face, isGrass);
                         break;
                     }
                     case 3: {
                         TextureID texZ = blockData.faces[LEFT_FACE];
-                        v1 = GetChunkVertex(mesh_up, mesh_back, mesh_left, ao_LB, 0, 0, texZ, face, isGrass);
-                        v2 = GetChunkVertex(mesh_up, mesh_front, mesh_left, ao_LF, 0, mesh_back - mesh_front, texZ, face, isGrass);
-                        v3 = GetChunkVertex(mesh_up, mesh_front, mesh_right, ao_RF, mesh_right - mesh_left, mesh_back - mesh_front, texZ, face, isGrass);
-                        v4 = GetChunkVertex(mesh_up, mesh_back, mesh_right, ao_RB, mesh_right - mesh_left, 0, texZ, face, isGrass);
+                        v1 = GetChunkVertex(mesh_up, mesh_back, mesh_left, ao_LB, 0, mesh_right - mesh_left, texZ, face, isGrass);
+                        v2 = GetChunkVertex(mesh_up, mesh_front, mesh_left, ao_LF, mesh_back - mesh_front, mesh_right - mesh_left, texZ, face, isGrass);
+                        v3 = GetChunkVertex(mesh_up, mesh_front, mesh_right, ao_RF, mesh_back - mesh_front, 0, texZ, face, isGrass);
+                        v4 = GetChunkVertex(mesh_up, mesh_back, mesh_right, ao_RB, 0, 0, texZ, face, isGrass);
                         break;
                     }
                     case 4: {
-                        TextureID texZ = blockData.faces[BACK_FACE];
+                        TextureID texZ = blockData.faces[TOP_FACE];
                         v1 = GetChunkVertex(mesh_front, mesh_left, mesh_up, ao_LF, 0, mesh_right - mesh_left, texZ, face, isGrass);
                         v2 = GetChunkVertex(mesh_back, mesh_left, mesh_up, ao_LB, mesh_back - mesh_front, mesh_right - mesh_left, texZ, face, isGrass);
                         v3 = GetChunkVertex(mesh_back, mesh_right, mesh_up, ao_RB, mesh_back - mesh_front, 0, texZ, face, isGrass);
@@ -241,7 +241,7 @@ void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std
                         break;
                     }
                     case 5: {
-                        TextureID texZ = blockData.faces[FRONT_FACE];
+                        TextureID texZ = blockData.faces[BOTTOM_FACE];
                         v1 = GetChunkVertex(mesh_back, mesh_left, mesh_up, ao_LB, 0, mesh_right - mesh_left, texZ, face, isGrass);
                         v2 = GetChunkVertex(mesh_front, mesh_left, mesh_up, ao_LF, mesh_back - mesh_front, mesh_right - mesh_left, texZ, face, isGrass);
                         v3 = GetChunkVertex(mesh_front, mesh_right, mesh_up, ao_RF, mesh_back - mesh_front, 0, texZ, face, isGrass);
@@ -250,7 +250,7 @@ void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std
                     }
                     }
                     bool flipped = ao_LB + ao_RF > ao_RB + ao_LF;
-                    InsertQuad(vertices, v1, v2, v3, v4, flipped);
+                    InsertQuad(vertices, v1, v2, v3, v4, !flipped);
                 }
             }
         }

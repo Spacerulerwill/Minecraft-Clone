@@ -42,19 +42,18 @@ class World {
 private:
     std::unordered_map<iVec2, ChunkStack> mChunkStacks;
     Skybox mSkybox;
-    Shader chunkShader = Shader("shaders/chunk.shader");
-    Shader waterShader = Shader("shaders/water.shader");
-    Shader customModelShader = Shader("shaders/custom_model.shader");
+    Shader mChunkShader = Shader("shaders/chunk.shader");
+    Shader mWaterShader = Shader("shaders/water.shader");
+    Shader mCustomModelShader = Shader("shaders/custom_model.shader");
     siv::PerlinNoise mPerlin;
     BS::thread_pool mTaskPool;
     BS::thread_pool mUnloadPool;
     std::array<TexArray2D, MAX_ANIMATION_FRAMES> mTextureAtlases;
     Tex2D mGrassSideMask = Tex2D("textures/block/mask/grass_side_mask.png", GL_TEXTURE1);
-    std::size_t currentAtlasID{ 0 };
-    double lastAtlasSwitch = 0.0f;
-    siv::PerlinNoise::seed_type seed;
-    std::string worldDirectory;
-    Vec3 sunDirection {0.0f, 0.0f, 0.0f};
+    std::size_t mCurrentAtlasID{ 0 };
+    double mLastAtlasSwitch = 0.0f;
+    siv::PerlinNoise::seed_type mSeed;
+    std::string mWorldDirectory;
 public:
     World(std::string worldDirectory);
     ~World();
@@ -70,13 +69,13 @@ public:
     int mChunkLoadDistance = 3;
     int mChunkPartialLoadDistance = 1;
     int mMaxTasksPerFrame = 20;
-    Player player;
+    Player mPlayer;
     void Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn);
     void TrySwitchToNextTextureAtlas();
     void GenerateChunks();
-    double worldLoadedTime; // Time of program when world finishes loading
-    double worldStartTime; // The last saved world time when the player last closed the game
-    double currentTime; // Current world time
+    double mWorldLoadedTime; // Time of program when world finishes loading
+    double mWorldStartTime; // The last saved world time when the player last closed the game
+    double mCurrentTime; // Current world time
     const ChunkStack* GetChunkStack(iVec2 pos) const;
     std::shared_ptr<Chunk> GetChunk(iVec3 pos) const;
     BlockID GetBlock(iVec3 pos) const;
