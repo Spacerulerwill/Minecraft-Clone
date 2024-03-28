@@ -6,6 +6,7 @@ air:
   opaque: false
   collision: false
   can_interact_through: true
+  waterloggable: false
 stone:
   unique_faces: 1
   break_sound_id: 3
@@ -14,6 +15,7 @@ stone:
   opaque: true
   collision: true
   can_interact_through: false
+  waterloggable: false
 dirt: 
   unique_faces: 1
   break_sound_id: 2
@@ -22,6 +24,7 @@ dirt:
   opaque: true
   collision: true
   can_interact_through: false
+  waterloggable: false
 grass:
   unique_faces: 3
   break_sound_id: 1
@@ -30,6 +33,7 @@ grass:
   opaque: true
   collision: true
   can_interact_through: false
+  waterloggable: false
 bedrock: 
   unique_faces: 1
   break_sound_id: 3
@@ -38,6 +42,7 @@ bedrock:
   opaque: true
   collision: true
   can_interact_through: false
+  waterloggable: false
 glass:
   unique_faces: 1
   break_sound_id: 5
@@ -46,6 +51,7 @@ glass:
   opaque: false
   collision: true
   can_interact_through: false
+  waterloggable: false
 water:
   unique_faces: 1
   break_sound_id: 3
@@ -55,6 +61,7 @@ water:
   collision: false
   frames: 32
   can_interact_through: true
+  waterloggable: false
 rose:
   unique_faces: 1
   break_sound_id: 1
@@ -63,6 +70,7 @@ rose:
   opaque: false
   collision: false
   can_interact_through: false
+  waterloggable: true
 pink_tulip:
   unique_faces: 1
   break_sound_id: 1
@@ -71,6 +79,7 @@ pink_tulip:
   opaque: false
   collision: false
   can_interact_through: false
+  waterloggable: true
 tall_grass:
   unique_faces: 1
   break_sound_id: 1
@@ -79,6 +88,7 @@ tall_grass:
   opaque: false
   collision: false
   can_interact_through: false
+  waterloggable: true
 sand:
   unique_faces: 1
   break_sound_id: 6
@@ -87,6 +97,7 @@ sand:
   opaque: true
   collision: true
   can_interact_through: false
+  waterloggable: false
 sugar_cane:
   unique_faces: 1
   break_sound_id: 1
@@ -95,6 +106,7 @@ sugar_cane:
   opaque: false
   collision: false
   can_interact_through: false
+  waterloggable: true
 wood:
   unique_faces: 1
   break_sound_id: 4
@@ -103,6 +115,7 @@ wood:
   opaque: true
   collision: true
   can_interact_through: false
+  waterloggable: false
 sakura_leaves:
   unique_faces: 1
   break_sound_id: 1
@@ -111,3 +124,4 @@ sakura_leaves:
   opaque: true
   collision: true
   can_interact_through: false
+  waterloggable: false

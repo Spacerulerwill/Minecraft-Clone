@@ -64,8 +64,8 @@ void Chunk::CreateMesh() {
 
     // Mesh
     ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks, ChunkMesher::IsOpaqueCube);
-    ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks, [](BlockType block) { return block == BlockType::GLASS; });
-    ChunkMesher::BinaryGreedyMesh(mWaterVertices, mBlocks, [](BlockType block) { return block == BlockType::WATER; });
+    ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks, [](Block block) { return block.GetType() == BlockType::GLASS; });
+    ChunkMesher::BinaryGreedyMesh(mWaterVertices, mBlocks, [](Block block) { return block.GetType() == BlockType::WATER || block.IsWaterLogged(); });
     ChunkMesher::MeshCustomModelBlocks(mCustomModelVertices, mBlocks);
     needsBuffering = true;
 }

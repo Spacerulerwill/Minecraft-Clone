@@ -12,15 +12,15 @@ License: MIT
 #include <functional>
 
 namespace ChunkMesher {
-    typedef bool (*ChunkMeshFilterCallback)(BlockType);
+    typedef bool (*ChunkMeshFilterCallback)(Block);
 
     struct ChunkVertex {
         uint32_t data1;
         uint32_t data2;
     };
 
-    inline bool IsOpaqueCube(BlockType blockType) {
-        BlockDataStruct blockData = GetBlockData(blockType);
+    inline bool IsOpaqueCube(Block block) {
+        BlockDataStruct blockData = GetBlockData(block.GetType());
         return blockData.opaque && blockData.modelID == static_cast<ModelID>(Model::CUBE);
     }
 

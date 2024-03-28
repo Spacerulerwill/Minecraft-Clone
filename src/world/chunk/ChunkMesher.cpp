@@ -96,7 +96,7 @@ void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std
         for (int x = 0; x < Chunk::SIZE_PADDED; x++) {
             uint64_t zb = 0;
             for (int z = 0; z < Chunk::SIZE_PADDED; z++) {
-                if (condition(blocks[index].GetType())) {
+                if (condition(blocks[index])) {
                     axis_cols[x + (z * Chunk::SIZE_PADDED)] |= 1ULL << y;
                     axis_cols[z + (y * Chunk::SIZE_PADDED) + (Chunk::SIZE_PADDED_SQUARED)] |= 1ULL << x;
                     zb |= 1ULL << z;
@@ -177,7 +177,7 @@ void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std
                     uint8_t mesh_up = bit_pos + (face % 2 == 0 ? 1 : 0);
 
                     Block block = blocks[GetAxisIndex(axis, right, forward, bit_pos)];
-                    BlockType type = block.GetType();
+                    BlockType type = block.IsWaterLogged() ? BlockType::WATER : block.GetType();
                     bool isGrass = type == BlockType::GRASS;
                     const BlockDataStruct& blockData = GetBlockData(type);
 

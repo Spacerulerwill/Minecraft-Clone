@@ -185,6 +185,7 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     mSkybox.Draw(perspective, translationRemoved(view), model, currentDayProgress);
     glDepthFunc(GL_LESS);
 
+    // Draw opaque
     mChunkShader.Bind();
     mChunkShader.SetMat4("projection", perspective);
     mChunkShader.SetMat4("view", view);
@@ -202,19 +203,6 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
         stack.Draw(mChunkShader, totalChunks, chunksDrawn);
     }
 
-    mWaterShader.Bind();
-    mWaterShader.SetMat4("projection", perspective);
-    mWaterShader.SetMat4("view", view);
-    mWaterShader.SetVec3("color", mWaterColor);
-    mWaterShader.SetFloat("ambient", ambientTerrainLight);
-    glActiveTexture(GL_TEXTURE0);
-    mWaterShader.SetInt("tex_array", 0);
-    glEnable(GL_BLEND);
-    for (auto& [pos, stack] : mChunkStacks) {
-        stack.DrawWater(mWaterShader, totalChunks, chunksDrawn);
-    }
-    glDisable(GL_BLEND);
-
     // Draw custom models
     glDisable(GL_CULL_FACE);
     mCustomModelShader.Bind();
@@ -228,6 +216,20 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
         stack.DrawCustomModel(mCustomModelShader, totalChunks, chunksDrawn);
     }
     glEnable(GL_CULL_FACE);
+
+    // Draw water
+    mWaterShader.Bind();
+    mWaterShader.SetMat4("projection", perspective);
+    mWaterShader.SetMat4("view", view);
+    mWaterShader.SetVec3("color", mWaterColor);
+    mWaterShader.SetFloat("ambient", ambientTerrainLight);
+    glActiveTexture(GL_TEXTURE0);
+    mWaterShader.SetInt("tex_array", 0);
+    glEnable(GL_BLEND);
+    for (auto& [pos, stack] : mChunkStacks) {
+        stack.DrawWater(mWaterShader, totalChunks, chunksDrawn);
+    }
+    glDisable(GL_BLEND);
 }
 
 void World::GenerateChunks()

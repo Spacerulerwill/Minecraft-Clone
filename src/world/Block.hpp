@@ -86,6 +86,7 @@ struct BlockDataStruct {
     bool opaque;
     bool collision;
     bool canInteractThrough;
+    bool waterloggable;
 };
 
 struct BlockSoundStruct {

@@ -59,7 +59,7 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
             // If we do hit a chunk, check if its air. If it's not then we stop the raycasting otherwise we continue
             Block block = chunk->GetBlock(blockPosInChunk);
             BlockType type = block.GetType();
-            if (!GetBlockData(type).canInteractThrough) {
+            if (!GetBlockData(type).canInteractThrough || block.IsWaterLogged()) {
                 return BlockRaycastResult{
                     chunk,
                     blockPosInChunk,

@@ -71,6 +71,7 @@ void LoadBlockData() {
         blockData.opaque = it->second["opaque"].as<bool>();
         blockData.collision = it->second["collision"].as<bool>();
         blockData.canInteractThrough = it->second["can_interact_through"].as<bool>();
+        blockData.waterloggable = it->second["waterloggable"].as<bool>();
 
         switch (uniqueFacesCount) {
         case 1: {

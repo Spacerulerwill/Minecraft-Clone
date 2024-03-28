@@ -76,40 +76,17 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
             const BlockDataStruct& blockData = GetBlockData(type);
             if (raycast.chunk != nullptr && !blockData.canInteractThrough) {
                 // Update chunk block was broken in
-                raycast.chunk->SetBlock(raycast.blockPos, Block(BlockType::AIR, 0, false));
-                raycast.chunk->CreateMesh();
-                raycast.chunk->BufferData();
-                BlockSoundStruct soundData = BlockSounds[blockData.breakSoundID];
-                SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), irrklang::vec3df(camera.position));
-
-                // If the block was on an chunk edge and it was a cube, re-mesh that one too
-                if (blockData.modelID == static_cast<ModelID>(Model::CUBE)) {
-                    for (int i = 0; i < 3; i++) {
-                        Vec3 chunkPos = raycast.chunk->GetPosition();
-
-                        if (raycast.blockPos[i] == 1) {
-                            chunkPos[i]--;
-                            auto chunk = world.GetChunk(chunkPos);
-                            if (chunk != nullptr) {
-                                Vec3 blockPos = raycast.blockPos;
-                                blockPos[i] = Chunk::SIZE_PADDED_SUB_1;
-                                chunk->SetBlock(blockPos, Block(BlockType::AIR, 0, false));
-                                chunk->CreateMesh();
-                                chunk->BufferData();
-                            }
-                        }
-                        else if (raycast.blockPos[i] == Chunk::SIZE) {
-                            chunkPos[i]++;
-                            auto chunk = world.GetChunk(chunkPos);
-                            if (chunk != nullptr) {
-                                Vec3 blockPos = raycast.blockPos;
-                                blockPos[i] = 0;
-                                chunk->SetBlock(blockPos, Block(BlockType::AIR, 0, false));
-                                chunk->CreateMesh();
-                                chunk->BufferData();
-                            }
-                        }
+                if (!blockData.canInteractThrough) {
+                    if (raycast.blockHit.IsWaterLogged()) {
+                        raycast.chunk->SetBlock(raycast.blockPos, Block(BlockType::WATER, 0, false));
                     }
+                    else {
+                        raycast.chunk->SetBlock(raycast.blockPos, Block(BlockType::AIR, 0, false));
+                    }
+                    raycast.chunk->CreateMesh();
+                    raycast.chunk->BufferData();
+                    BlockSoundStruct soundData = BlockSounds[blockData.breakSoundID];
+                    SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), irrklang::vec3df(camera.position));
                 }
             }
         }
@@ -117,7 +94,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
     }
     case GLFW_MOUSE_BUTTON_RIGHT: {
         if (action == GLFW_PRESS) {
-            // Perform raycast and get info about the block hit
+            // Perform ray cast and get info about the block hit
             const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(world, camera.position, camera.front, 10.0f);
             BlockType type = raycast.blockHit.GetType();
             const BlockDataStruct& hitBlockData = GetBlockData(type);
@@ -125,96 +102,34 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
             // Info about our selected block
             const BlockDataStruct& selectedBlockData = GetBlockData(selectedBlockType);
 
-            if (raycast.chunk != nullptr && !hitBlockData.canInteractThrough) {
-                std::shared_ptr<Chunk> chunkToPlaceIn = nullptr;
-                iVec3 blockPlacePosition = raycast.blockPos + raycast.normal;
-
-                for (int i = 0; i < 3; i++) {
-                    if (blockPlacePosition[i] == Chunk::SIZE_PADDED_SUB_1) {
-                        Vec3 chunkPos = raycast.chunk->GetPosition();
-                        chunkPos[i]++;
-                        chunkToPlaceIn = world.GetChunk(chunkPos);
-                        if (chunkToPlaceIn != nullptr) {
-                            raycast.chunk->SetBlock(blockPlacePosition, Block(selectedBlockType, 0, false));
-                            // If they are both opaque or both not opaque
-                            if (selectedBlockData.opaque == hitBlockData.opaque) {
-                                raycast.chunk->CreateMesh();
-                                raycast.chunk->BufferData();
-                            }
-                            blockPlacePosition[i] = 1;
-                            goto place_block;
-                        }
-                    }
-                    else if (blockPlacePosition[i] == 0) {
-                        Vec3 chunkPos = raycast.chunk->GetPosition();
-                        chunkPos[i]--;
-                        chunkToPlaceIn = world.GetChunk(chunkPos);
-                        if (chunkToPlaceIn != nullptr) {
-                            raycast.chunk->SetBlock(blockPlacePosition, Block(selectedBlockType, 0, false));
-                            // If they are both opaque or both not opaque
-                            if (selectedBlockData.opaque == hitBlockData.opaque) {
-                                raycast.chunk->CreateMesh();
-                                raycast.chunk->BufferData();
-                            }
-                            blockPlacePosition[i] = Chunk::SIZE;
-                            goto place_block;
-                        }
-                    }
+            if (raycast.chunk != nullptr) {
+                // if we are placing water in a waterloggable block
+                if (selectedBlockType == BlockType::WATER && hitBlockData.waterloggable && !raycast.blockHit.IsWaterLogged()) {
+                    raycast.chunk->SetBlock(raycast.blockPos, Block(raycast.blockHit.GetType(), 0, true));
                 }
+                else if (!hitBlockData.canInteractThrough) {
+                    iVec3 blockPlacePosition = raycast.blockPos + raycast.normal;
+                    Block blockBeforePlace = raycast.chunk->GetBlock(blockPlacePosition);
 
-                // otherwise our chunk is just the raycast chunk hit
-                chunkToPlaceIn = raycast.chunk;
-
-            place_block:
-                if (chunkToPlaceIn != nullptr) {
-                    Block blockBeforePlace = chunkToPlaceIn->GetBlock(blockPlacePosition);
-                    chunkToPlaceIn->SetBlock(blockPlacePosition, Block(selectedBlockType, 0, false));
+                    // If we are placing a waterloggable block in a water block
+                    if (selectedBlockData.waterloggable && blockBeforePlace.GetType() == BlockType::WATER) {
+                        raycast.chunk->SetBlock(blockPlacePosition, Block(selectedBlockType, 0, true));
+                    }
+                    else {
+                        raycast.chunk->SetBlock(blockPlacePosition, Block(selectedBlockType, 0, false));
+                    }
 
                     if (boundingBox.IsColliding(world, camera.position)) {
-                        chunkToPlaceIn->SetBlock(blockPlacePosition, blockBeforePlace);
+                        raycast.chunk->SetBlock(blockPlacePosition, blockBeforePlace);
                         return;
                     }
-
-                    for (int i = 0; i < 3; i++) {
-                        if (blockPlacePosition[i] == Chunk::SIZE) {
-                            Vec3 chunkPos = chunkToPlaceIn->GetPosition();
-                            chunkPos[i]++;
-                            auto adjacentChunk = world.GetChunk(chunkPos);
-                            if (adjacentChunk != nullptr) {
-                                Vec3 blockPos = blockPlacePosition;
-                                blockPos[i] = 0;
-                                adjacentChunk->SetBlock(blockPos, Block(selectedBlockType, 0, false));
-                                blockPos[i] = 1;
-                                if (selectedBlockData.opaque == GetBlockData(adjacentChunk->GetBlock(blockPos).GetType()).opaque) {
-                                    adjacentChunk->CreateMesh();
-                                    adjacentChunk->BufferData();
-                                }
-                            }
-                        }
-                        else if (blockPlacePosition[i] == 1) {
-                            Vec3 chunkPos = chunkToPlaceIn->GetPosition();
-                            chunkPos[i]--;
-                            auto adjacentChunk = world.GetChunk(chunkPos);
-                            if (adjacentChunk != nullptr) {
-                                Vec3 blockPos = blockPlacePosition;
-                                blockPos[i] = Chunk::SIZE_PADDED_SUB_1;
-                                adjacentChunk->SetBlock(blockPos, Block(selectedBlockType, 0, false));
-                                blockPos[i] = Chunk::SIZE;
-                                if (selectedBlockData.opaque == GetBlockData(adjacentChunk->GetBlock(blockPos).GetType()).opaque) {
-                                    adjacentChunk->CreateMesh();
-                                    adjacentChunk->BufferData();
-                                }
-                            }
-                        }
-                    }
-
-                    chunkToPlaceIn->CreateMesh();
-                    chunkToPlaceIn->BufferData();
-                    const BlockDataStruct& blockData = GetBlockData(selectedBlockType);
-                    BlockSoundStruct soundData = BlockSounds[blockData.placeSoundID];
-                    SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), irrklang::vec3df(camera.position));
                 }
             }
+            raycast.chunk->CreateMesh();
+            raycast.chunk->BufferData();
+            const BlockDataStruct& blockData = GetBlockData(selectedBlockType);
+            BlockSoundStruct soundData = BlockSounds[blockData.placeSoundID];
+            SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), irrklang::vec3df(camera.position));
         }
         break;
     }
