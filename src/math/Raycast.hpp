@@ -19,7 +19,7 @@ namespace Raycaster {
         std::shared_ptr<Chunk> chunk;
         iVec3 blockPos;
         iVec3 normal;
-        BlockID blockHit;
+        Block blockHit;
     };
 
     BlockRaycastResult BlockRaycast(const World& world, Vec3 start, Vec3 direction, float distance);

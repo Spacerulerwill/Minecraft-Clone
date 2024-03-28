@@ -10,7 +10,6 @@ License: MIT
 #include <util/Log.hpp>
 
 std::size_t VoxelIndex(iVec3 pos) {
-    //return pos[2] + (pos[0] << Chunk::SIZE_PADDED_LOG_2) + (pos[1] << Chunk::SIZE_PADDED_SQUARED_LOG_2);
     return pos[1] + (pos[0] << Chunk::SIZE_PADDED_LOG_2) + (pos[2] << Chunk::SIZE_PADDED_SQUARED_LOG_2);
 }
 
@@ -42,13 +41,13 @@ iVec3 Chunk::GetPosition() const
 
 void Chunk::AllocateMemory()
 {
-    mBlocks.resize(Chunk::SIZE_PADDED_CUBED, AIR);
+    mBlocks.resize(Chunk::SIZE_PADDED_CUBED, Block(BlockType::AIR, 0, false));
     allocated = true;
 }
 
 void Chunk::ReleaseMemory()
 {
-    std::vector<BlockID>().swap(mBlocks);
+    decltype(mBlocks)().swap(mBlocks);
     allocated = false;
 }
 
@@ -65,8 +64,8 @@ void Chunk::CreateMesh() {
 
     // Mesh
     ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks, ChunkMesher::IsOpaqueCube);
-    ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks, [](BlockID block) { return block == GLASS; });
-    ChunkMesher::BinaryGreedyMesh(mWaterVertices, mBlocks, [](BlockID block) { return block == WATER; });
+    ChunkMesher::BinaryGreedyMesh(mVertices, mBlocks, [](BlockType block) { return block == BlockType::GLASS; });
+    ChunkMesher::BinaryGreedyMesh(mWaterVertices, mBlocks, [](BlockType block) { return block == BlockType::WATER; });
     ChunkMesher::MeshCustomModelBlocks(mCustomModelVertices, mBlocks);
     needsBuffering = true;
 }
@@ -129,31 +128,31 @@ void Chunk::DrawCustomModel(Shader& shader, int* potentialDrawCalls, int* totalD
     glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mCustomModelVertexCount));
 }
 
-BlockID Chunk::RawGetBlock(iVec3 pos) const
+Block Chunk::RawGetBlock(iVec3 pos) const
 {
     return mBlocks[VoxelIndex(pos)];
 }
 
-void Chunk::RawSetBlock(iVec3 pos, BlockID block)
+void Chunk::RawSetBlock(iVec3 pos, Block block)
 {
     mBlocks[VoxelIndex(pos)] = block;
     needsSaving = true;
 }
 
-BlockID Chunk::GetBlock(iVec3 pos) const
+Block Chunk::GetBlock(iVec3 pos) const
 {
-    if (!allocated || pos[0] < 0 || pos[0] >= SIZE_PADDED || pos[1] < 0 || pos[1] >= SIZE_PADDED || pos[2] < 0 || pos[2] >= SIZE_PADDED) return AIR;
+    if (!allocated || pos[0] < 0 || pos[0] >= SIZE_PADDED || pos[1] < 0 || pos[1] >= SIZE_PADDED || pos[2] < 0 || pos[2] >= SIZE_PADDED) return Block(BlockType::AIR, 0, false);
     return mBlocks[VoxelIndex(pos)];
 }
 
-void Chunk::SetBlock(iVec3 pos, BlockID block)
+void Chunk::SetBlock(iVec3 pos, Block block)
 {
     if (!allocated || pos[0] < 0 || pos[0] >= SIZE_PADDED || pos[1] < 0 || pos[1] >= SIZE_PADDED || pos[2] < 0 || pos[2] >= SIZE_PADDED) return;
     mBlocks[VoxelIndex(pos)] = block;
     needsSaving = true;
 }
 
-BlockID* Chunk::GetBlockDataPointer() {
+Block* Chunk::GetBlockDataPointer() {
     return mBlocks.data();
 }
 

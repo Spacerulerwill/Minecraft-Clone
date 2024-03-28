@@ -10,13 +10,13 @@ License: MIT
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <type_traits>
 
-using BlockID = uint8_t;
 using TextureID = uint8_t;
 using SoundID = uint8_t;
 using ModelID = uint8_t;
 
-enum Block : BlockID {
+enum class BlockType : uint8_t {
     AIR,
     STONE,
     DIRT,
@@ -32,6 +32,23 @@ enum Block : BlockID {
     WOOD,
     SAKURA_LEAVES,
     NUM_BLOCKS
+};
+
+using BlockTypeID = std::underlying_type<BlockType>::type;
+
+class Block {
+private:
+    uint16_t data{};
+public:
+    Block(BlockType type, uint8_t rotation, bool waterlogged);
+    void SetType(BlockType type);
+    void SetRotation(uint8_t rotation);
+    void SetWaterlogged(bool waterlogged);
+    BlockType GetType() const;
+    uint8_t GetRotation() const;
+    bool IsWaterLogged() const;
+    bool operator==(Block block) const;
+    bool operator!=(Block block) const;
 };
 
 enum class Sound : SoundID {
@@ -78,12 +95,13 @@ struct BlockSoundStruct {
 using BlockModel = std::vector<uint32_t>;
 
 // Global arrays used to fetch certain information by integer ID, using array indexing
-extern BlockDataStruct BlockData[NUM_BLOCKS];
+extern BlockDataStruct BlockData[static_cast<std::size_t>(BlockType::NUM_BLOCKS)];
 extern BlockSoundStruct BlockSounds[static_cast<std::size_t>(Sound::NUM_SOUNDS)];
 extern BlockModel BlockModels[static_cast<std::size_t>(Model::NUM_MODELS)];
 constexpr unsigned int TEXTURE_SIZE = 16;
 constexpr const std::size_t MAX_ANIMATION_FRAMES = 32;
 void InitBlocks();
+const BlockDataStruct& GetBlockData(BlockType type);
 
 #endif // !BLOCK_H
 

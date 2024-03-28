@@ -30,7 +30,7 @@ struct PlayerSave {
 };
 
 struct Player {
-    BlockID selectedBlock = SAKURA_LEAVES;
+    BlockType selectedBlockType = BlockType::STONE;
     bool canJump = false;
     float yVelocity = 0.0f;
     float movementSpeed = 5.0f;
@@ -39,7 +39,7 @@ struct Player {
     void ProcessKeyInput(const World& world, const Window& window, float deltaTime);
     void KeyCallback(int key, int scancode, int action, int mods);
     void MouseCallback(const World& world, int button, int action, int mods);
-    void Move(const World& world, PlayerMovement direction, float deltaTime);
+    void Move(const World& world, PlayerMovement direction, float speed, float deltaTime);
     void ApplyGravity(const World&, float deltaTime);
 };
 

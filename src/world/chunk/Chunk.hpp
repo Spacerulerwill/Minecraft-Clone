@@ -38,7 +38,7 @@ private:
     std::vector<ChunkMesher::ChunkVertex> mCustomModelVertices;
     std::size_t mCustomModelVertexCount = 0;
 
-    std::vector<BlockID> mBlocks;
+    std::vector<Block> mBlocks;
     iVec3 mPos{};
     Mat4 mModel = Mat4::identity();
     Sphere sphere;
@@ -58,18 +58,18 @@ public:
     void CreateMesh();
     void BufferData();
     void UpdateVisiblity(const Frustum& frustum);
-    BlockID* GetBlockDataPointer();
+    Block* GetBlockDataPointer();
     void Draw(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
     void DrawWater(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
     void DrawCustomModel(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
     // Get block in chunk - does not perform boundary checks or check whether the chunk is allocated/loaded. Dangerous!
-    BlockID RawGetBlock(iVec3 pos) const;
+    Block RawGetBlock(iVec3 pos) const;
     // Set block in chunk - does not perform boundary checks or check whether the chunk is allocated/loaded. Dangerous!
-    void RawSetBlock(iVec3 pos, BlockID block);
+    void RawSetBlock(iVec3 pos, Block block);
     // Get block in chunk with boundary checks and allocation check
-    BlockID GetBlock(iVec3 pos) const;
+    Block GetBlock(iVec3 pos) const;
     // Set block in chunk with boundary checks and allocation check
-    void SetBlock(iVec3 pos, BlockID block);
+    void SetBlock(iVec3 pos, Block block);
     std::atomic<bool> needsBuffering = false;
     std::atomic<bool> needsSaving = false;
     std::atomic<bool> allocated = false;

@@ -78,9 +78,9 @@ public:
     double mCurrentTime; // Current world time
     const ChunkStack* GetChunkStack(iVec2 pos) const;
     std::shared_ptr<Chunk> GetChunk(iVec3 pos) const;
-    BlockID GetBlock(iVec3 pos) const;
-    void SetBlock(iVec3 pos, BlockID block);
-    void SetBlockAndRemesh(iVec3 pos, BlockID block);
+    Block GetBlock(iVec3 pos) const;
+    void SetBlock(iVec3 pos, Block block);
+    void SetBlockAndRemesh(iVec3 pos, Block block);
 };
 
 #endif // !WORLD_H

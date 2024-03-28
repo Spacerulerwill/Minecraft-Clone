@@ -12,20 +12,20 @@ License: MIT
 #include <functional>
 
 namespace ChunkMesher {
-    typedef bool (*ChunkMeshFilterCallback)(BlockID);
+    typedef bool (*ChunkMeshFilterCallback)(BlockType);
 
     struct ChunkVertex {
         uint32_t data1;
         uint32_t data2;
     };
 
-    inline bool IsOpaqueCube(BlockID blockID) {
-        BlockDataStruct blockData = BlockData[blockID];
+    inline bool IsOpaqueCube(BlockType blockType) {
+        BlockDataStruct blockData = GetBlockData(blockType);
         return blockData.opaque && blockData.modelID == static_cast<ModelID>(Model::CUBE);
     }
 
-    void BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks, ChunkMeshFilterCallback condition);
-    void MeshCustomModelBlocks(std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks);
+    void BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std::vector<Block>& blocks, ChunkMeshFilterCallback condition);
+    void MeshCustomModelBlocks(std::vector<ChunkVertex>& vertices, const std::vector<Block>& blocks);
 };
 
 #endif // !CHUNK_MESHER_H

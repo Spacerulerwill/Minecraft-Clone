@@ -12,24 +12,20 @@ License: MIT
 
 void Player::ProcessKeyInput(const World& world, const Window& window, float deltaTime)
 {
+    float speed = window.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) ? movementSpeed * 2 : movementSpeed;
     if (window.IsKeyPressed(GLFW_KEY_W)) {
-        Move(world, PlayerMovement::FORWARD, deltaTime);
+        Move(world, PlayerMovement::FORWARD, speed, deltaTime);
     }
     if (window.IsKeyPressed(GLFW_KEY_S)) {
-        Move(world, PlayerMovement::BACKWARD, deltaTime);
+        Move(world, PlayerMovement::BACKWARD, speed, deltaTime);
     }
     if (window.IsKeyPressed(GLFW_KEY_A)) {
-        Move(world, PlayerMovement::LEFT, deltaTime);
+        Move(world, PlayerMovement::LEFT, speed, deltaTime);
     }
     if (window.IsKeyPressed(GLFW_KEY_D)) {
-        Move(world, PlayerMovement::RIGHT, deltaTime);
+        Move(world, PlayerMovement::RIGHT, speed, deltaTime);
     }
-    if (window.IsKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
-        movementSpeed = 10.0f;
-    }
-    else {
-        movementSpeed = 5.0f;
-    }
+
     if (window.IsKeyPressed(GLFW_KEY_SPACE)) {
         if (canJump) {
             yVelocity = -15.0f;
@@ -44,16 +40,24 @@ void Player::KeyCallback(int key, int scancode, int action, int mods)
 
     switch (key) {
     case GLFW_KEY_X: {
-        selectedBlock--;
-        if (selectedBlock == AIR) {
-            selectedBlock = NUM_BLOCKS - 1;
+        auto selectedBlockID = static_cast<BlockTypeID>(selectedBlockType);
+        selectedBlockID--;
+        if (static_cast<BlockType>(selectedBlockID) == BlockType::AIR) {
+            selectedBlockType = static_cast<BlockType>(static_cast<BlockTypeID>(BlockType::NUM_BLOCKS) - 1);
+        }
+        else {
+            selectedBlockType = static_cast<BlockType>(selectedBlockID);
         }
         break;
     }
     case GLFW_KEY_C: {
-        selectedBlock++;
-        if (selectedBlock == NUM_BLOCKS) {
-            selectedBlock = AIR + 1;
+        auto selectedBlockID = static_cast<BlockTypeID>(selectedBlockType);
+        selectedBlockID++;
+        if (static_cast<BlockType>(selectedBlockID) == BlockType::NUM_BLOCKS) {
+            selectedBlockType = static_cast<BlockType>(static_cast<BlockTypeID>(BlockType::AIR) + 1);
+        }
+        else {
+            selectedBlockType = static_cast<BlockType>(selectedBlockID);
         }
         break;
     }
@@ -68,18 +72,18 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
     case GLFW_MOUSE_BUTTON_1: {
         if (action == GLFW_PRESS) {
             const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(world, camera.position, camera.front, 10.0f);
-
-            if (raycast.chunk != nullptr && !BlockData[raycast.blockHit].canInteractThrough) {
+            BlockType type = raycast.blockHit.GetType();
+            const BlockDataStruct& blockData = GetBlockData(type);
+            if (raycast.chunk != nullptr && !blockData.canInteractThrough) {
                 // Update chunk block was broken in
-                raycast.chunk->SetBlock(raycast.blockPos, AIR);
+                raycast.chunk->SetBlock(raycast.blockPos, Block(BlockType::AIR, 0, false));
                 raycast.chunk->CreateMesh();
                 raycast.chunk->BufferData();
-                BlockDataStruct blockData = BlockData[raycast.blockHit];
                 BlockSoundStruct soundData = BlockSounds[blockData.breakSoundID];
                 SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), irrklang::vec3df(camera.position));
 
-                // If the block was on an chunk edge and it was a cube, remesh that one too
-                if (BlockData[raycast.blockHit].modelID == static_cast<ModelID>(Model::CUBE)) {
+                // If the block was on an chunk edge and it was a cube, re-mesh that one too
+                if (blockData.modelID == static_cast<ModelID>(Model::CUBE)) {
                     for (int i = 0; i < 3; i++) {
                         Vec3 chunkPos = raycast.chunk->GetPosition();
 
@@ -89,7 +93,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                             if (chunk != nullptr) {
                                 Vec3 blockPos = raycast.blockPos;
                                 blockPos[i] = Chunk::SIZE_PADDED_SUB_1;
-                                chunk->SetBlock(blockPos, AIR);
+                                chunk->SetBlock(blockPos, Block(BlockType::AIR, 0, false));
                                 chunk->CreateMesh();
                                 chunk->BufferData();
                             }
@@ -100,7 +104,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                             if (chunk != nullptr) {
                                 Vec3 blockPos = raycast.blockPos;
                                 blockPos[i] = 0;
-                                chunk->SetBlock(blockPos, AIR);
+                                chunk->SetBlock(blockPos, Block(BlockType::AIR, 0, false));
                                 chunk->CreateMesh();
                                 chunk->BufferData();
                             }
@@ -113,8 +117,15 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
     }
     case GLFW_MOUSE_BUTTON_RIGHT: {
         if (action == GLFW_PRESS) {
+            // Perform raycast and get info about the block hit
             const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(world, camera.position, camera.front, 10.0f);
-            if (raycast.chunk != nullptr && !BlockData[raycast.blockHit].canInteractThrough) {
+            BlockType type = raycast.blockHit.GetType();
+            const BlockDataStruct& hitBlockData = GetBlockData(type);
+
+            // Info about our selected block
+            const BlockDataStruct& selectedBlockData = GetBlockData(selectedBlockType);
+
+            if (raycast.chunk != nullptr && !hitBlockData.canInteractThrough) {
                 std::shared_ptr<Chunk> chunkToPlaceIn = nullptr;
                 iVec3 blockPlacePosition = raycast.blockPos + raycast.normal;
 
@@ -124,9 +135,9 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                         chunkPos[i]++;
                         chunkToPlaceIn = world.GetChunk(chunkPos);
                         if (chunkToPlaceIn != nullptr) {
-                            raycast.chunk->SetBlock(blockPlacePosition, selectedBlock);
+                            raycast.chunk->SetBlock(blockPlacePosition, Block(selectedBlockType, 0, false));
                             // If they are both opaque or both not opaque
-                            if ((BlockData[selectedBlock].opaque) == (BlockData[raycast.blockHit].opaque)) {
+                            if (selectedBlockData.opaque == hitBlockData.opaque) {
                                 raycast.chunk->CreateMesh();
                                 raycast.chunk->BufferData();
                             }
@@ -139,9 +150,9 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                         chunkPos[i]--;
                         chunkToPlaceIn = world.GetChunk(chunkPos);
                         if (chunkToPlaceIn != nullptr) {
-                            raycast.chunk->SetBlock(blockPlacePosition, selectedBlock);
+                            raycast.chunk->SetBlock(blockPlacePosition, Block(selectedBlockType, 0, false));
                             // If they are both opaque or both not opaque
-                            if ((BlockData[selectedBlock].opaque) == (BlockData[raycast.blockHit].opaque)) {
+                            if (selectedBlockData.opaque == hitBlockData.opaque) {
                                 raycast.chunk->CreateMesh();
                                 raycast.chunk->BufferData();
                             }
@@ -156,8 +167,8 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
 
             place_block:
                 if (chunkToPlaceIn != nullptr) {
-                    BlockID blockBeforePlace = chunkToPlaceIn->GetBlock(blockPlacePosition);
-                    chunkToPlaceIn->SetBlock(blockPlacePosition, selectedBlock);
+                    Block blockBeforePlace = chunkToPlaceIn->GetBlock(blockPlacePosition);
+                    chunkToPlaceIn->SetBlock(blockPlacePosition, Block(selectedBlockType, 0, false));
 
                     if (boundingBox.IsColliding(world, camera.position)) {
                         chunkToPlaceIn->SetBlock(blockPlacePosition, blockBeforePlace);
@@ -172,9 +183,9 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                             if (adjacentChunk != nullptr) {
                                 Vec3 blockPos = blockPlacePosition;
                                 blockPos[i] = 0;
-                                adjacentChunk->SetBlock(blockPos, selectedBlock);
+                                adjacentChunk->SetBlock(blockPos, Block(selectedBlockType, 0, false));
                                 blockPos[i] = 1;
-                                if ((BlockData[selectedBlock].opaque) == (BlockData[adjacentChunk->GetBlock(blockPos)].opaque)) {
+                                if (selectedBlockData.opaque == GetBlockData(adjacentChunk->GetBlock(blockPos).GetType()).opaque) {
                                     adjacentChunk->CreateMesh();
                                     adjacentChunk->BufferData();
                                 }
@@ -187,9 +198,9 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                             if (adjacentChunk != nullptr) {
                                 Vec3 blockPos = blockPlacePosition;
                                 blockPos[i] = Chunk::SIZE_PADDED_SUB_1;
-                                adjacentChunk->SetBlock(blockPos, selectedBlock);
+                                adjacentChunk->SetBlock(blockPos, Block(selectedBlockType, 0, false));
                                 blockPos[i] = Chunk::SIZE;
-                                if ((BlockData[selectedBlock].opaque) == (BlockData[adjacentChunk->GetBlock(blockPos)].opaque)) {
+                                if (selectedBlockData.opaque == GetBlockData(adjacentChunk->GetBlock(blockPos).GetType()).opaque) {
                                     adjacentChunk->CreateMesh();
                                     adjacentChunk->BufferData();
                                 }
@@ -199,7 +210,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
 
                     chunkToPlaceIn->CreateMesh();
                     chunkToPlaceIn->BufferData();
-                    BlockDataStruct blockData = BlockData[selectedBlock];
+                    const BlockDataStruct& blockData = GetBlockData(selectedBlockType);
                     BlockSoundStruct soundData = BlockSounds[blockData.placeSoundID];
                     SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), irrklang::vec3df(camera.position));
                 }
@@ -210,8 +221,9 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
     case GLFW_MOUSE_BUTTON_3: {
         if (action == GLFW_PRESS) {
             const Raycaster::BlockRaycastResult raycast = Raycaster::BlockRaycast(world, camera.position, camera.front, 10.0f);
-            if (raycast.chunk != nullptr && !BlockData[raycast.blockHit].canInteractThrough) {
-                selectedBlock = raycast.blockHit;
+            BlockType type = raycast.blockHit.GetType();
+            if (raycast.chunk != nullptr && !GetBlockData(type).canInteractThrough) {
+                selectedBlockType = type;
             }
         }
         break;
@@ -219,39 +231,39 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
     }
 }
 
-void Player::Move(const World& world, PlayerMovement direction, float deltaTime)
+void Player::Move(const World& world, PlayerMovement direction, float speed, float deltaTime)
 {
     float velocity{};
     Vec3 directionMultiplier{};
 
     switch (direction) {
     case PlayerMovement::FORWARD: {
-        velocity = deltaTime * movementSpeed;
+        velocity = deltaTime * speed;
         directionMultiplier = Vec3{ camera.front[0], 0.0f, camera.front[2] }.normalized();
         break;
     }
     case PlayerMovement::BACKWARD: {
-        velocity = deltaTime * movementSpeed;
+        velocity = deltaTime * speed;
         directionMultiplier = Vec3{ camera.front[0], 0.0f, camera.front[2] }.normalized() * -1.0f;
         break;
     }
     case PlayerMovement::LEFT: {
-        velocity = deltaTime * movementSpeed;
+        velocity = deltaTime * speed;
         directionMultiplier = camera.right * -1.0f;
         break;
     }
     case PlayerMovement::RIGHT: {
-        velocity = deltaTime * movementSpeed;
+        velocity = deltaTime * speed;
         directionMultiplier = camera.right;
         break;
     }
     case PlayerMovement::DOWN: {
-        velocity = deltaTime * movementSpeed;
+        velocity = deltaTime * speed;
         directionMultiplier = camera.worldUp * -1.0f;
         break;
     }
     case PlayerMovement::UP: {
-        velocity = deltaTime * movementSpeed;
+        velocity = deltaTime * speed;
         directionMultiplier = camera.worldUp;
         break;
     }
@@ -279,7 +291,7 @@ void Player::Move(const World& world, PlayerMovement direction, float deltaTime)
 
 void Player::ApplyGravity(const World& world, float deltaTime)
 {
-    Move(world, PlayerMovement::GRAVITY, deltaTime);
+    Move(world, PlayerMovement::GRAVITY, 1.0f, deltaTime);
     yVelocity += GRAVITY;
 }
 

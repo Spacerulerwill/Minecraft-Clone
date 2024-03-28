@@ -8,7 +8,49 @@ License: MIT
 #include <util/Log.hpp>
 #include <fmt/format.h>
 
-BlockDataStruct BlockData[NUM_BLOCKS] = {};
+Block::Block(BlockType type, uint8_t rotation, bool waterlogged) : data((static_cast<uint16_t>(type) << 6) | (rotation << 1) | (waterlogged ? 1 : 0)) {}
+
+void Block::SetType(BlockType type)
+{
+    data |= static_cast<uint16_t>(type) << 6;
+}
+
+void Block::SetRotation(uint8_t rotation)
+{
+    data |= ((rotation & 0b11111) << 1);
+}
+
+void Block::SetWaterlogged(bool waterlogged)
+{
+    data |= waterlogged ? 1 : 0;
+}
+
+BlockType Block::GetType() const
+{
+    return static_cast<BlockType>((data >> 6) & 0b11111111);
+}
+
+uint8_t Block::GetRotation() const
+{
+    return static_cast<uint8_t>((data >> 1) & 0b11111);
+}
+
+bool Block::IsWaterLogged() const
+{
+    return static_cast<bool>(data & 1);
+}
+
+bool Block::operator==(Block block) const
+{
+    return data == block.data;
+}
+
+bool Block::operator!=(Block block) const
+{
+    return data != block.data;
+}
+
+BlockDataStruct BlockData[static_cast<std::size_t>(BlockType::NUM_BLOCKS)] = {};
 BlockSoundStruct BlockSounds[static_cast<std::size_t>(Sound::NUM_SOUNDS)] = {};
 BlockModel BlockModels[static_cast<std::size_t>(Model::NUM_MODELS)] = {};
 
@@ -119,6 +161,11 @@ void InitBlocks() {
     LoadBlockData();
     LoadBlockSoundData();
     LoadBlockModels();
+}
+
+const BlockDataStruct& GetBlockData(BlockType type)
+{
+    return BlockData[static_cast<std::size_t>(type)];
 }
 
 

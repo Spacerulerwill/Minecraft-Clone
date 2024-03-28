@@ -57,8 +57,9 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
         iVec3 blockPosInChunk = GetChunkBlockPosFromGlobalBlockPos(currentBlock);
         if (chunk != nullptr) {
             // If we do hit a chunk, check if its air. If it's not then we stop the raycasting otherwise we continue
-            BlockID block = chunk->GetBlock(blockPosInChunk);
-            if (!BlockData[block].canInteractThrough) {
+            Block block = chunk->GetBlock(blockPosInChunk);
+            BlockType type = block.GetType();
+            if (!GetBlockData(type).canInteractThrough) {
                 return BlockRaycastResult{
                     chunk,
                     blockPosInChunk,
@@ -71,7 +72,7 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
         if (t[0] <= t[1] && t[0] <= t[2])
         {
             if (currentBlock[0] == endBlock[0]) {
-                BlockID block = chunk != nullptr ? chunk->GetBlock(blockPosInChunk) : AIR;
+                Block block = chunk != nullptr ? chunk->GetBlock(blockPosInChunk) : Block(BlockType::AIR, 0, false);
                 return BlockRaycastResult{
                     chunk,
                     blockPosInChunk,
@@ -88,7 +89,7 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
         else if (t[1] <= t[2])
         {
             if (currentBlock[1] == endBlock[1]) {
-                BlockID block = chunk != nullptr ? chunk->GetBlock(blockPosInChunk) : AIR;
+                Block block = chunk != nullptr ? chunk->GetBlock(blockPosInChunk) : Block(BlockType::AIR, 0, false);
                 return BlockRaycastResult{
                     chunk,
                     blockPosInChunk,
@@ -105,7 +106,7 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
         else
         {
             if (currentBlock[2] == endBlock[2]) {
-                BlockID block = chunk != nullptr ? chunk->GetBlock(blockPosInChunk) : AIR;
+                Block block = chunk != nullptr ? chunk->GetBlock(blockPosInChunk) : Block(BlockType::AIR, 0, false);
                 return BlockRaycastResult{
                     chunk,
                     blockPosInChunk,

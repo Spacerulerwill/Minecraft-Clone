@@ -14,8 +14,9 @@ bool BoundingBox::IsColliding(const World& world, Vec3 center)
     for (int x = corner1[0]; x <= corner2[0]; x++) {
         for (int y = corner1[1]; y <= corner2[1]; y++) {
             for (int z = corner1[2]; z <= corner2[2]; z++) {
-                BlockID block = world.GetBlock(iVec3{ x,y,z });
-                if (block != AIR && BlockData[block].collision) {
+                Block block = world.GetBlock(iVec3{ x,y,z });
+                BlockType type = block.GetType();
+                if (block.GetType() != BlockType::AIR && GetBlockData(type).collision) {
                     return true;
                 }
             }

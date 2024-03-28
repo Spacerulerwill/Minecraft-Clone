@@ -40,7 +40,7 @@ void Game::Run(std::string worldDirectory) {
     Shader framebufferShader("shaders/framebuffer.shader");
     Crosshair crosshair(INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT, 32);
     pWorld = std::make_unique<World>(worldDirectory);    
-    ScopedSound backgroundMusic("sound/music.mp3", true); 
+    //ScopedSound backgroundMusic("sound/music.mp3", true); 
     Mat4 ortho = orthographic(0.0f, INITIAL_WINDOW_HEIGHT, 0.0f, INITIAL_WINDOW_WIDTH, -1.0f, 100.0f);
     mWindow.SetVisible();
     while (!mWindow.ShouldClose()) {
@@ -102,6 +102,7 @@ void Game::SettingsMenu(int potentialDrawCalls, int totalDrawCalls) {
     ImGui::SetNextWindowPos(ImVec2{ 0,0 });
     ImGui::Begin("Settings");
     ImGui::SliderFloat("Sensitivity", &pWorld->mPlayer.camera.mouseSensitivity, 0.0f, 1.0f);
+    ImGui::SliderFloat("Movement Speed", &pWorld->mPlayer.movementSpeed, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_NoInput);
     ImGui::SliderInt("Chunk load distance", &pWorld->mChunkLoadDistance, 3, 30, "%d", ImGuiSliderFlags_NoInput);
     ImGui::SliderInt("Chunk partial load distance", &pWorld->mChunkPartialLoadDistance, 3, 30, "%d", ImGuiSliderFlags_NoInput);
     ImGui::SliderInt("Max tasks per frame", &pWorld->mMaxTasksPerFrame, 1, 50, "%d", ImGuiSliderFlags_NoInput);

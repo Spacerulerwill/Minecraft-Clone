@@ -26,8 +26,8 @@ inline const int GetAxisIndex(const int& axis, const int& a, const int& b, const
     else return c + (b * Chunk::SIZE_PADDED) + (a * Chunk::SIZE_PADDED_SQUARED);
 }
 
-inline const bool SolidCheck(int voxel) {
-    return BlockData[voxel].opaque;
+inline const bool SolidCheck(BlockType blockType) {
+    return GetBlockData(blockType).opaque;
 }
 
 inline constexpr iVec2 AODirections[8] = {
@@ -48,24 +48,25 @@ inline const int VertexAO(int side1, int side2, int corner) {
     return 3 - (side1 + side2 + corner);
 }
 
-inline const bool CompareAO(const std::vector<BlockID>& blocks, int axis, int forward, int right, int c, int forward_offset, int right_offset) {
+inline const bool CompareAO(const std::vector<Block>& blocks, int axis, int forward, int right, int c, int forward_offset, int right_offset) {
     for (const auto& ao_dir : AODirections) {
-        if (SolidCheck(blocks.at(GetAxisIndex(axis, right + ao_dir[0], forward + ao_dir[1], c))) !=
-            SolidCheck(blocks.at(GetAxisIndex(axis, right + right_offset + ao_dir[0], forward + forward_offset + ao_dir[1], c)))
-            ) {
+        bool firstBlockSolid = SolidCheck(blocks.at(GetAxisIndex(axis, right + ao_dir[0], forward + ao_dir[1], c)).GetType());
+        bool secondBlockSolid = SolidCheck(blocks.at(GetAxisIndex(axis, right + right_offset + ao_dir[0], forward + forward_offset + ao_dir[1], c)).GetType());
+        if (firstBlockSolid != secondBlockSolid) {
             return false;
         }
     }
     return true;
 }
 
-inline const bool CompareForward(const std::vector<BlockID>& blocks, int axis, int forward, int right, int bit_pos, int light_dir) {
-    return
-        blocks.at(GetAxisIndex(axis, right, forward, bit_pos)) == blocks.at(GetAxisIndex(axis, right, forward + 1, bit_pos)) &&
-        CompareAO(blocks, axis, forward, right, bit_pos + light_dir, 1, 0);
+inline const bool CompareForward(const std::vector<Block>& blocks, int axis, int forward, int right, int bit_pos, int light_dir) {
+    Block first = blocks.at(GetAxisIndex(axis, right, forward, bit_pos));
+    Block second = blocks.at(GetAxisIndex(axis, right, forward + 1, bit_pos));
+    bool ao = CompareAO(blocks, axis, forward, right, bit_pos + light_dir, 1, 0);
+    return first == second && ao;
 }
 
-inline const bool CompareRight(const std::vector<BlockID>& blocks, int axis, int forward, int right, int bit_pos, int light_dir) {
+inline const bool CompareRight(const std::vector<Block>& blocks, int axis, int forward, int right, int bit_pos, int light_dir) {
     return
         blocks.at(GetAxisIndex(axis, right, forward, bit_pos)) == blocks.at(GetAxisIndex(axis, right + 1, forward, bit_pos)) &&
         CompareAO(blocks, axis, forward, right, bit_pos + light_dir, 0, 1);
@@ -87,7 +88,7 @@ inline ChunkMesher::ChunkVertex GetChunkVertex(uint32_t x, uint32_t y, uint32_t 
     };
 }
 
-void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks, ChunkMeshFilterCallback condition) {
+void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std::vector<Block>& blocks, ChunkMeshFilterCallback condition) {
     // Step 1: Convert to binary column representation for each direction
     std::vector<uint64_t> axis_cols(Chunk::SIZE_PADDED_SQUARED * 3);
     int index = 0;
@@ -95,7 +96,7 @@ void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std
         for (int x = 0; x < Chunk::SIZE_PADDED; x++) {
             uint64_t zb = 0;
             for (int z = 0; z < Chunk::SIZE_PADDED; z++) {
-                if (condition(blocks[index])) {
+                if (condition(blocks[index].GetType())) {
                     axis_cols[x + (z * Chunk::SIZE_PADDED)] |= 1ULL << y;
                     axis_cols[z + (y * Chunk::SIZE_PADDED) + (Chunk::SIZE_PADDED_SQUARED)] |= 1ULL << x;
                     zb |= 1ULL << z;
@@ -175,20 +176,21 @@ void ChunkMesher::BinaryGreedyMesh(std::vector<ChunkVertex>& vertices, const std
                     uint8_t mesh_back = forward + 1;
                     uint8_t mesh_up = bit_pos + (face % 2 == 0 ? 1 : 0);
 
-                    BlockID type = blocks[GetAxisIndex(axis, right, forward, bit_pos)];
-                    bool isGrass = type == GRASS;
-                    BlockDataStruct blockData = BlockData[type];
+                    Block block = blocks[GetAxisIndex(axis, right, forward, bit_pos)];
+                    BlockType type = block.GetType();
+                    bool isGrass = type == BlockType::GRASS;
+                    const BlockDataStruct& blockData = GetBlockData(type);
 
                     int c = bit_pos + light_dir;
-                    bool ao_F = SolidCheck(blocks[GetAxisIndex(axis, right, forward - 1, c)]);
-                    bool ao_B = SolidCheck(blocks[GetAxisIndex(axis, right, forward + 1, c)]);
-                    bool ao_L = SolidCheck(blocks[GetAxisIndex(axis, right - 1, forward, c)]);
-                    bool ao_R = SolidCheck(blocks[GetAxisIndex(axis, right + 1, forward, c)]);
+                    bool ao_F = SolidCheck(blocks[GetAxisIndex(axis, right, forward - 1, c)].GetType());
+                    bool ao_B = SolidCheck(blocks[GetAxisIndex(axis, right, forward + 1, c)].GetType());
+                    bool ao_L = SolidCheck(blocks[GetAxisIndex(axis, right - 1, forward, c)].GetType());
+                    bool ao_R = SolidCheck(blocks[GetAxisIndex(axis, right + 1, forward, c)].GetType());
 
-                    bool ao_LFC = SolidCheck(blocks[GetAxisIndex(axis, right - 1, forward - 1, c)]);
-                    bool ao_LBC = SolidCheck(blocks[GetAxisIndex(axis, right - 1, forward + 1, c)]);
-                    bool ao_RFC = SolidCheck(blocks[GetAxisIndex(axis, right + 1, forward - 1, c)]);
-                    bool ao_RBC = SolidCheck(blocks[GetAxisIndex(axis, right + 1, forward + 1, c)]);
+                    bool ao_LFC = SolidCheck(blocks[GetAxisIndex(axis, right - 1, forward - 1, c)].GetType());
+                    bool ao_LBC = SolidCheck(blocks[GetAxisIndex(axis, right - 1, forward + 1, c)].GetType());
+                    bool ao_RFC = SolidCheck(blocks[GetAxisIndex(axis, right + 1, forward - 1, c)].GetType());
+                    bool ao_RBC = SolidCheck(blocks[GetAxisIndex(axis, right + 1, forward + 1, c)].GetType());
 
                     uint32_t ao_LB = VertexAO(ao_L, ao_B, ao_LBC);
                     uint32_t ao_LF = VertexAO(ao_L, ao_F, ao_LFC);
@@ -264,20 +266,20 @@ ChunkMesher::ChunkVertex GetCustomModelBlockVertex(uint32_t x, uint32_t y, uint3
     };
 }
 
-void ChunkMesher::MeshCustomModelBlocks(std::vector<ChunkVertex>& vertices, const std::vector<BlockID>& blocks) {
+void ChunkMesher::MeshCustomModelBlocks(std::vector<ChunkVertex>& vertices, const std::vector<Block>& blocks) {
     for (int x = 1; x < Chunk::SIZE_PADDED_SUB_1; x++) {
         for (int y = 1; y < Chunk::SIZE_PADDED_SUB_1; y++) {
             for (int z = 1; z < Chunk::SIZE_PADDED_SUB_1; z++) {
-                BlockID type = blocks[VoxelIndex(iVec3{ x, y, z })];
-                BlockDataStruct blockData = BlockData[type];
+                BlockType type = blocks[VoxelIndex(iVec3{ x, y, z })].GetType();
+                BlockDataStruct blockData = GetBlockData(type);
                 if (blockData.modelID != static_cast<ModelID>(Model::CUBE)) {
                     if (
-                        !BlockData[blocks[VoxelIndex(iVec3{ x + 1, y, z })]].opaque ||
-                        !BlockData[blocks[VoxelIndex(iVec3{ x - 1, y, z })]].opaque ||
-                        !BlockData[blocks[VoxelIndex(iVec3{ x, y + 1, z })]].opaque ||
-                        !BlockData[blocks[VoxelIndex(iVec3{ x, y - 1, z })]].opaque ||
-                        !BlockData[blocks[VoxelIndex(iVec3{ x, y, z + 1 })]].opaque ||
-                        !BlockData[blocks[VoxelIndex(iVec3{ x, y, z - 1 })]].opaque
+                        !GetBlockData(blocks[VoxelIndex(iVec3{ x + 1, y, z })].GetType()).opaque ||
+                        !GetBlockData(blocks[VoxelIndex(iVec3{ x - 1, y, z })].GetType()).opaque ||
+                        !GetBlockData(blocks[VoxelIndex(iVec3{ x, y + 1, z })].GetType()).opaque ||
+                        !GetBlockData(blocks[VoxelIndex(iVec3{ x, y - 1, z })].GetType()).opaque ||
+                        !GetBlockData(blocks[VoxelIndex(iVec3{ x, y, z + 1 })].GetType()).opaque ||
+                        !GetBlockData(blocks[VoxelIndex(iVec3{ x, y, z - 1 })].GetType()).opaque
                         ) {
                         std::vector<uint32_t>& modelVertices = BlockModels[blockData.modelID];
                         std::vector<ChunkVertex> modelPackedVerts;
@@ -289,7 +291,7 @@ void ChunkMesher::MeshCustomModelBlocks(std::vector<ChunkVertex>& vertices, cons
                                 modelVertices[i + 3],
                                 modelVertices[i + 4],
                                 blockData.faces[TOP_FACE],
-                                type == TALL_GRASS
+                                type == BlockType::TALL_GRASS
                             ));
                         }
                         vertices.insert(vertices.end(), modelPackedVerts.begin(), modelPackedVerts.end());
