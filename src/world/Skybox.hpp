@@ -12,7 +12,7 @@ LICENSE: MIT
 #include <opengl/BufferObject.hpp>
 #include <opengl/VertexArray.hpp>
 #include <opengl/Shader.hpp>
-#include <math/Matrix.hpp>
+#include <glm/mat4x4.hpp>
 #include <opengl/Texture.hpp>
 
 class Skybox {
@@ -30,7 +30,7 @@ private:
     Cubemap mTransitionCubemap;
 public:
     Skybox();
-    void Draw(const Mat4& projection, const Mat4& view, const Mat4& model, double currentDayProgress);
+    void Draw(const glm::mat4& projection, const glm::mat4& view, const glm::mat4& model, double currentDayProgress);
 };
 
 #endif // !SKYBOX_H

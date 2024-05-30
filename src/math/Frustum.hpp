@@ -7,24 +7,24 @@ License: MIT
 #define FRUSTUM_H
 
 #include <glad/glad.h>
-#include <math/Vector.hpp>
+#include "glm/glm.hpp"
 #include <array>
 
 struct Plane
 {
-    Vec3 normal = { 0.f, 1.f, 0.f };   // unit vector
+    glm::vec3 normal = glm::vec3( 0.f, 1.f, 0.f );   // unit vector
     GLfloat     distance = 0.f;        // Distance with origin
 
     Plane() = default;
 
-    Plane(const Vec3& p1, const Vec3& norm)
-        : normal(norm.normalized()),
-        distance(normal.dot(p1))
+    Plane(const glm::vec3& p1, const glm::vec3& norm)
+        : normal(glm::normalize(norm)),
+        distance(glm::dot(normal, p1))
     {}
 
-    float getSignedDistanceToPlane(const Vec3& point) const
+    float getSignedDistanceToPlane(const glm::vec3& point) const
     {
-        return (normal.dot(point)) - distance;
+        return glm::dot(normal, point) - distance;
     }
 };
 
@@ -41,10 +41,10 @@ using Frustum = std::array<Plane, 6>;
 
 struct Sphere {
     Sphere() = default;
-    Vec3 center{ 0.0f, 0.0f, 0.0f };
+    glm::vec3 center = glm::vec3(0.0f);
     GLfloat radius{ 0.0f };
 
-    Sphere(const Vec3& inCenter, float inRadius)
+    Sphere(const glm::vec3& inCenter, float inRadius)
         : center{ inCenter }, radius{ inRadius }
     {}
 

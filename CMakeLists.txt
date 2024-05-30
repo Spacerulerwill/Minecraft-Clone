@@ -41,10 +41,6 @@ add_executable(${PROJECT_NAME}
     src/world/Block.hpp
     src/world/Player.cpp
     src/world/Player.hpp
-    src/math/Vector.cpp
-    src/math/Vector.hpp
-    src/math/Matrix.cpp
-    src/math/Matrix.hpp
     src/math/Math.cpp
     src/math/Math.hpp
     src/math/Raycast.cpp
@@ -58,7 +54,6 @@ add_executable(${PROJECT_NAME}
     src/util/Log.cpp
     src/util/Log.hpp
     src/util/IO.hpp
-    src/util/Concepts.hpp
     src/util/Util.hpp
     lib/glad.c
     lib/imgui/imgui_impl_glfw.cpp
@@ -74,12 +69,14 @@ add_subdirectory(lib/submodules/glfw)
 add_subdirectory(lib/submodules/spdlog)
 add_subdirectory(lib/submodules/yaml-cpp)
 add_subdirectory(lib/submodules/fmt)
+add_subdirectory(lib/submodules/glm)
 
 target_include_directories(${PROJECT_NAME} 
     SYSTEM PRIVATE lib/submodules/glfw/include
     SYSTEM PRIVATE lib/submodules/spdlog/include
     SYSTEM PRIVATE lib/submodules/yaml-cpp/include
     SYSTEM PRIVATE lib/submodules/fmt/include
+    SYSTEM PRIVATE lib/submodules/glm/include
     SYSTEM PRIVATE include/imgui
     SYSTEM PRIVATE include
     PUBLIC src
@@ -90,6 +87,7 @@ target_link_directories(${PROJECT_NAME}
     PRIVATE lib/submodules/spdlog/src
     PRIVATE lib/submodules/yaml-cpp/src
     PRIVATE lib/submodules/fmt/src
+    PRIVATE lib/submodules/glm/src
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -97,6 +95,7 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC glfw
     PUBLIC yaml-cpp
     PUBLIC fmt
+    PUBLIC glm
 )
 
 # copy our resources to executable location

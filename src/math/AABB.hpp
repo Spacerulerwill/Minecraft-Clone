@@ -5,15 +5,15 @@ License: MIT
 #ifndef AABB_H
 #define AABB_H
 
-#include <math/Vector.hpp>
+#include <glm/vec3.hpp>
 
 class World;
 
 struct BoundingBox {
-    BoundingBox(Vec3 size, Vec3 localPos) :size(size), localPos(localPos) {}
-    Vec3 size{};
-    Vec3 localPos{};
-    bool IsColliding(const World& world, Vec3 center);
+    BoundingBox(glm::vec3 size, glm::vec3 localPos) :size(size), localPos(localPos) {}
+    glm::vec3 size{};
+    glm::vec3 localPos{};
+    bool IsColliding(const World& world, glm::vec3 center);
 };
 
 #endif // !AABB_H

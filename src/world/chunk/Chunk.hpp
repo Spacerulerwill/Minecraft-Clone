@@ -12,14 +12,14 @@ License: MIT
 #include <opengl/Shader.hpp>
 #include <world/chunk/ChunkMesher.hpp>
 #include <world/Block.hpp>
-#include <math/Vector.hpp>
-#include <math/Matrix.hpp>
+#include <glm/vec3.hpp>
+#include <glm/mat4x4.hpp>
 #include <math/Frustum.hpp>
 #include <PerlinNoise.hpp>
 #include <vector>
 #include <atomic>
 
-std::size_t VoxelIndex(iVec3 pos);
+std::size_t VoxelIndex(glm::ivec3 pos);
 
 class Chunk {
 private:
@@ -39,8 +39,8 @@ private:
     std::size_t mCustomModelVertexCount = 0;
 
     std::vector<Block> mBlocks;
-    iVec3 mPos{};
-    Mat4 mModel = Mat4::identity();
+    glm::ivec3 mPos{};
+    glm::mat4 mModel = glm::mat4(1.0f);
     Sphere sphere;
 public:
     static constexpr int SIZE_PADDED_LOG_2 = 6;
@@ -51,8 +51,8 @@ public:
     static constexpr int SIZE_PADDED_SUB_1 = SIZE_PADDED - 1;
     static constexpr int SIZE = SIZE_PADDED - 2;
     static constexpr int HALF_SIZE = SIZE / 2;
-    Chunk(iVec3 pos);
-    iVec3 GetPosition() const;
+    Chunk(glm::ivec3 pos);
+    glm::ivec3 GetPosition() const;
     void AllocateMemory();
     void ReleaseMemory();
     void CreateMesh();
@@ -63,13 +63,13 @@ public:
     void DrawWater(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
     void DrawCustomModel(Shader& shader, int* potentialDrawCalls, int* totalDrawCalls);
     // Get block in chunk - does not perform boundary checks or check whether the chunk is allocated/loaded. Dangerous!
-    Block RawGetBlock(iVec3 pos) const;
+    Block RawGetBlock(glm::ivec3 pos) const;
     // Set block in chunk - does not perform boundary checks or check whether the chunk is allocated/loaded. Dangerous!
-    void RawSetBlock(iVec3 pos, Block block);
+    void RawSetBlock(glm::ivec3 pos, Block block);
     // Get block in chunk with boundary checks and allocation check
-    Block GetBlock(iVec3 pos) const;
+    Block GetBlock(glm::ivec3 pos) const;
     // Set block in chunk with boundary checks and allocation check
-    void SetBlock(iVec3 pos, Block block);
+    void SetBlock(glm::ivec3 pos, Block block);
     std::atomic<bool> needsBuffering = false;
     std::atomic<bool> needsSaving = false;
     std::atomic<bool> allocated = false;

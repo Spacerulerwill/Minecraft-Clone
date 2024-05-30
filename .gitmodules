@@ -10,3 +10,6 @@
 [submodule "submodules/fmt"]
 	path = lib/submodules/fmt
 	url = https://github.com/fmtlib/fmt
+[submodule "lib/submodules/glm"]
+	path = lib/submodules/glm
+	url = https://github.com/g-truc/glm

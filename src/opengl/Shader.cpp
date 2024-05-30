@@ -4,8 +4,6 @@ License: MIT
 */
 
 #include <opengl/Shader.hpp>
-#include <math/Matrix.hpp>
-#include <math/Vector.hpp>
 #include <glad/glad.h>
 #include <util/Log.hpp>
 #include <fstream>
@@ -13,6 +11,7 @@ License: MIT
 #include <sstream>
 #include <vector>
 #include <fmt/format.h>
+#include <glm/gtc/type_ptr.hpp>
 
 Shader::Shader(std::string filepath) : mFilepath(filepath) {
     ShaderSources shaders = ParseShader(filepath);
@@ -124,41 +123,41 @@ void Shader::GetShaderUniformLocations() {
     }
 }
 
-void Shader::SetMat4(const std::string& name, const Mat4& mat) {
-    glUniformMatrix4fv(GetLocation(name), 1, GL_TRUE, mat.GetPointer());
+void Shader::SetMat4(const std::string& name, const glm::mat4& mat) {
+    glUniformMatrix4fv(GetLocation(name), 1, GL_FALSE, glm::value_ptr(mat));
 }
 
-void Shader::SetMat3(const std::string& name, const Mat3& mat) {
-    glUniformMatrix3fv(GetLocation(name), 1, GL_TRUE, mat.GetPointer());
+void Shader::SetMat3(const std::string& name, const glm::mat3& mat) {
+    glUniformMatrix3fv(GetLocation(name), 1, GL_FALSE, glm::value_ptr(mat));
 }
 
-void Shader::SetMat2(const std::string& name, const Mat2& mat) {
-    glUniformMatrix2fv(GetLocation(name), 1, GL_TRUE, mat.GetPointer());
+void Shader::SetMat2(const std::string& name, const glm::mat2& mat) {
+    glUniformMatrix2fv(GetLocation(name), 1, GL_FALSE, glm::value_ptr(mat));
 }
 
-void Shader::SetiVec4(const std::string& name, const iVec4& vec) {
-    glUniform4iv(GetLocation(name), 1, vec.GetPointer());
+void Shader::SetiVec4(const std::string& name, const glm::ivec4& vec) {
+    glUniform4iv(GetLocation(name), 1, glm::value_ptr(vec));
 }
 
-void Shader::SetiVec3(const std::string& name, const iVec3& vec) {
-    glUniform3iv(GetLocation(name), 1, vec.GetPointer());
+void Shader::SetiVec3(const std::string& name, const glm::ivec3& vec) {
+    glUniform3iv(GetLocation(name), 1, glm::value_ptr(vec));
 }
 
-void Shader::SetiVec2(const std::string& name, const iVec2& vec) {
-    glUniform2iv(GetLocation(name), 1, vec.GetPointer());
+void Shader::SetiVec2(const std::string& name, const glm::ivec2& vec) {
+    glUniform2iv(GetLocation(name), 1, glm::value_ptr(vec));
 }
 
-void Shader::SetVec4(const std::string& name, const Vec4& vec) {
-    glUniform4fv(GetLocation(name), 1, vec.GetPointer());
+void Shader::SetVec4(const std::string& name, const glm::vec4& vec) {
+    glUniform4fv(GetLocation(name), 1, glm::value_ptr(vec));
 }
 
-void Shader::SetVec3(const std::string& name, const Vec3& vec) {
-    glUniform3fv(GetLocation(name), 1, vec.GetPointer());
+void Shader::SetVec3(const std::string& name, const glm::vec3& vec) {
+    glUniform3fv(GetLocation(name), 1, glm::value_ptr(vec));
 }
 
 
-void Shader::SetVec2(const std::string& name, const Vec2& vec) {
-    glUniform2fv(GetLocation(name), 1, vec.GetPointer());
+void Shader::SetVec2(const std::string& name, const glm::vec2& vec) {
+    glUniform2fv(GetLocation(name), 1, glm::value_ptr(vec));
 }
 
 void Shader::SetFloat(const std::string& name, GLfloat x) {

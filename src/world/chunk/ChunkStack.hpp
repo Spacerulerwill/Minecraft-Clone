@@ -10,7 +10,8 @@ LICENSE: MIT
 #include <world/chunk/Chunk.hpp>
 #include <world/Block.hpp>
 #include <opengl/Shader.hpp>
-#include <math/Vector.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 #include <math/Frustum.hpp>
 #include <PerlinNoise.hpp>
 #include <world/Block.hpp>
@@ -26,7 +27,7 @@ enum class ChunkStackState {
 
 class ChunkStack {
 private:
-    iVec2 mPos{};
+    glm::ivec2 mPos{};
     std::vector<std::shared_ptr<Chunk>> mChunks;
     void SaveToFile(const std::string& worldDirectory);
 public:
@@ -38,17 +39,17 @@ public:
     const_iterator cend() const;
     size_t size() const;
     static constexpr std::size_t DEFAULT_SIZE = 8;
-    ChunkStack(iVec2 pos);
+    ChunkStack(glm::ivec2 pos);
     void GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin);
     void Draw(Shader& shader, int* totalChunks, int* chunksDrawn);
     void DrawWater(Shader& shader, int* totalChunks, int* chunksDrawn);
     void DrawCustomModel(Shader& shader, int* totalChunks, int* chunksDrawn);
-    iVec2 GetPosition() const;
+    glm::ivec2 GetPosition() const;
     std::shared_ptr<Chunk> GetChunk(std::size_t y) const;
-    Block RawGetBlock(iVec3 pos) const;
-    void RawSetBlock(iVec3 pos, Block block);
-    Block GetBlock(iVec3 pos) const;
-    void SetBlock(iVec3 pos, Block block);
+    Block RawGetBlock(glm::ivec3 pos) const;
+    void RawSetBlock(glm::ivec3 pos, Block block);
+    Block GetBlock(glm::ivec3 pos) const;
+    void SetBlock(glm::ivec3 pos, Block block);
     void FullyLoad(const std::string& worldDirectory, siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin);
     void PartiallyLoad(const std::string& worldDirectory, siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin);
     void Unload(const std::string& worldDirectory);;

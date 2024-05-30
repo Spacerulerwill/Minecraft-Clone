@@ -5,6 +5,7 @@ License: MIT
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include <glm/vec3.hpp>
 
 #include <core/Game.hpp>
 #include <core/SoundEngine.hpp>
@@ -122,7 +123,7 @@ MenuOptionResult create_world() {
         };
     };
     if (!WriteStructToDisk(fmt::format("{}/player.data", worldDirectory), PlayerSave{
-        .pos = Vec3{0.0f, 1000.0f, 0.0f},
+        .pos = glm::vec3(0.0f, 1000.0f, 0.0f),
         .pitch = 0.0f,
         .yaw = -90.0f
         })) {

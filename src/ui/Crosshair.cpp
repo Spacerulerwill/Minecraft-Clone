@@ -23,7 +23,7 @@ Crosshair::Crosshair(int initialWindowWidth, int initialWindowHeight, unsigned i
     mVAO.AddBuffer(mVBO, bufferLayout);
 }
 
-void Crosshair::Draw(const Mat4& ortho) {
+void Crosshair::Draw(const glm::mat4& ortho) {
     glActiveTexture(GL_TEXTURE1);
     mTexture.Bind();
     mShader.Bind();

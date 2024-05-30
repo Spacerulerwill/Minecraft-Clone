@@ -8,12 +8,19 @@ License: MIT
 
 #include <numbers>
 #include <random>
+#include <irrKlang/irrKlang.h>
+#include <glm/vec3.hpp>
+#include <string>
 
 constexpr float PI_OVER_180 = static_cast<float>(std::numbers::pi) / 180.0f;
 constexpr float ONE_EIGHTY_OVER_PI = 180.0f / static_cast<float>(std::numbers::pi);
 
 float radians(float theta);
 float degrees(float theta);
+
+irrklang::vec3df glm_vec3_to_irrklang_vec3df(glm::vec3 vec);
+glm::vec3 irrklang_vec3df_to_glm_vec3(irrklang::vec3df vec);
+std::string vec3_to_string(glm::vec3 vec);
 
 #endif // !MATH_HPP 
 

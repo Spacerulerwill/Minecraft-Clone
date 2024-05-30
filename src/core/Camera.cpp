@@ -16,15 +16,15 @@ Camera::Camera() {
     UpdateCameraVectors();
 }
 
-Camera::Camera(Vec3 pos) : position(pos) {
+Camera::Camera(glm::vec3 pos) : position(pos) {
     UpdateCameraVectors();
 }
 
-Camera::Camera(Vec3 pos, float pitch, float yaw) : position(pos), yaw(yaw), pitch(pitch) {
+Camera::Camera(glm::vec3 pos, float pitch, float yaw) : position(pos), yaw(yaw), pitch(pitch) {
     UpdateCameraVectors();
 }
 
-Mat4 Camera::GetViewMatrix() const {
+glm::mat4 Camera::GetViewMatrix() const {
     return lookAt(position, position + front, up);
 }
 
@@ -33,14 +33,14 @@ Frustum Camera::GetFrustum() const
     Frustum frustum{};
     const float halfVSide = far * tanf(radians(FOV * .5f));
     const float halfHSide = halfVSide * aspect;
-    const Vec3 frontMultFar = far * front;
+    const glm::vec3 frontMultFar = far * front;
 
     frustum[static_cast<std::size_t>(FrustumPlane::NEAR)] = { position + near * front, front };
     frustum[static_cast<std::size_t>(FrustumPlane::FAR)] = { position + frontMultFar, front * -1.0f };
-    frustum[static_cast<std::size_t>(FrustumPlane::RIGHT)] = { position, (frontMultFar - right * halfHSide).cross(up).normalized() };
-    frustum[static_cast<std::size_t>(FrustumPlane::LEFT)] = { position, up.cross(frontMultFar + right * halfHSide).normalized() };
-    frustum[static_cast<std::size_t>(FrustumPlane::TOP)] = { position, right.cross(frontMultFar - up * halfVSide).normalized() };
-    frustum[static_cast<std::size_t>(FrustumPlane::BOTTOM)] = { position, (frontMultFar + up * halfVSide).cross(right).normalized() };
+    frustum[static_cast<std::size_t>(FrustumPlane::RIGHT)] = { position, glm::normalize(glm::cross(frontMultFar - right * halfHSide, up)) };
+    frustum[static_cast<std::size_t>(FrustumPlane::LEFT)] = { position, glm::normalize(glm::cross(up, frontMultFar + right * halfHSide))};
+    frustum[static_cast<std::size_t>(FrustumPlane::TOP)] = { position, glm::normalize(glm::cross(right, frontMultFar - up * halfVSide)) };
+    frustum[static_cast<std::size_t>(FrustumPlane::BOTTOM)] = { position, glm::normalize(glm::cross(frontMultFar + up * halfVSide, right))};
     return frustum;
 }
 
@@ -76,7 +76,7 @@ void Camera::ProcessMouseScroll(float yoffset)
 void Camera::SetFOV(float newFOV)
 {
     FOV = std::clamp(newFOV, MIN_FOV, MAX_FOV);
-    perspectiveMatrix = perspective(radians(FOV), aspect, near, far);
+    perspectiveMatrix = glm::perspective(radians(FOV), aspect, near, far);
 }
 
 float Camera::GetFOV() const
@@ -87,15 +87,15 @@ float Camera::GetFOV() const
 void Camera::UpdateCameraVectors()
 {
     // Calculate new front vector
-    Vec3 newFront;
-    newFront[0] = static_cast<float>(cos(radians(yaw)) * cos(radians(pitch)));
-    newFront[1] = static_cast<float>(sin(radians(pitch)));
-    newFront[2] = static_cast<float>(sin(radians(yaw)) * cos(radians(pitch)));
-    front = newFront.normalized();
+    glm::vec3 newFront;
+    newFront.x = static_cast<float>(cos(radians(yaw)) * cos(radians(pitch)));
+    newFront.y = static_cast<float>(sin(radians(pitch)));
+    newFront.z = static_cast<float>(sin(radians(yaw)) * cos(radians(pitch)));
+    front = glm::normalize(newFront);
 
     // Calculate up and right 
-    right = (front.cross(worldUp)).normalized();
-    up = (right.cross(front)).normalized();
+    right = glm::normalize(glm::cross(front, worldUp));
+    up = glm::normalize(glm::cross(right, front));
 }
 
 /*

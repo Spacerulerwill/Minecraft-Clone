@@ -7,54 +7,54 @@ License: MIT
 #include <world/World.hpp>
 #include <util/Log.hpp>
 
-Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 start, Vec3 direction, float distance)
+Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, glm::vec3 start, glm::vec3 direction, float distance)
 {
-    Vec3 end = start + direction * distance;
-    iVec3 normal{ 0,0,0 };
+    glm::vec3 end = start + direction * distance;
+    glm::ivec3 normal = glm::ivec3(0);
     
-    iVec3 currentBlock {
+    glm::ivec3 currentBlock = glm::ivec3(
         static_cast<int>(floorf(start[0])),
         static_cast<int>(floorf(start[1])),
         static_cast<int>(floorf(start[2]))
-    };
+    );
 
-    const iVec3 endBlock{
+    const glm::ivec3 endBlock = glm::ivec3(
         static_cast<int>(floorf(end[0])),
         static_cast<int>(floorf(end[1])),
         static_cast<int>(floorf(end[2]))
-    };
+    );
 
-    const iVec3 d {
+    const glm::ivec3 d = glm::ivec3(
         ((start[0] < end[0]) ? 1 : ((start[0] > end[0]) ? -1 : 0)),
         ((start[1] < end[1]) ? 1 : ((start[1] > end[1]) ? -1 : 0)),
         ((start[2] < end[2]) ? 1 : ((start[2] > end[2]) ? -1 : 0))
-    };
+    );
 
-    const Vec3 deltat{
+    const glm::vec3 deltat = glm::vec3(
         1.0f / std::abs(end[0] - start[0]),
         1.0f / std::abs(end[1] - start[1]),
         1.0f / std::abs(end[2] - start[2])
-    };
+    );
 
-    const Vec3 min {
+    const glm::vec3 min  = glm::vec3(
         floorf(start[0]),
         floorf(start[1]),
         floorf(start[2])
-    };
+    );
 
-    const Vec3 max = min + Vec3{1.0f, 1.0f, 1.0f};
+    const glm::vec3 max = min + glm::vec3(1.0f);
 
-    Vec3 t {
+    glm::vec3 t = glm::vec3(
         ((start[0] > end[0]) ? (start[0] - min[0]) : (max[0] - start[0])) * deltat[0],
         ((start[1] > end[1]) ? (start[1] - min[1]) : (max[1] - start[1])) * deltat[1],
         ((start[2] > end[2]) ? (start[2] - min[2]) : (max[2] - start[2])) * deltat[2]
-    };
+    );
 
     while (true)
     {
-        iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(currentBlock);
+        glm::ivec3 chunkPos = GetChunkPosFromGlobalBlockPos(currentBlock);
         std::shared_ptr<Chunk> chunk = world.GetChunk(chunkPos);
-        iVec3 blockPosInChunk = GetChunkBlockPosFromGlobalBlockPos(currentBlock);
+        glm::ivec3 blockPosInChunk = GetChunkBlockPosFromGlobalBlockPos(currentBlock);
         if (chunk != nullptr) {
             // If we do hit a chunk, check if its air. If it's not then we stop the raycasting otherwise we continue
             Block block = chunk->GetBlock(blockPosInChunk);
@@ -81,9 +81,9 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
                 };
             };
             t[0] += deltat[0];
-            normal = iVec3{
+            normal = glm::ivec3(
                 -d[0],0,0
-            };
+            );
             currentBlock[0] += d[0];
         }
         else if (t[1] <= t[2])
@@ -98,9 +98,9 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
                 };
             };
             t[1] += deltat[1];
-            normal = iVec3{
+            normal = glm::ivec3(
                 0,-d[1],0
-            };
+            );
             currentBlock[1] += d[1];
         }
         else
@@ -115,9 +115,9 @@ Raycaster::BlockRaycastResult Raycaster::BlockRaycast(const World& world, Vec3 s
                 };
             };
             t[2] += deltat[2];
-            normal = iVec3{
+            normal = glm::ivec3(
                0,0,-d[2]
-            };
+            );
             currentBlock[2] += d[2];
         }
     }

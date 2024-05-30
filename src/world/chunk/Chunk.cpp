@@ -8,12 +8,13 @@ License: MIT
 #include <GLFW/glfw3.h>
 #include <cmath>
 #include <util/Log.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
-std::size_t VoxelIndex(iVec3 pos) {
-    return pos[1] + (pos[0] << Chunk::SIZE_PADDED_LOG_2) + (pos[2] << Chunk::SIZE_PADDED_SQUARED_LOG_2);
+std::size_t VoxelIndex(glm::ivec3 pos) {
+    return pos.y + (pos.x << Chunk::SIZE_PADDED_LOG_2) + (pos.z << Chunk::SIZE_PADDED_SQUARED_LOG_2);
 }
 
-Chunk::Chunk(iVec3 pos) : mPos(pos)
+Chunk::Chunk(glm::ivec3 pos) : mPos(pos)
 {
     // Setup buffers
     VertexBufferLayout bufferLayout;
@@ -24,17 +25,17 @@ Chunk::Chunk(iVec3 pos) : mPos(pos)
     mCustomModelVAO.AddBuffer(mCustomModelVBO, bufferLayout);
 
     // Transform it to its global position
-    Vec3 globalPosition = static_cast<Vec3>(pos) * Chunk::SIZE;
-    mModel *= translate(globalPosition);
+    glm::vec3 globalPosition = static_cast<glm::vec3>(pos * Chunk::SIZE);
+    mModel *= glm::translate(mModel, globalPosition);
 
     // Sphere for frustum culling
     sphere = Sphere{ 
-        globalPosition + Vec3{Chunk::HALF_SIZE, Chunk::HALF_SIZE, Chunk::HALF_SIZE}, 
-        Vec3{Chunk::HALF_SIZE, Chunk::HALF_SIZE, Chunk::HALF_SIZE}.length() 
+        globalPosition + glm::vec3(static_cast<float>(Chunk::HALF_SIZE)), 
+        glm::length(glm::vec3(static_cast<float>(Chunk::HALF_SIZE)))
     };
 }
 
-iVec3 Chunk::GetPosition() const
+glm::ivec3 Chunk::GetPosition() const
 {
     return mPos;
 }
@@ -128,26 +129,26 @@ void Chunk::DrawCustomModel(Shader& shader, int* potentialDrawCalls, int* totalD
     glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mCustomModelVertexCount));
 }
 
-Block Chunk::RawGetBlock(iVec3 pos) const
+Block Chunk::RawGetBlock(glm::ivec3 pos) const
 {
     return mBlocks[VoxelIndex(pos)];
 }
 
-void Chunk::RawSetBlock(iVec3 pos, Block block)
+void Chunk::RawSetBlock(glm::ivec3 pos, Block block)
 {
     mBlocks[VoxelIndex(pos)] = block;
     needsSaving = true;
 }
 
-Block Chunk::GetBlock(iVec3 pos) const
+Block Chunk::GetBlock(glm::ivec3 pos) const
 {
-    if (!allocated || pos[0] < 0 || pos[0] >= SIZE_PADDED || pos[1] < 0 || pos[1] >= SIZE_PADDED || pos[2] < 0 || pos[2] >= SIZE_PADDED) return Block(BlockType::AIR, 0, false);
+    if (!allocated || pos.x < 0 || pos.x >= SIZE_PADDED || pos.y < 0 || pos.y >= SIZE_PADDED || pos.z < 0 || pos.z >= SIZE_PADDED) return Block(BlockType::AIR, 0, false);
     return mBlocks[VoxelIndex(pos)];
 }
 
-void Chunk::SetBlock(iVec3 pos, Block block)
+void Chunk::SetBlock(glm::ivec3 pos, Block block)
 {
-    if (!allocated || pos[0] < 0 || pos[0] >= SIZE_PADDED || pos[1] < 0 || pos[1] >= SIZE_PADDED || pos[2] < 0 || pos[2] >= SIZE_PADDED) return;
+    if (!allocated || pos.x < 0 || pos.x >= SIZE_PADDED || pos.y < 0 || pos.y >= SIZE_PADDED || pos.z < 0 || pos.z >= SIZE_PADDED) return;
     mBlocks[VoxelIndex(pos)] = block;
     needsSaving = true;
 }

@@ -9,8 +9,12 @@ License: MIT
 #include <glad/glad.h>
 #include <string>
 #include <unordered_map>
-#include <math/Matrix.hpp>
-#include <math/Vector.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+#include <glm/mat2x2.hpp>
+#include <glm/mat3x3.hpp>
+#include <glm/mat4x4.hpp>
 
 struct ShaderSources {
     std::string Vertex;
@@ -43,15 +47,15 @@ public:
     void Bind() const;
     void Unbind() const;
 
-    void SetMat4(const std::string& name, const Mat4& mat);
-    void SetMat3(const std::string& name, const Mat3& mat);
-    void SetMat2(const std::string& name, const Mat2& mat);
-    void SetiVec4(const std::string& name, const iVec4& vec);
-    void SetiVec3(const std::string& name, const iVec3& vec);
-    void SetiVec2(const std::string& name, const iVec2& vec);
-    void SetVec4(const std::string& name, const Vec4& vec);
-    void SetVec3(const std::string& name, const Vec3& vec);
-    void SetVec2(const std::string& name, const Vec2& vec);
+    void SetMat4(const std::string& name, const glm::mat4& mat);
+    void SetMat3(const std::string& name, const glm::mat3& mat);
+    void SetMat2(const std::string& name, const glm::mat2& mat);
+    void SetiVec4(const std::string& name, const glm::ivec4& vec);
+    void SetiVec3(const std::string& name, const glm::ivec3& vec);
+    void SetiVec2(const std::string& name, const glm::ivec2& vec);
+    void SetVec4(const std::string& name, const glm::vec4& vec);
+    void SetVec3(const std::string& name, const glm::vec3& vec);
+    void SetVec2(const std::string& name, const glm::vec2& vec);
     void SetFloat(const std::string& name, GLfloat x);
     void SetInt(const std::string& name, GLint val);
 };

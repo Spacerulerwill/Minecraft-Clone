@@ -91,7 +91,7 @@ Skybox::Skybox()
     mVAO.AddBuffer(mVBO, bufLayout);
 }
 
-void Skybox::Draw(const Mat4& projection, const Mat4& view, const Mat4& model, double currentDayProgress) {
+void Skybox::Draw(const glm::mat4& projection, const glm::mat4& view, const glm::mat4& model, double currentDayProgress) {
     mShader.Bind();
     mVAO.Bind();
     mShader.SetInt("day_skybox", 0);

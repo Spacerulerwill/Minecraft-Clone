@@ -7,7 +7,7 @@ License: MIT
 #include <core/SoundEngine.hpp>
 #include <opengl/Shader.hpp>
 #include <world/Block.hpp>
-#include <math/Matrix.hpp>
+#include <glm/mat4x4.hpp>
 #include <math/Raycast.hpp>
 #include <math/Frustum.hpp>
 #include <util/Log.hpp>
@@ -41,7 +41,7 @@ void Game::Run(std::string worldDirectory) {
     Crosshair crosshair(INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT, 32);
     pWorld = std::make_unique<World>(worldDirectory);    
     ScopedSound backgroundMusic("sound/music.mp3", true); 
-    Mat4 ortho = orthographic(0.0f, INITIAL_WINDOW_HEIGHT, 0.0f, INITIAL_WINDOW_WIDTH, -1.0f, 100.0f);
+    glm::mat4 ortho = glm::ortho(0.0f, static_cast<float>(INITIAL_WINDOW_WIDTH), 0.0f, static_cast<float>(INITIAL_WINDOW_HEIGHT), -1.0f, 100.0f);
     mWindow.SetVisible();
     while (!mWindow.ShouldClose()) {
         // World events
@@ -65,8 +65,8 @@ void Game::Run(std::string worldDirectory) {
 
         // Set sound engine listener to players position
         SoundEngine::GetEngine()->setListenerPosition(
-            irrklang::vec3df((pWorld->mPlayer.camera.position)),
-            irrklang::vec3df((pWorld->mPlayer.camera.front))
+            glm_vec3_to_irrklang_vec3df((pWorld->mPlayer.camera.position)),
+            glm_vec3_to_irrklang_vec3df((pWorld->mPlayer.camera.front))
         );
 
         // Draw World
@@ -107,13 +107,13 @@ void Game::SettingsMenu(int potentialDrawCalls, int totalDrawCalls) {
     ImGui::SliderInt("Chunk partial load distance", &pWorld->mChunkPartialLoadDistance, 3, 30, "%d", ImGuiSliderFlags_NoInput);
     ImGui::SliderInt("Max tasks per frame", &pWorld->mMaxTasksPerFrame, 1, 50, "%d", ImGuiSliderFlags_NoInput);
 
-    iVec3 blockPos = GetWorldBlockPosFromGlobalPos(pWorld->mPlayer.camera.position);
-    iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(blockPos);
-    iVec3 chunkLocalBlockPos = GetChunkBlockPosFromGlobalBlockPos(blockPos);
+    glm::ivec3 blockPos = GetWorldBlockPosFromGlobalPos(pWorld->mPlayer.camera.position);
+    glm::ivec3 chunkPos = GetChunkPosFromGlobalBlockPos(blockPos);
+    glm::ivec3 chunkLocalBlockPos = GetChunkBlockPosFromGlobalBlockPos(blockPos);
 
-    ImGui::Text("Block coordinates: %s", std::string(blockPos).c_str());
-    ImGui::Text("Chunk local block coordinates: %s", std::string(chunkLocalBlockPos).c_str());
-    ImGui::Text("Chunk coordinates: %s", std::string(chunkPos).c_str());
+    ImGui::Text("Block coordinates: %s", vec3_to_string(blockPos).c_str());
+    ImGui::Text("Chunk local block coordinates: %s", vec3_to_string(chunkLocalBlockPos).c_str());
+    ImGui::Text("Chunk coordinates: %s", vec3_to_string(chunkPos).c_str());
     ImGui::Text("FPS: %d", fps);
     ImGui::Text("Potential draw calls: %d", potentialDrawCalls);
     ImGui::Text("Total draw calls: %d", totalDrawCalls);

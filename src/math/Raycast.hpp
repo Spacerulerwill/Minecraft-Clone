@@ -7,7 +7,7 @@ License: MIT
 #define RAYCAST_H
 
 #include <world/Block.hpp>
-#include <math/Vector.hpp>
+#include <glm/vec3.hpp>
 #include <world/chunk/Chunk.hpp>
 #include <memory>
 
@@ -17,12 +17,12 @@ namespace Raycaster {
 
     struct BlockRaycastResult {
         std::shared_ptr<Chunk> chunk;
-        iVec3 blockPos;
-        iVec3 normal;
-        Block blockHit;
+        glm::ivec3 blockPos{};
+        glm::ivec3 normal{};
+        Block blockHit = Block(BlockType::AIR, 0, false);
     };
 
-    BlockRaycastResult BlockRaycast(const World& world, Vec3 start, Vec3 direction, float distance);
+    BlockRaycastResult BlockRaycast(const World& world, glm::vec3 start, glm::vec3 direction, float distance);
 };
 
 #endif // !RAYCAST_H

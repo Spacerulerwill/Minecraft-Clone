@@ -4,7 +4,7 @@ License: MIT
 */
 
 #include <world/chunk/ChunkMesher.hpp>
-#include <math/Vector.hpp>
+#include <glm/vec2.hpp>
 #include <world/Block.hpp>
 #include <world/chunk/Chunk.hpp>
 
@@ -30,15 +30,15 @@ inline const bool SolidCheck(BlockType blockType) {
     return GetBlockData(blockType).opaque;
 }
 
-inline constexpr iVec2 AODirections[8] = {
-    {0, -1},
-    {0, 1},
-    {-1, 0 },
-    {1, 0},
-    {-1, -1 },
-    { -1, 1 },
-    { 1, -1 },
-    { 1, 1 },
+inline constexpr glm::ivec2 AODirections[8] = {
+    glm::ivec2(0, -1),
+    glm::ivec2(0, 1),
+    glm::ivec2( - 1, 0),
+    glm::ivec2(1, 0),
+    glm::ivec2( - 1, -1 ),
+    glm::ivec2( - 1, 1 ),
+    glm::ivec2( 1, -1 ),
+    glm::ivec2( 1, 1 ),
 };
 
 inline const int VertexAO(int side1, int side2, int corner) {
@@ -270,16 +270,16 @@ void ChunkMesher::MeshCustomModelBlocks(std::vector<ChunkVertex>& vertices, cons
     for (int x = 1; x < Chunk::SIZE_PADDED_SUB_1; x++) {
         for (int y = 1; y < Chunk::SIZE_PADDED_SUB_1; y++) {
             for (int z = 1; z < Chunk::SIZE_PADDED_SUB_1; z++) {
-                BlockType type = blocks[VoxelIndex(iVec3{ x, y, z })].GetType();
+                BlockType type = blocks[VoxelIndex(glm::ivec3( x, y, z ))].GetType();
                 BlockDataStruct blockData = GetBlockData(type);
                 if (blockData.modelID != static_cast<ModelID>(Model::CUBE)) {
                     if (
-                        !GetBlockData(blocks[VoxelIndex(iVec3{ x + 1, y, z })].GetType()).opaque ||
-                        !GetBlockData(blocks[VoxelIndex(iVec3{ x - 1, y, z })].GetType()).opaque ||
-                        !GetBlockData(blocks[VoxelIndex(iVec3{ x, y + 1, z })].GetType()).opaque ||
-                        !GetBlockData(blocks[VoxelIndex(iVec3{ x, y - 1, z })].GetType()).opaque ||
-                        !GetBlockData(blocks[VoxelIndex(iVec3{ x, y, z + 1 })].GetType()).opaque ||
-                        !GetBlockData(blocks[VoxelIndex(iVec3{ x, y, z - 1 })].GetType()).opaque
+                        !GetBlockData(blocks[VoxelIndex(glm::ivec3( x + 1, y, z ))].GetType()).opaque ||
+                        !GetBlockData(blocks[VoxelIndex(glm::ivec3( x - 1, y, z ))].GetType()).opaque ||
+                        !GetBlockData(blocks[VoxelIndex(glm::ivec3( x, y + 1, z ))].GetType()).opaque ||
+                        !GetBlockData(blocks[VoxelIndex(glm::ivec3( x, y - 1, z ))].GetType()).opaque ||
+                        !GetBlockData(blocks[VoxelIndex(glm::ivec3( x, y, z + 1 ))].GetType()).opaque ||
+                        !GetBlockData(blocks[VoxelIndex(glm::ivec3( x, y, z - 1 ))].GetType()).opaque
                         ) {
                         std::vector<uint32_t>& modelVertices = BlockModels[blockData.modelID];
                         std::vector<ChunkVertex> modelPackedVerts;

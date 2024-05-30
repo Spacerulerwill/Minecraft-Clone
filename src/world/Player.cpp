@@ -86,7 +86,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                     raycast.chunk->CreateMesh();
                     raycast.chunk->BufferData();
                     BlockSoundStruct soundData = BlockSounds[blockData.breakSoundID];
-                    SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), irrklang::vec3df(camera.position));
+                    SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), glm_vec3_to_irrklang_vec3df(camera.position));
                 }
             }
         }
@@ -108,7 +108,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
                     raycast.chunk->SetBlock(raycast.blockPos, Block(raycast.blockHit.GetType(), 0, true));
                 }
                 else if (!hitBlockData.canInteractThrough) {
-                    iVec3 blockPlacePosition = raycast.blockPos + raycast.normal;
+                    glm::ivec3 blockPlacePosition = raycast.blockPos + raycast.normal;
                     Block blockBeforePlace = raycast.chunk->GetBlock(blockPlacePosition);
 
                     // If we are placing a waterloggable block in a water block
@@ -129,7 +129,7 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
             raycast.chunk->BufferData();
             const BlockDataStruct& blockData = GetBlockData(selectedBlockType);
             BlockSoundStruct soundData = BlockSounds[blockData.placeSoundID];
-            SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), irrklang::vec3df(camera.position));
+            SoundEngine::GetEngine()->play3D(soundData.sounds[rand() % soundData.sounds.size()].c_str(), glm_vec3_to_irrklang_vec3df(camera.position));
         }
         break;
     }
@@ -149,17 +149,17 @@ void Player::MouseCallback(const World& world, int button, int action, int mods)
 void Player::Move(const World& world, PlayerMovement direction, float speed, float deltaTime)
 {
     float velocity{};
-    Vec3 directionMultiplier{};
+    glm::vec3 directionMultiplier = glm::vec3(0.0f);
 
     switch (direction) {
     case PlayerMovement::FORWARD: {
         velocity = deltaTime * speed;
-        directionMultiplier = Vec3{ camera.front[0], 0.0f, camera.front[2] }.normalized();
+        directionMultiplier = glm::normalize(glm::vec3( camera.front.x, 0.0f, camera.front.z));
         break;
     }
     case PlayerMovement::BACKWARD: {
         velocity = deltaTime * speed;
-        directionMultiplier = Vec3{ camera.front[0], 0.0f, camera.front[2] }.normalized() * -1.0f;
+        directionMultiplier = glm::normalize(glm::vec3( camera.front.x, 0.0f, camera.front.z )) * -1.0f;
         break;
     }
     case PlayerMovement::LEFT: {
@@ -189,8 +189,8 @@ void Player::Move(const World& world, PlayerMovement direction, float speed, flo
     }
     }
 
-    Vec3 distanceToMove = directionMultiplier * velocity;
-    Vec3 newPosition = camera.position;
+    glm::vec3 distanceToMove = directionMultiplier * velocity;
+    glm::vec3 newPosition = camera.position;
     for (int axis = 0; axis < 3; axis++) {
         newPosition[axis] += distanceToMove[axis];
         if (boundingBox.IsColliding(world, newPosition)) {

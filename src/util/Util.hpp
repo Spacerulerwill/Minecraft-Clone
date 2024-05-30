@@ -3,11 +3,19 @@ Copyright (C) 2023 William Redding - All Rights Reserved
 License: MIT
 */
 
+#ifndef UTIL_HPP
+#define UTIL_HPP
+
+#include <irrKlang/irrklang.h>
+#include <glm/glm.hpp>
+
 /*
  * This macro is for supressing unsued parameter warnings. This is useful for
  * unused callback parameters when interacting with an API
 */ 
 #define UNUSED(...) ((void)(__VA_ARGS__))
+
+#endif // !UTIL_HPP
 
 /*
 MIT License

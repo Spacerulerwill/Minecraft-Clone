@@ -10,6 +10,7 @@ License: MIT
 #include <opengl/Window.hpp>
 #include <math/AABB.hpp>
 #include <world/Block.hpp>
+#include <glm/vec3.hpp>
 
 class World;
 
@@ -24,7 +25,7 @@ enum class PlayerMovement {
 };
 
 struct PlayerSave {
-    Vec3 pos;
+    glm::vec3 pos;
     float pitch;
     float yaw;
 };
@@ -34,8 +35,8 @@ struct Player {
     bool canJump = false;
     float yVelocity = 0.0f;
     float movementSpeed = 5.0f;
-    Camera camera{ Vec3{ 0.0f, 0.0f, 0.0f} };
-    BoundingBox boundingBox{ Vec3{0.4f, 0.95f, 0.4f}, Vec3{0.0f, -0.75f, 0.0f} };
+    Camera camera{ glm::vec3(0.0f) };
+    BoundingBox boundingBox{ glm::vec3(0.4f, 0.95f, 0.4f), glm::vec3(0.0f, -0.75f, 0.0f) };
     void ProcessKeyInput(const World& world, const Window& window, float deltaTime);
     void KeyCallback(int key, int scancode, int action, int mods);
     void MouseCallback(const World& world, int button, int action, int mods);

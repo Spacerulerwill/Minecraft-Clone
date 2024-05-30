@@ -8,9 +8,10 @@ License: MIT
 
 #include <glad/glad.h>
 #include <math/Math.hpp>
-#include <math/Vector.hpp>
-#include <math/Matrix.hpp>
 #include <math/Frustum.hpp>
+#include <glm/vec3.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 class World;
 
@@ -32,8 +33,8 @@ private:
     float FOV = 90.0f;
 public:
     Camera();
-    Camera(Vec3 pos);
-    Camera(Vec3 pos, float pitch, float yaw);
+    Camera(glm::vec3 pos);
+    Camera(glm::vec3 pos, float pitch, float yaw);
 
     void ProcessMouseMovement(float xpos, float ypos);
     void ProcessMouseScroll(float yoffset);
@@ -49,17 +50,17 @@ public:
     // camera options
     float mouseSensitivity = 0.1f;
 
-    Vec3 position{ 0.0f, 0.0f, 0.0f };
-    Vec3 front{};
-    Vec3 up{};
-    Vec3 right{};
-    Vec3 worldUp{ 0.0f, 1.0f, 0.0f };
+    glm::vec3 position{ 0.0f, 0.0f, 0.0f };
+    glm::vec3 front{};
+    glm::vec3 up{};
+    glm::vec3 right{};
+    glm::vec3 worldUp{ 0.0f, 1.0f, 0.0f };
 
     float pitch = 0.0f;
     float yaw = -90.0f;
 
-    Mat4 perspectiveMatrix = perspective(radians(FOV), aspect, near, far);
-    Mat4 GetViewMatrix() const;
+    glm::mat4 perspectiveMatrix = glm::perspective(radians(FOV), aspect, near, far);
+    glm::mat4 GetViewMatrix() const;
 
     Frustum GetFrustum() const;
 

@@ -4,6 +4,9 @@ License: MIT
 */
 
 #include <math/Math.hpp>
+#include <irrKlang/irrKlang.h>
+#include <glm/vec3.hpp>
+#include <fmt/format.h>
 
 float radians(float theta)
 {
@@ -14,6 +17,22 @@ float degrees(float theta)
 {
     return theta * ONE_EIGHTY_OVER_PI;
 }
+
+glm::vec3 irrklang_vec3df_to_glm_vec3(irrklang::vec3df vec)
+{
+    return glm::vec3(vec.X, vec.Y, vec.Z);
+}
+
+std::string vec3_to_string(glm::vec3 vec)
+{
+    return fmt::format("({}, {}, {})", vec.x, vec.y, vec.z);
+}
+
+irrklang::vec3df glm_vec3_to_irrklang_vec3df(glm::vec3 vec)
+{
+    return irrklang::vec3df(vec.x, vec.y, vec.z);
+}
+
 
 /*
 MIT License

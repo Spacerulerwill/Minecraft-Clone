@@ -10,11 +10,12 @@ License: MIT
 #include <opengl/BufferObject.hpp>
 #include <opengl/Shader.hpp>
 #include <opengl/Texture.hpp>
+#include <glm/mat4x4.hpp>
 
 class Crosshair {
 public:
     Crosshair(int initialWindowWidth, int initialWindowHeight, unsigned int size);    
-    void Draw(const Mat4& ortho);
+    void Draw(const glm::mat4& ortho);
 private:
     Shader mShader = Shader("shaders/crosshair.shader");
     Tex2D mTexture = Tex2D("textures/ui/crosshair.png", GL_TEXTURE2);

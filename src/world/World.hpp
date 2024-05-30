@@ -19,12 +19,16 @@ License: MIT
 #include <BS_thread_pool.hpp>
 #include <array>
 #include <stdexcept>
+#include <glm/vec3.hpp>
+#include <glm/vec2.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/hash.hpp"
 
-iVec3 GetWorldBlockPosFromGlobalPos(Vec3 globalPosition);
-iVec3 GetChunkPosFromGlobalBlockPos(iVec3 globalBlockPos);
-iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 pos);
+glm::ivec3 GetWorldBlockPosFromGlobalPos(glm::vec3 globalPosition);
+glm::ivec3 GetChunkPosFromGlobalBlockPos(glm::ivec3 globalBlockPos);
+glm::ivec3 GetChunkBlockPosFromGlobalBlockPos(glm::ivec3 pos);
 
-constexpr const float GRAVITY = 0.5f;
+constexpr float GRAVITY = 0.5f;
 
 struct WorldSave {
     siv::PerlinNoise::seed_type seed;
@@ -40,7 +44,7 @@ public:
 
 class World {
 private:
-    std::unordered_map<iVec2, ChunkStack> mChunkStacks;
+    std::unordered_map<glm::ivec2, ChunkStack> mChunkStacks;
     Skybox mSkybox;
     Shader mChunkShader = Shader("shaders/chunk.shader");
     Shader mWaterShader = Shader("shaders/water.shader");
@@ -63,9 +67,9 @@ public:
     static constexpr int WATER_LEVEL = MIN_GEN_HEIGHT + (Chunk::SIZE * 4);    
     static_assert(WATER_LEVEL < MAX_GEN_HEIGHT);
     static constexpr double DAY_DURATION = 120.0;
-    Vec3 mWaterColor = Vec3{ 68.0f, 124.0f, 245.0f } / 255.0f;
-    Vec3 mFoliageColor = Vec3{ 145.0f, 189.0f, 89.0f } / 255.0f;
-    Vec3 mGrassColor = Vec3{ 145.0f, 189.0f, 89.0f } / 255.0f;
+    glm::vec3 mWaterColor = glm::vec3( 68.0f, 124.0f, 245.0f ) / 255.0f;
+    glm::vec3 mFoliageColor = glm::vec3( 145.0f, 189.0f, 89.0f ) / 255.0f;
+    glm::vec3 mGrassColor = glm::vec3( 145.0f, 189.0f, 89.0f ) / 255.0f;
     int mChunkLoadDistance = 3;
     int mChunkPartialLoadDistance = 1;
     int mMaxTasksPerFrame = 20;
@@ -76,11 +80,11 @@ public:
     double mWorldLoadedTime; // Time of program when world finishes loading
     double mWorldStartTime; // The last saved world time when the player last closed the game
     double mCurrentTime; // Current world time
-    const ChunkStack* GetChunkStack(iVec2 pos) const;
-    std::shared_ptr<Chunk> GetChunk(iVec3 pos) const;
-    Block GetBlock(iVec3 pos) const;
-    void SetBlock(iVec3 pos, Block block);
-    void SetBlockAndRemesh(iVec3 pos, Block block);
+    const ChunkStack* GetChunkStack(glm::ivec2 pos) const;
+    std::shared_ptr<Chunk> GetChunk(glm::ivec3 pos) const;
+    Block GetBlock(glm::ivec3 pos) const;
+    void SetBlock(glm::ivec3 pos, Block block);
+    void SetBlockAndRemesh(glm::ivec3 pos, Block block);
 };
 
 #endif // !WORLD_H

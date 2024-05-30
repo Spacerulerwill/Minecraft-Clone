@@ -9,42 +9,33 @@ License: MIT
 #include <fmt/format.h>
 #include <util/IO.hpp>
 #include <chrono>
+#include <glm/gtc/matrix_transform.hpp>
 
-iVec3 GetWorldBlockPosFromGlobalPos(Vec3 globalPosition)
+glm::ivec3 GetWorldBlockPosFromGlobalPos(glm::vec3 globalPosition)
 {
-    iVec3 result;
-    for (int i = 0; i < 3; i++) {
-        result[i] = static_cast<iVec3::value_type>(std::floor(globalPosition[i]));
-    }
-    return result;
+    return glm::ivec3(
+        static_cast<int>(std::floor(globalPosition.x)),
+        static_cast<int>(std::floor(globalPosition.y)),
+        static_cast<int>(std::floor(globalPosition.z))
+     );
 }
 
-iVec3 GetChunkPosFromGlobalBlockPos(iVec3 globalBlockPos)
+glm::ivec3 GetChunkPosFromGlobalBlockPos(glm::ivec3 globalBlockPos)
 {
-    iVec3 result;
-    for (int i = 0; i < 3; i++) {
-        if (globalBlockPos[i] < 0) {
-            result[i] = ((globalBlockPos[i] + 1) / Chunk::SIZE) - 1;
-        }
-        else {
-            result[i] = globalBlockPos[i] / Chunk::SIZE;
-        }
-    }
-    return result;
+    return glm::ivec3(
+        globalBlockPos.x < 0 ? ((globalBlockPos.x + 1) / Chunk::SIZE) - 1 : globalBlockPos.x / Chunk::SIZE,
+        globalBlockPos.y < 0 ? ((globalBlockPos.y + 1) / Chunk::SIZE) - 1 : globalBlockPos.y / Chunk::SIZE,
+        globalBlockPos.z < 0 ? ((globalBlockPos.z + 1) / Chunk::SIZE) - 1 : globalBlockPos.z / Chunk::SIZE
+    );
 }
 
-iVec3 GetChunkBlockPosFromGlobalBlockPos(iVec3 globalBlockPos)
+glm::ivec3 GetChunkBlockPosFromGlobalBlockPos(glm::ivec3 globalBlockPos)
 {
-    iVec3 result;
-    for (int i = 0; i < 3; i++) {
-        if (globalBlockPos[i] >= 0) {
-            result[i] = 1 + (globalBlockPos[i] % Chunk::SIZE);
-        }
-        else {
-            result[i] = Chunk::SIZE_PADDED_SUB_1 - (1 + (abs(globalBlockPos[i]) - 1) % Chunk::SIZE);
-        }
-    }
-    return result;
+    return glm::ivec3(
+        globalBlockPos.x < 0 ? Chunk::SIZE_PADDED_SUB_1 - (1 + (abs(globalBlockPos.x) - 1) % Chunk::SIZE) : 1 + (globalBlockPos.x % Chunk::SIZE),
+        globalBlockPos.y < 0 ? Chunk::SIZE_PADDED_SUB_1 - (1 + (abs(globalBlockPos.y) - 1) % Chunk::SIZE) : 1 + (globalBlockPos.y % Chunk::SIZE),
+        globalBlockPos.z < 0 ? Chunk::SIZE_PADDED_SUB_1 - (1 + (abs(globalBlockPos.z) - 1) % Chunk::SIZE) : 1 + (globalBlockPos.z % Chunk::SIZE)
+    );
 }
 
 
@@ -78,10 +69,10 @@ World::World(std::string worldDirectory) : mWorldDirectory(worldDirectory)
 
     // Load spawn chunks
     LOG_INFO("Loading spawn chunks...");
-    Vec3 playerPos = mPlayer.camera.position;
-    iVec2 playerChunkPos{
-        static_cast<int>(floor(playerPos[0]) / Chunk::SIZE),
-        static_cast<int>(floor(playerPos[2]) / Chunk::SIZE)
+    glm::vec3 playerPos = mPlayer.camera.position;
+    glm::ivec2 playerChunkPos{
+        static_cast<int>(floor(playerPos.x) / Chunk::SIZE),
+        static_cast<int>(floor(playerPos.z) / Chunk::SIZE)
     };
 
     // Load all chunks
@@ -89,7 +80,7 @@ World::World(std::string worldDirectory) : mWorldDirectory(worldDirectory)
     for (int x = -totalRenderDistance; x <= totalRenderDistance; x++) {
         for (int z = -totalRenderDistance; z <= totalRenderDistance; z++) {
             int radius = static_cast<int>(std::round(sqrtf(x * x + z * z)));
-            iVec2 pos = playerChunkPos + iVec2{ x,z };
+            glm::ivec2 pos = playerChunkPos + glm::ivec2(x,z);
             if (radius < mChunkLoadDistance) {
                 auto emplace = mChunkStacks.emplace(pos, pos);
                 ChunkStack& chunkStack = emplace.first->second;
@@ -157,8 +148,8 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     double currentDay;
     double currentDayProgress = std::modf(day, &currentDay);
 
-    Mat4 perspective = mPlayer.camera.perspectiveMatrix;
-    Mat4 view = mPlayer.camera.GetViewMatrix();
+    glm::mat4 perspective = mPlayer.camera.perspectiveMatrix;
+    glm::mat4 view = mPlayer.camera.GetViewMatrix();
     float ambientTerrainLight = 1.0f;
 
     if (currentDayProgress < 0.5) {
@@ -181,8 +172,8 @@ void World::Draw(const Frustum& frustum, int* totalChunks, int* chunksDrawn)
     }
 
     glDepthFunc(GL_LEQUAL);
-    Mat4 model = rotate(Vec3{0.0f, 1.0f, 0.0f}, mCurrentTime * 0.01f); 
-    mSkybox.Draw(perspective, translationRemoved(view), model, currentDayProgress);
+    glm::mat4 model = glm::rotate(glm::mat4(1.0f), static_cast<float>(mCurrentTime) * 0.01f, glm::vec3(0.0f, 1.0f, 0.0f));
+    mSkybox.Draw(perspective, glm::mat4(glm::mat3((view))), model, currentDayProgress);
     glDepthFunc(GL_LESS);
 
     // Draw opaque
@@ -238,19 +229,19 @@ void World::GenerateChunks()
     int tasks = 0;
 
     // Detect what chunk the player is in
-    Vec3 playerPos = mPlayer.camera.position;
-    iVec2 playerChunkPos{
-        static_cast<int>(floor(playerPos[0]) / Chunk::SIZE),
-        static_cast<int>(floor(playerPos[2]) / Chunk::SIZE)
-    };
+    glm::vec3 playerPos = mPlayer.camera.position;
+    glm::ivec2 playerChunkPos = glm::ivec2(
+        static_cast<int>(floor(playerPos.x) / Chunk::SIZE),
+        static_cast<int>(floor(playerPos.z) / Chunk::SIZE)
+    );
 
     // Unload chunks out of distance
-    std::vector<std::unordered_map<iVec2, ChunkStack>::iterator> iteratorsToRemove;
+    std::vector<std::unordered_map<glm::ivec2, ChunkStack>::iterator> iteratorsToRemove;
     for (auto it = mChunkStacks.begin(); it != mChunkStacks.end();) {
         ChunkStack& stack = it->second;
-        iVec2 stackPos = stack.GetPosition();
-        iVec2 distFromPlayer = stackPos - playerChunkPos;
-        int dist = static_cast<int>(std::roundf(distFromPlayer.length()));
+        glm::ivec2 stackPos = stack.GetPosition();
+        glm::ivec2 distFromPlayer = stackPos - playerChunkPos;
+        int dist = static_cast<int>(std::roundf(glm::length(glm::vec2(distFromPlayer))));
         if (dist > totalRenderDistance && !stack.is_in_task) {
             if (tasks < mMaxTasksPerFrame) {
                 tasks++;
@@ -283,7 +274,7 @@ void World::GenerateChunks()
                 continue;
             }
 
-            iVec2 pos = playerChunkPos + iVec2{ x, z };
+            glm::ivec2 pos = playerChunkPos + glm::ivec2( x, z );
             auto find = mChunkStacks.find(pos);
 
             // Inner radius (chunk loading)
@@ -399,7 +390,7 @@ void World::TrySwitchToNextTextureAtlas()
     }
 }
 
-const ChunkStack* World::GetChunkStack(iVec2 pos) const
+const ChunkStack* World::GetChunkStack(glm::ivec2 pos) const
 {
     auto find = mChunkStacks.find(pos);
     if (find == mChunkStacks.end()) {
@@ -408,44 +399,44 @@ const ChunkStack* World::GetChunkStack(iVec2 pos) const
     return &find->second;
 }
 
-std::shared_ptr<Chunk> World::GetChunk(iVec3 pos) const
+std::shared_ptr<Chunk> World::GetChunk(glm::ivec3 pos) const
 {
-    const ChunkStack* chunkStack = GetChunkStack(iVec2{ pos[0], pos[2] });
+    const ChunkStack* chunkStack = GetChunkStack(glm::ivec2( pos.x, pos.z ));
     if (chunkStack == nullptr || chunkStack->state != ChunkStackState::LOADED) {
         return nullptr;
     }
     return chunkStack->GetChunk(pos[1]);
 }
 
-Block World::GetBlock(iVec3 pos) const
+Block World::GetBlock(glm::ivec3 pos) const
 {
-    iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
+    glm::ivec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
     std::shared_ptr<Chunk> chunk = GetChunk(chunkPos);
     if (chunk != nullptr) {
-        iVec3 blockPos = GetChunkBlockPosFromGlobalBlockPos(pos);
+        glm::ivec3 blockPos = GetChunkBlockPosFromGlobalBlockPos(pos);
         return chunk->GetBlock(blockPos);
     }
     return Block(BlockType::AIR, 0, false);
 }
 
-void World::SetBlock(iVec3 pos, Block block)
+void World::SetBlock(glm::ivec3 pos, Block block)
 {
-    iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
+    glm::ivec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
     std::shared_ptr<Chunk> chunk = GetChunk(chunkPos);
 
     if (chunk != nullptr) {
-        iVec3 blockPos = GetChunkBlockPosFromGlobalBlockPos(pos);
+        glm::ivec3 blockPos = GetChunkBlockPosFromGlobalBlockPos(pos);
         chunk->SetBlock(blockPos, block);
     }
 }
 
-void World::SetBlockAndRemesh(iVec3 pos, Block block)
+void World::SetBlockAndRemesh(glm::ivec3 pos, Block block)
 {
-    iVec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
+    glm::ivec3 chunkPos = GetChunkPosFromGlobalBlockPos(pos);
     std::shared_ptr<Chunk> chunk = GetChunk(chunkPos);
 
     if (chunk != nullptr) {
-        iVec3 blockPos = GetChunkBlockPosFromGlobalBlockPos(pos);
+        glm::ivec3 blockPos = GetChunkBlockPosFromGlobalBlockPos(pos);
         chunk->SetBlock(blockPos, block);
         chunk->CreateMesh();
         chunk->BufferData();
