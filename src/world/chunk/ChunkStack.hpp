@@ -38,7 +38,7 @@ public:
     const_iterator cbegin() const;
     const_iterator cend() const;
     size_t size() const;
-    static constexpr std::size_t DEFAULT_SIZE = 8;
+    static constexpr std::size_t DEFAULT_SIZE = 4;
     ChunkStack(glm::ivec2 pos);
     void GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::PerlinNoise& perlin);
     void Draw(Shader& shader, int* totalChunks, int* chunksDrawn);

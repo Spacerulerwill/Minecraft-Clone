@@ -30,7 +30,8 @@ enum class BlockType : uint8_t {
     SAND,
     SUGARCANE,
     WOOD,
-    SAKURA_LEAVES,
+    SAKURA_LEAVES,  
+    SNOW,
     NUM_BLOCKS
 };
 
@@ -59,6 +60,7 @@ enum class Sound : SoundID {
     WOOD,
     GLASS,
     SAND,
+    SNOW,
     NUM_SOUNDS
 };
 

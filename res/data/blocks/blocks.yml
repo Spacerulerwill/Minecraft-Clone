@@ -125,3 +125,12 @@ sakura_leaves:
   collision: true
   can_interact_through: false
   waterloggable: false
+snow:
+  unique_faces: 1
+  break_sound_id: 7
+  place_sound_id: 7
+  model_id: 0
+  opaque: true
+  collision: true
+  can_interact_through: false
+  waterloggable: false

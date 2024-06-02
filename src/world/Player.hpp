@@ -31,7 +31,7 @@ struct PlayerSave {
 };
 
 struct Player {
-    BlockType selectedBlockType = BlockType::STONE;
+    BlockType selectedBlockType = BlockType::SNOW;
     bool canJump = false;
     float yVelocity = 0.0f;
     float movementSpeed = 5.0f;

@@ -64,9 +64,11 @@ public:
     static constexpr int MAX_GEN_HEIGHT = (ChunkStack::DEFAULT_SIZE * Chunk::SIZE) - 1;
     static constexpr int MIN_GEN_HEIGHT = Chunk::SIZE - 1;
     static constexpr int MAX_SUB_MIN_GEN_HEIGHT = MAX_GEN_HEIGHT - MIN_GEN_HEIGHT;
-    static constexpr int WATER_LEVEL = MIN_GEN_HEIGHT + (Chunk::SIZE * 4);    
+    static constexpr int WATER_LEVEL = MIN_GEN_HEIGHT + Chunk::SIZE;
     static_assert(WATER_LEVEL < MAX_GEN_HEIGHT);
-    static constexpr double DAY_DURATION = 120.0;
+    static constexpr int GRASS_LEVEL = WATER_LEVEL + Chunk::SIZE;
+    static_assert(GRASS_LEVEL < MAX_GEN_HEIGHT);
+    static constexpr double DAY_DURATION = 600.0;
     glm::vec3 mWaterColor = glm::vec3( 68.0f, 124.0f, 245.0f ) / 255.0f;
     glm::vec3 mFoliageColor = glm::vec3( 145.0f, 189.0f, 89.0f ) / 255.0f;
     glm::vec3 mGrassColor = glm::vec3( 145.0f, 189.0f, 89.0f ) / 255.0f;

@@ -48,42 +48,55 @@ void ChunkStack::GenerateTerrain(siv::PerlinNoise::seed_type seed, const siv::Pe
 
     for (int x = 0; x < Chunk::SIZE_PADDED; x++) {
         for (int z = 0; z < Chunk::SIZE_PADDED; z++) {
-            float heightMultiplayer = perlin.octave2D_01((mPos[0] * Chunk::SIZE + x) * 0.001f, (mPos[1] * Chunk::SIZE + z) * 0.001f, 4, 0.5);
+            float heightMultiplayer = perlin.octave2D_01((mPos[0] * Chunk::SIZE + x) * 0.005f, (mPos[1] * Chunk::SIZE + z) * 0.005f, 4, 0.5);
             int height = World::MIN_GEN_HEIGHT + (heightMultiplayer * World::MAX_SUB_MIN_GEN_HEIGHT);
-            
+            // Water
             if (height < World::WATER_LEVEL) {
                 for (int y = height; y < World::WATER_LEVEL; y++) {
-                    RawSetBlock(glm::ivec3( x,y, z ), Block(BlockType::WATER, 0, false));
+                    RawSetBlock(glm::ivec3(x, y, z), Block(BlockType::WATER, 0, false));
                 }
-                RawSetBlock(glm::ivec3( x,height - 1,z ), Block(BlockType::DIRT, 0, false));
+                RawSetBlock(glm::ivec3(x, height - 1, z), Block(BlockType::DIRT, 0, false));
             }
+            // Sand
             else if (height < World::WATER_LEVEL + 2) {
-                RawSetBlock(glm::ivec3(x, height-1, z), Block(BlockType::SAND, 0, false));
+                RawSetBlock(glm::ivec3(x, height - 1, z), Block(BlockType::SAND, 0, false));
             }
-            else {
-                RawSetBlock(glm::ivec3( x,height - 1,z ), Block(BlockType::GRASS, 0, false));
+            // Grass
+            else if (height < World::GRASS_LEVEL) {
+                RawSetBlock(glm::ivec3(x, height - 1, z), Block(BlockType::GRASS, 0, false));
                 float rand = distribution(gen);
                 if (rand < 0.01f) {
                     if (height <= World::MAX_GEN_HEIGHT - 1) {
-                        RawSetBlock(glm::ivec3( x, height, z ), Block(BlockType::ROSE, 0, false));
+                        RawSetBlock(glm::ivec3(x, height, z), Block(BlockType::ROSE, 0, false));
                     }
                 }
                 else if (rand < 0.02f) {
-                    if (height <= World::MAX_GEN_HEIGHT -1) {
-                        RawSetBlock(glm::ivec3( x, height, z ), Block(BlockType::PINK_TULIP, 0, false));
+                    if (height <= World::MAX_GEN_HEIGHT - 1) {
+                        RawSetBlock(glm::ivec3(x, height, z), Block(BlockType::PINK_TULIP, 0, false));
                     }
                 }
                 else if (rand < 0.2f) {
                     if (height <= World::MAX_GEN_HEIGHT - 1) {
-                        RawSetBlock(glm::ivec3( x, height, z ), Block(BlockType::TALL_GRASS, 0, false));
+                        RawSetBlock(glm::ivec3(x, height, z), Block(BlockType::TALL_GRASS, 0, false));
                     }
-                }    
+                }
+                for (int y = 0; y < height - 4; y++) {
+                    RawSetBlock(glm::ivec3(x, y, z), Block(BlockType::STONE, 0, false));
+                }
+                for (int y = height - 4; y < height - 1; y++) {
+                    RawSetBlock(glm::ivec3(x, y, z), Block(BlockType::DIRT, 0, false));
+                }
             }
-            for (int y = 0; y < height - 4; y++) {
-                RawSetBlock(glm::ivec3( x, y, z ), Block(BlockType::STONE, 0, false));
-            }
-            for (int y = height - 4; y < height - 1; y++) {
-                RawSetBlock(glm::ivec3( x, y, z ), Block(BlockType::DIRT, 0, false));
+            else if (height < World::GRASS_LEVEL + 4) {
+                for (int y = 0; y < height; y++) {
+                    RawSetBlock(glm::ivec3(x, y, z), Block(BlockType::STONE, 0, false));
+                }
+            } 
+            else {
+                for (int y = 0; y < height - 1; y++) {
+                    RawSetBlock(glm::ivec3(x, y, z), Block(BlockType::STONE, 0, false));
+                }
+                RawSetBlock(glm::ivec3(x, height - 1, z), Block(BlockType::SNOW, 0, false));
             }
             RawSetBlock(glm::ivec3( x, 0, z ), Block(BlockType::BEDROCK, 0, false));
         }
