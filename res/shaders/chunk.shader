@@ -13,13 +13,13 @@ out vec3 TexCoords;
 flat out ivec3 FragNormal;
 out float isGrass;
 
-ivec3 NORMALS[6] = ivec3[](
-  vec3( 0, 0, -1 ),
-  vec3(0, 0, 1 ),
-  vec3( -1, 0, 0 ),
-  vec3( 1, 0, 0 ),
-  vec3( 0, 1, 0 ),
-  vec3( 0, -1, 0)
+ivec3 NORMALS[6] = ivec3[6](
+  ivec3( 0, 0, -1 ),
+  ivec3(0, 0, 1 ),
+  ivec3( -1, 0, 0 ),
+  ivec3( 1, 0, 0 ),
+  ivec3( 0, 1, 0 ),
+  ivec3( 0, -1, 0)
 );
 
 const float AO_MIN = 0.3;

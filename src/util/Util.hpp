@@ -6,7 +6,7 @@ License: MIT
 #ifndef UTIL_HPP
 #define UTIL_HPP
 
-#include <irrKlang/irrklang.h>
+#include <irrKlang/irrKlang.h>
 #include <glm/glm.hpp>
 
 /*
